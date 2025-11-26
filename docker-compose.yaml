@@ -1,0 +1,61 @@
+version: "3.8"
+
+# Define reusable GPU resource constraints
+x-resources:
+  # la shm_size es calculada de acuerdo al 80% de la memoria RAM como maximo
+  # es importante que el ordenador a entrenar tenga al menos lo mismo de swap que de RAM
+  &resources_gpu
+  shm_size: "24g"
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+  environment:
+    - NVIDIA_VISIBLE_DEVICES=0
+    - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+  deploy:
+    resources:
+      limits:
+        cpus: "${WORKER_CPU_CORES}"
+        memory: ${WORKER_RAM_MEMORY}
+      reservations:
+        # cpus: "1.0"
+        # memory: 2048M
+        # memory_swap: 500M
+        devices:
+          - driver: nvidia
+            device_ids: [ "0" ]
+            capabilities: [ gpu ]
+
+services:
+  worker:
+    <<: *resources_gpu
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    image: wisrovi/wyoloservice_worker:v2.0.0
+    container_name: worker_demo
+    env_file:
+      - control_host.env
+      - user.env
+    # restart: always
+    command: tail -f /dev/null
+    privileged: true
+    volumes:
+      - ./media:/media
+      - ./app/:/app/
+    cap_add:
+      - SYS_ADMIN
+      - DAC_READ_SEARCH
+    ports:
+      - "23455:8000" # API
+    labels:
+      - "autoheal=true"
+      - "com.centurylinklabs.watchtower.enable=true" # Habilita Watchtower para este contenedor
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
+      interval: 20s
+      timeout: 2s
+      retries: 1
+      start_period: 20s
