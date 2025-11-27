@@ -5,7 +5,7 @@ from datetime import datetime
 import click
 import yaml
 
-from train_yolo.trainer_wrapper import TrainerWrapper
+from .trainer_wrapper import TrainerWrapper
 
 
 def load_config(config_path: str):
