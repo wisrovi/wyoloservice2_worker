@@ -582,5 +582,3 @@ if __name__ == "__main__":
             except:
                 print(f'ResultadoFinal:{request_config["train"]["results"]["fitness"]}')
 
-    return request_config
-
