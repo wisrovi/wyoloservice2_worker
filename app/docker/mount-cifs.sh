@@ -12,7 +12,6 @@ echo "control_server_HOST: $CONTROL_HOST"
 echo "USER: $CIFS_USER"
 echo "PASS: $CIFS_PASS"
 
-
 # Instalar paquetes necesarios si no están disponibles
 if ! command -v mount.cifs &> /dev/null; then
     echo "Instalando cifs-utils..."
@@ -22,35 +21,45 @@ fi
 echo
 echo "Montando /mnt/control_server ..."
 
+FOLDER_MOUNT_DATASETS=/datasets
+FOLDER_MOUNT_CONFIG=/config_versions
+FOLDER_MOUNT_DB=/api_database
 
 # Crear directorio de montaje
-mkdir -p /mnt/control_server/datasets
-mkdir -p /mnt/control_server/config_versions
-mkdir -p /mnt/control_server/api_database
+mkdir -p $FOLDER_MOUNT_DATASETS
+mkdir -p $FOLDER_MOUNT_CONFIG
+mkdir -p $FOLDER_MOUNT_DB
 
-chmod 777 -R /mnt/control_server
-chmod 777 -R /mnt/control_server/datasets
-chmod 777 -R /mnt/control_server/config_versions
-chmod 777 -R /mnt/control_server/api_database
+umount $FOLDER_MOUNT_DATASETS
+umount $FOLDER_MOUNT_CONFIG
+umount $FOLDER_MOUNT_DB
+
+chmod 777 -R $FOLDER_MOUNT_DATASETS
+chmod 777 -R $FOLDER_MOUNT_CONFIG
+chmod 777 -R $FOLDER_MOUNT_DB
 
 # Probar diferentes métodos de montaje que usa Nautilus
 echo "Intentando montaje en control_server"
 
 # Probar diferentes configuraciones de montaje
 echo "Probando configuración 1: vers=3.0"
-MOUNT_OPTS="username=$CIFS_USER,password=$CIFS_PASS,port=23449,file_mode=0777,dir_mode=0777,iocharset=utf8,uid=$(id -u),gid=$(id -g),vers=3.0,soft"
+# MOUNT_OPTS="username=$CIFS_USER,password=$CIFS_PASS,port=23449,file_mode=0777,dir_mode=0777,iocharset=utf8,uid=$(id -u),gid=$(id -g),vers=3.0,soft"
+MOUNT_OPTS="username=$CIFS_USER,password=$CIFS_PASS,port=23449,file_mode=0777,dir_mode=0777,iocharset=utf8"
 
 # Montar cada share con manejo de errores
 echo "Montando datasets..."
-mount -t cifs //$CONTROL_HOST/datasets /mnt/control_server/datasets -o $MOUNT_OPTS || echo "Error montando datasets"
+mount -t cifs //$CONTROL_HOST/datasets $FOLDER_MOUNT_DATASETS -o $MOUNT_OPTS || echo "Error montando datasets"
 
 echo "Montando config_versions..."
-mount -t cifs //$CONTROL_HOST/config_versions /mnt/control_server/config_versions -o $MOUNT_OPTS || echo "Error montando config_versions"
+mount -t cifs //$CONTROL_HOST/config_versions $FOLDER_MOUNT_CONFIG -o $MOUNT_OPTS || echo "Error montando config_versions"
 
 echo "Montando api_database..."
-mount -t cifs //$CONTROL_HOST/api_database /mnt/control_server/api_database -o $MOUNT_OPTS || echo "Error montando api_database"
-
+mount -t cifs //$CONTROL_HOST/api_database $FOLDER_MOUNT_DB -o $MOUNT_OPTS || echo "Error montando api_database"
 
 echo
-echo "Contenido de /mnt/control_server:"
-ls -la /mnt/control_server
+echo "Contenido de los montajes hechos:"
+ls -la $FOLDER_MOUNT_DATASETS
+echo
+ls -la $FOLDER_MOUNT_CONFIG
+echo
+ls -la $FOLDER_MOUNT_DB

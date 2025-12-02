@@ -11,9 +11,9 @@ from setproctitle import setproctitle  # Para cambiar el nombre del proceso
 setproctitle("train_service")
 
 
-def ejecutar_comando(args: dict, trial_number: int, verbose=True, config_path=None):
-
+def ejecutar_comando(args: list, trial_number: int, verbose=True, config_path=None):
     stream_manager = None
+    task_id = None
     if config_path:
         with open(config_path, "r") as f:
             user_config = yaml.safe_load(f)
@@ -25,7 +25,7 @@ def ejecutar_comando(args: dict, trial_number: int, verbose=True, config_path=No
             host=redis_config.get("REDIS_HOST"),
             port=redis_config.get("REDIS_PORT"),
             db=redis_config.get("REDIS_DB"),
-            verbose=False
+            verbose=False,
         )
 
     buffer = []  # Para almacenar toda la salida y parsear al final
@@ -39,7 +39,6 @@ def ejecutar_comando(args: dict, trial_number: int, verbose=True, config_path=No
             bufsize=1,  # Line-buffered (1 línea a la vez)
             cwd=os.getcwd(),
         ) as process:
-
             # Leer la salida en tiempo real
             for line in process.stdout:
                 buffer.append(line)  # Almacenar línea para parsear después
@@ -52,7 +51,7 @@ def ejecutar_comando(args: dict, trial_number: int, verbose=True, config_path=No
                         data={
                             "value": line,
                         },
-                        ttl=60*60,
+                        ttl=60 * 60,
                     )
 
             # Esperar a que el proceso termine
@@ -75,14 +74,12 @@ def ejecutar_comando(args: dict, trial_number: int, verbose=True, config_path=No
         # guardar el resultado para analisis posteriores
         config_path = args[2].split("=")[-1]
         with open(config_path, "r") as f:
-            args = yaml.safe_load(f)
+            config_data = yaml.safe_load(f)
 
-        experiment_name = args.get("sweeper").get("study_name")
-        tempfile = args.get("tempfile", "")
+        experiment_name = config_data.get("sweeper").get("study_name")
+        tempfile = config_data.get("tempfile", "")
 
-        RESULT_PATH = (
-            f'{tempfile}/models/{experiment_name}/{args["type"]}/{args["task_id"]}'
-        )
+        RESULT_PATH = f"{tempfile}/models/{experiment_name}/{config_data['type']}/{config_data['task_id']}"
 
         with open(
             f"{RESULT_PATH}/trail_history/trial_{int(trial_number)}.train_log", "w"
@@ -104,8 +101,8 @@ def train_run(
     trial_number: int,
     verbose: bool = False,
     fitness: str = "fitness",
-    script_path:str = "/lib/wyoloservice/train_yolo"
-):    
+    script_path: str = "/app/lib/src/wyolo/core",
+):
     os.chdir(script_path)
 
     args = [
@@ -117,6 +114,9 @@ def train_run(
     ]
     # example:
     # python yolo_train.py --config_path="./media/dataset/example/classify/colorball.v8i.multiclass/config_train.yaml" --trial_number=1 --fitness=fitness
+    print(args)
+    import time
+    time.sleep(30)
 
     resultado = ejecutar_comando(
         args,
@@ -130,10 +130,9 @@ def train_run(
 
 if __name__ == "__main__":
     resultado = train_run(
-        config_path="./media/dataset/example/classify/colorball.v8i.multiclass/config_train.yaml",
+        config_path="/datasets/clasification/colorball.v8i.multiclass/config_train.yaml",
         trial_number=1,
         verbose=False,
-        script_path="lib/heart/",
     )
     if resultado is not None:
         print(f"Resultado del entrenamiento: {resultado}")

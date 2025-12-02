@@ -5,7 +5,7 @@ from datetime import datetime
 import click
 import yaml
 
-from .trainer_wrapper import TrainerWrapper
+from trainer_wrapper import TrainerWrapper
 
 
 def load_config(config_path: str):
@@ -57,7 +57,7 @@ def train(config_path: str, fitness: str, trial_number: int):
     experiment_name = request_config.get("sweeper").get("study_name")
     tempfile = request_config.get("tempfile", "")
 
-    RESULT_PATH = f'{tempfile}/models/{experiment_name}/{request_config["type"]}/{request_config["task_id"]}/'
+    RESULT_PATH = f"{tempfile}/models/{experiment_name}/{request_config['type']}/{request_config['task_id']}/"
     os.makedirs(f"{RESULT_PATH}/trail_history", exist_ok=True)
     request_config["path_results"] = f"{RESULT_PATH}/{trial_number}/"
 
@@ -87,9 +87,9 @@ def train(config_path: str, fitness: str, trial_number: int):
             request_config["train"]["results"] = results.results_dict
 
             try:
-                print(f'ResultadoFinal:{request_config["train"]["results"][fitness]}')
+                print(f"ResultadoFinal:{request_config['train']['results'][fitness]}")
             except:
-                print(f'ResultadoFinal:{request_config["train"]["results"]["fitness"]}')
+                print(f"ResultadoFinal:{request_config['train']['results']['fitness']}")
 
     return request_config
 
@@ -101,4 +101,3 @@ if __name__ == "__main__":
     """
 
     request_config = train()
-
