@@ -6,6 +6,13 @@ x-resources:
   # es importante que el ordenador a entrenar tenga al menos lo mismo de swap que de RAM
   &resources_gpu
   shm_size: "24g"
+  hostname: ${USER}
+  cap_add:
+    - SYS_ADMIN
+    - DAC_READ_SEARCH
+    - NET_ADMIN
+    - SYS_RESOURCE
+  privileged: true
   logging:
     driver: "json-file"
     options:
@@ -14,6 +21,9 @@ x-resources:
   environment:
     - NVIDIA_VISIBLE_DEVICES=0
     - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+  labels:
+    - "autoheal=true"
+    - "com.centurylinklabs.watchtower.enable=true" 
   deploy:
     resources:
       limits:
@@ -35,27 +45,43 @@ services:
       context: ./app
       dockerfile: Dockerfile
     image: wisrovi/wyoloservice_worker:v2.0.0
-    container_name: worker_demo
     env_file:
       - control_host.env
       - user.env
     # restart: always
-    command: tail -f /dev/null
-    privileged: true
+    command: tail -f /dev/null    
     volumes:
-      - ./media:/media
-      - ./app/:/app/
-    cap_add:
-      - SYS_ADMIN
-      - DAC_READ_SEARCH
-    ports:
-      - "23455:8000" # API
-    labels:
-      - "autoheal=true"
-      - "com.centurylinklabs.watchtower.enable=true" # Habilita Watchtower para este contenedor
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
-      interval: 20s
-      timeout: 2s
-      retries: 1
-      start_period: 20s
+      - ./app:/app
+      # - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    network_mode: host
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1 && nvidia-smi --query-gpu=name,memory.total,memory.free --format=csv,noheader  && echo 'All systems operational' || echo 'GPU check failed'  || exit 1"]
+    #   interval: 20s # Frecuencia de verificación
+    #   timeout: 5s # Tiempo máximo para completar la verificación
+    #   retries: 3 # Intentos antes de marcar como unhealthy
+    #   start_period: 20s # Periodo inicial antes de comenzar las verificaciones
+
+  # watchtower:
+  #   image: containrrr/watchtower
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   restart: always
+  #   environment:
+  #     - WATCHTOWER_LABEL_ENABLE=true # Habilita el control por etiquetas
+  #     - WATCHTOWER_SCHEDULE=0 0 0,2,4,6,8,10,12,14,16,18,20,22 * * * # todos los segundos, minutos, dias, semanas, meses, a las horas 0,2,...,22
+  #     - WATCHTOWER_CLEANUP=true # Elimina imágenes antiguas después de actualizar
+  #   labels:
+  #     - "com.centurylinklabs.watchtower.enable=false"
+
+  # autoheal:
+    # environment:
+    #   - AUTOHEAL_INTERVAL=10
+    #   - CURL_TIMEOUT=30
+    #   - AUTOHEAL_CONTAINER_LABEL=all
+    # volumes:
+    #   - "/var/run/docker.sock:/var/run/docker.sock"
+    # image: willfarrell/autoheal
+    # restart: always
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=false"
