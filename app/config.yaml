@@ -1,10 +1,10 @@
-mlflow:
-  MLFLOW_TRACKING_URI: http://localhost:23435
-minio:
-  MINIO_ENDPOINT: http://localhost:23444
-  MINIO_ID: mlflow
-  MINIO_SECRET_KEY: wyoloservice
-  MINIO_BUCKET: models
+# mlflow:
+#   MLFLOW_TRACKING_URI: http://localhost:23435
+# minio:
+#   MINIO_ENDPOINT: http://localhost:23444
+#   MINIO_ID: mlflow
+#   MINIO_SECRET_KEY: wyoloservice
+#   MINIO_BUCKET: models
 redis:
   REDIS_HOST: localhost
   REDIS_PORT: 23438
@@ -23,11 +23,21 @@ default:
   threshold: 0.35
   override hydra/sweeper: optuna
 model: yolov8n.pt
-train:
-  batch: -1
-  epochs: 1
 type: "yolo"
+task_id: "test_training_001"
+tempfile: "/app/tmp/tasks"
+train:
+  data: "/app/dataset.yaml"
+  epochs: 10
+  imgsz: 640
+  batch: 16
+  verbose: true
+  plots: true
+  exist_ok: true
 sweeper:
+  study_name: "test_experiment"
+  n_trials: 2
+  tune: false
   grace_period: 5
   max_concurrent: 1
   algorithm: optuna

@@ -46,7 +46,7 @@ services:
       dockerfile: Dockerfile
     image: wisrovi/wyoloservice_worker:v2.0.0
     env_file:
-      - control_host.env
+      - config/control_host.env
       - user.env
     # restart: always
     command: tail -f /dev/null    

@@ -106,7 +106,6 @@ class TrainerWrapper:
     status_eda_completed = StatusEDA.PENDING
 
     def __init__(self, config: dict):
-
         self.config = config
 
         # Update a setting
@@ -213,7 +212,7 @@ class TrainerWrapper:
                     .get("data", None)
                     .replace("/datasets/", "")
                 )
-                data_url = f'http://{os.environ.get("CONTROL_HOST", "localhost")}:23443/files/{dvc_path}'
+                data_url = f"http://{os.environ.get('CONTROL_HOST', 'localhost')}:23443/files/{dvc_path}"
                 data_path = self.config.get("train", {}).get("data", None)
 
             if data_url:
@@ -489,14 +488,17 @@ class TrainerWrapper:
                 else:
                     raise
 
-                grace_period = self.config.get("sweeper", {}).get("grace_period", False)
-                epochs = self.config.get("train", {}).get("epochs", False)
+                grace_period = self.config.get("sweeper", {}).get("grace_period", 10)
+                epochs = self.config.get("train", {}).get("epochs", 10)
+
+                # Ensure grace_period is positive and reasonable
+                grace_period = max(1, min(epochs, grace_period))
 
                 return self.model.tune(
                     **config_train,
                     iterations=tune,
                     use_ray=True,
-                    grace_period=min(epochs, grace_period),
+                    grace_period=grace_period,
                 )
             else:
                 # read env var MAX_GPU (user defined) for max gpu (value between 0 and 100)
@@ -532,9 +534,7 @@ class TrainerWrapper:
 
 
 if __name__ == "__main__":
-
-    request_config:dict = ...
-
+    request_config: dict = ...
 
     trainer = TrainerWrapper(config=request_config)
     trainer.create_model(
@@ -548,7 +548,7 @@ if __name__ == "__main__":
     experiment_name = request_config.get("sweeper").get("study_name")
     tempfile = request_config.get("tempfile", "")
 
-    RESULT_PATH = f'{tempfile}/models/{experiment_name}/{request_config["type"]}/{request_config["task_id"]}/'
+    RESULT_PATH = f"{tempfile}/models/{experiment_name}/{request_config['type']}/{request_config['task_id']}/"
     os.makedirs(f"{RESULT_PATH}/trail_history", exist_ok=True)
     request_config["path_results"] = f"{RESULT_PATH}/{trial_number}/"
 
@@ -578,7 +578,6 @@ if __name__ == "__main__":
             request_config["train"]["results"] = results.results_dict
 
             try:
-                print(f'ResultadoFinal:{request_config["train"]["results"][fitness]}')
+                print(f"ResultadoFinal:{request_config['train']['results'][fitness]}")
             except:
-                print(f'ResultadoFinal:{request_config["train"]["results"]["fitness"]}')
-
+                print(f"ResultadoFinal:{request_config['train']['results']['fitness']}")
