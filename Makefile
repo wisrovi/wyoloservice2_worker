@@ -23,8 +23,12 @@ user.env:
     echo "WORKER_RAM_MEMORY=$$((MEM_TOTAL / 1048576 * 8 / 10))g" >> user.env
 	echo "WORKER_CPU_CORES=$$((`nproc` - 1)).0" >> user.env
 
-start: user.env
-	docker-compose -f docker-compose.yaml --env-file user.env  --compatibility up -d --build --force-recreate --no-deps
+config.py:
+	pip install customtkinter
+	python config.py
+
+start: user.env config.py
+	docker-compose -f docker-compose.yaml --env-file user.env  --compatibility up -d --build --force-recreate --no-deps  --pull always
 
 build:
 	docker-compose -f docker-compose.yaml  --env-file user.env  build
