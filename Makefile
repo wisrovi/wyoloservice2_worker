@@ -28,3 +28,10 @@ start: user.env
 
 build:
 	docker-compose -f docker-compose.yaml  --env-file user.env  build
+
+stop:
+	docker-compose -f docker-compose.yaml --env-file user.env down  --remove-orphans
+
+
+into:
+	docker-compose -f docker-compose.yaml --env-file user.env  exec worker zsh
