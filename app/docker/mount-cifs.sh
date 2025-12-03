@@ -63,3 +63,21 @@ echo
 ls -la $FOLDER_MOUNT_CONFIG
 echo
 ls -la $FOLDER_MOUNT_DB
+
+# poner la config para dvc en /app/dvc/config
+mkdir -p /app/.dvc
+cat << EOF > /app/.dvc/config
+[core]
+    autostage = true
+    remote = minio
+
+[remote "control_server"]
+    url = s3://dvcstorage
+    endpointurl = //$CONTROL_HOST:23444
+    access_key_id = $CIFS_USER
+    secret_access_key = $CIFS_PASS
+    jobs = 8
+    read_timeout = 300
+    connect_timeout = 60
+EOF
+
