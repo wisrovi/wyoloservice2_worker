@@ -186,24 +186,15 @@ class TrainerWrapper:
 
     def on_train_end(self, trainer):
         if "minio" in self.config and "mlflow" in self.config:
-            try:
-                # Log the trained model using log_model
-                import torch
+            pytorch_model = trainer.model.model
+            mlflow.pytorch.log_model(pytorch_model, "model")
 
-                pytorch_model = trainer.model.model
-                mlflow.pytorch.log_model(pytorch_model, "model")
-                print(f"PyTorch model logged to MLflow using log_model")
+            metrics = {
+                slugify(key): float(value) for key, value in trainer.metrics.items()
+            }
+            mlflow.log_metrics(metrics)
 
-                metrics = {}
-                for key, value in trainer.metrics.items():
-                    metrics[slugify(key)] = float(value)
-
-                mlflow.log_metrics(metrics)
-
-                self.save_eda()
-            except Exception as e:
-                print(f"Error logging to MLflow: {e}")
-                print("Continuing without MLflow logging...")
+            self.save_eda()
 
     def on_train_start(self, trainer):
         if "minio" in self.config and "mlflow" in self.config:

@@ -13,9 +13,10 @@ redis:
   TOPIC: training_queue
   RESULT_TOPIC: results_queue
 dvc:
-  MINIO_ENDPOINT: http://dvc-minio:9000
-  MINIO_ID: dvc
+  MINIO_ENDPOINT: http://localhost:23444
+  MINIO_ID: mlflow
   MINIO_SECRET_KEY: wyoloservice
+  MINIO_BUCKET: dvcstorage
 default:
   timeout: 60
   max_retries: 3
