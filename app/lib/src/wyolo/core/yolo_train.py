@@ -5,7 +5,7 @@ from datetime import datetime
 import click
 import yaml
 
-from trainer_wrapper import TrainerWrapper
+from .trainer_wrapper import TrainerWrapper
 
 
 def load_config(config_path: str):
@@ -19,29 +19,7 @@ def get_datetime():
     return now.strftime("%Y%m%d_%H%M%S")
 
 
-@click.command()
-@click.option(
-    "--config_path",
-    type=click.Path(exists=True),
-    required=True,
-    default="config.yaml",
-    help="Ruta al archivo de configuración.",
-)
-@click.option(
-    "--fitness",
-    type=str,
-    required=True,
-    default="fitness",
-    help="variable de fitness a evaluar",
-)
-@click.option(
-    "--trial_number",
-    type=int,
-    required=True,
-    default=0,
-    help="Número de la prueba.",
-)
-def train(config_path: str, fitness: str, trial_number: int):
+def create_trainer(config_path: str, trial_number: int):
     request_config = load_config(config_path=config_path)
     request_config["config_path"] = config_path
 
@@ -79,6 +57,10 @@ def train(config_path: str, fitness: str, trial_number: int):
 
     trainer.config_train = request_config
 
+    return trainer, request_config
+
+
+def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
     if "train" in request_config:
         results = trainer.train(config_train=request_config["train"])
 
@@ -90,6 +72,38 @@ def train(config_path: str, fitness: str, trial_number: int):
                 print(f"ResultadoFinal:{request_config['train']['results'][fitness]}")
             except:
                 print(f"ResultadoFinal:{request_config['train']['results']['fitness']}")
+
+    return request_config
+
+
+@click.command()
+@click.option(
+    "--config_path",
+    type=click.Path(exists=True),
+    required=True,
+    default="config.yaml",
+    help="Ruta al archivo de configuración.",
+)
+@click.option(
+    "--fitness",
+    type=str,
+    required=True,
+    default="fitness",
+    help="variable de fitness a evaluar",
+)
+@click.option(
+    "--trial_number",
+    type=int,
+    required=True,
+    default=0,
+    help="Número de la prueba.",
+)
+def send_train(config_path: str, fitness: str, trial_number: int):
+    trainer, request_config = create_trainer(
+        config_path=config_path, trial_number=trial_number
+    )
+
+    request_config = train(trainer, request_config, fitness)
 
     return request_config
 
