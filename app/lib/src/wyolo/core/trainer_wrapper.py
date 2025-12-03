@@ -72,7 +72,7 @@ class StatusEDA:
 class TrainerWrapper:
     # https://github.com/ultralytics/ultralytics/issues/8214
     config = {}
-    GPU_USE = 0.6  # procentaje de uso de GPU
+    GPU_USE = 0.4  # procentaje de uso de GPU
 
     is_configured = False
     model = None
@@ -142,6 +142,9 @@ class TrainerWrapper:
 
         dataset = os.path.dirname(self.config.get("train", {}).get("data"))
         hay_folder_report = os.path.exists(f"{dataset}/reports")
+        if not hay_folder_report:
+            os.makedirs(f"{dataset}/reports", exist_ok=True)
+
         hay_archivos_en_reporte_eda = len(os.listdir(f"{dataset}/reports")) > 0
 
         if hay_folder_report and hay_archivos_en_reporte_eda:
@@ -183,16 +186,20 @@ class TrainerWrapper:
 
     def on_train_end(self, trainer):
         if "minio" in self.config and "mlflow" in self.config:
-            pytorch_model = trainer.model
-            mlflow.pytorch.log_model(pytorch_model, "model")
+            try:
+                pytorch_model = trainer.model
+                mlflow.pytorch.log_model(pytorch_model, "model")
 
-            metrics = {}
-            for key, value in trainer.metrics.items():
-                metrics[slugify(key)] = float(value)
+                metrics = {}
+                for key, value in trainer.metrics.items():
+                    metrics[slugify(key)] = float(value)
 
-            mlflow.log_metrics(metrics)
+                mlflow.log_metrics(metrics)
 
-            self.save_eda()
+                self.save_eda()
+            except Exception as e:
+                print(f"Error logging to MLflow: {e}")
+                print("Continuing without MLflow logging...")
 
     def on_train_start(self, trainer):
         if "minio" in self.config and "mlflow" in self.config:
