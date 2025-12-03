@@ -187,8 +187,12 @@ class TrainerWrapper:
     def on_train_end(self, trainer):
         if "minio" in self.config and "mlflow" in self.config:
             try:
-                pytorch_model = trainer.model
+                # Log the trained model using log_model
+                import torch
+
+                pytorch_model = trainer.model.model
                 mlflow.pytorch.log_model(pytorch_model, "model")
+                print(f"PyTorch model logged to MLflow using log_model")
 
                 metrics = {}
                 for key, value in trainer.metrics.items():
