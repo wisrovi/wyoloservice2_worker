@@ -65,13 +65,12 @@ class TrainerWrapper:
             # Configure system metrics globally BEFORE ultralytics starts
             try:
                 import mlflow
-
                 mlflow.set_system_metrics_sampling_interval(5)
                 mlflow.set_system_metrics_samples_before_logging(3)
                 print("✅ System metrics configured globally")
             except Exception as e:
                 print(f"⚠️ Could not configure system metrics: {e}")
-
+            
             settings.update({"mlflow": True})
         else:
             settings.update({"mlflow": False})
@@ -115,12 +114,18 @@ class TrainerWrapper:
             os.environ["MLFLOW_EXPERIMENT_NAME"] = experiment_name
             os.environ["MLFLOW_RUN_NAME"] = self.config.get("task_id", "default_run")
 
-            # Set MLflow experiment
+            # Set MLflow experiment and enable system metrics
             try:
                 import mlflow
 
                 mlflow.set_experiment(experiment_name)
+                
+                # Enable system metrics collection globally
+                mlflow.set_system_metrics_sampling_interval(5)  # Sample every 5 seconds
+                mlflow.set_system_metrics_samples_before_logging(3)  # Log after 3 samples
+                
                 print(f"MLflow experiment set: {experiment_name}")
+                print("✅ System metrics enabled globally")
             except Exception as e:
                 print(f"Error setting MLflow experiment: {e}")
 
@@ -171,7 +176,7 @@ class TrainerWrapper:
                 self.eda_manager.save_eda(self.path_results)
                 self.status_eda_completed = 2  # StatusEDA.SAVED
 
-    def on_train_start(self, trainer):
+def on_train_start(self, trainer):
         """Called when training starts."""
         self.start_time = getattr(trainer, "start_time", time.time())
 
@@ -207,12 +212,32 @@ class TrainerWrapper:
         # Upload example images
         self.log_example_images(model_type=trainer.model._get_name())
 
-    def on_train_end(self, trainer):
-        """Called when training ends."""
+        def on_train_end(self, trainer):
+                """Called when training ends."""
         self.end_time = time.time()
 
         # Log model and metrics
         self.mlflow_manager.log_model_and_metrics(trainer)
+
+        # Log final system metrics summary
+        if "minio" in self.config and "mlflow" in self.config:
+            try:
+                import mlflow
+                import psutil
+
+                # Log final system metrics as tags for easy access
+                final_metrics = {
+                    "final_cpu_percent": psutil.cpu_percent(interval=1),
+                    "final_memory_percent": psutil.virtual_memory().percent,
+                    "final_disk_usage": psutil.disk_usage("/").percent,
+                }
+
+                for key, value in final_metrics.items():
+                    mlflow.set_tag(key, value)
+
+                print("✅ Final system metrics logged")
+            except Exception as e:
+                print(f"⚠️ Could not log final system metrics: {e}")
 
         # Save EDA
         self.save_eda()
@@ -355,11 +380,8 @@ class TrainerWrapper:
             # Start MLflow run with system metrics if configured
             if "minio" in self.config and "mlflow" in self.config:
                 import mlflow
-
                 if not mlflow.active_run():
-                    experiment_name = self.config.get("sweeper", {}).get(
-                        "study_name", "default_experiment"
-                    )
+                    experiment_name = self.config.get("sweeper", {}).get("study_name", "default_experiment")
                     run_name = self.config.get("task_id", "default_run")
                     mlflow.start_run(run_name=run_name, log_system_metrics=True)
                     print(f"✅ MLflow run started with system metrics: {run_name}")
