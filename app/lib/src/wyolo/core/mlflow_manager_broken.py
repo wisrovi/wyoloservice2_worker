@@ -67,7 +67,7 @@ class MLflowManager:
         except Exception as e:
             print(f"Error logging config file: {e}")
 
-    def log_model_and_metrics(self, trainer):
+def log_model_and_metrics(self, trainer):
         """Log model and metrics to MLflow."""
         if "minio" in self.config and "mlflow" in self.config:
             # Generate registered model name from experiment and task info
@@ -106,15 +106,15 @@ class MLflowManager:
             try:
                 # Get the PyTorch model from trainer
                 pytorch_model = trainer.model.model
-
+                
                 # Create a simple wrapper for MLflow compatibility
                 class ModelWrapper:
                     def __init__(self, model):
                         self.model = model
-
+                    
                     def predict(self, data):
                         return self.model(data)
-
+                    
                     def __call__(self, data):
                         return self.model(data)
 
@@ -153,56 +153,14 @@ class MLflowManager:
                 print(f"❌ Error logging PyTorch model: {e}")
                 # Fallback: just log the .pt file as artifact
                 try:
-                    best_model_path = os.path.join(
-                        str(trainer.save_dir), "weights", "best.pt"
-                    )
-                    if os.path.exists(best_model_path):
-                        mlflow.log_artifact(best_model_path, "model_fallback")
-                        print("⚠️ Model logged as fallback artifact")
-
-                        # Also log using pytorch.log_model for proper model registration
-                        try:
-                            pytorch_model = trainer.model.model
-
-                            class SimpleModelWrapper:
-                                def __init__(self, model):
-                                    self.model = model
-
-                                def predict(self, data):
-                                    return self.model(data)
-
-                                def __call__(self, data):
-                                    return self.model(data)
-
-                            wrapped_model = SimpleModelWrapper(pytorch_model)
-
-                            pytorch.log_model(
-                                wrapped_model,
-                                name="yolo_classification_model",
-                                conda_env={
-                                    "channels": ["defaults", "pytorch", "conda-forge"],
-                                    "dependencies": [
-                                        "python=3.8",
-                                        "pytorch",
-                                        "torchvision",
-                                        "ultralytics",
-                                        "mlflow",
-                                        "numpy",
-                                        "pillow",
-                                        "pyyaml",
-                                    ],
-                                },
-                                registered_model_name=None,
-                            )
-                            print(
-                                "✅ PyTorch model logged successfully with pytorch.log_model"
-                            )
-                        except Exception as pytorch_e:
-                            print(
-                                f"⚠️ Could not log with pytorch.log_model: {pytorch_e}"
-                            )
-                except Exception as fallback_e:
-                    print(f"❌ Error in fallback logging: {fallback_e}")
+                best_model_path = os.path.join(
+                    str(trainer.save_dir), "weights", "best.pt"
+                )
+                if os.path.exists(best_model_path):
+                    mlflow.log_artifact(best_model_path, "model_fallback")
+                    print("⚠️ Model logged as fallback artifact")
+            except Exception as fallback_e:
+                print(f"❌ Error in fallback logging: {fallback_e}")
 
     def log_system_info(self, gpu_info: str):
         """Log system information to MLflow."""
