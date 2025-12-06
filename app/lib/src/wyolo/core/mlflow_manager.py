@@ -13,6 +13,24 @@ class MLflowManager:
     def __init__(self, config: dict):
         self.config = config
         self.redis_manager = None
+        self._setup_system_metrics()
+
+    def _setup_system_metrics(self):
+        """Setup MLflow system metrics logging."""
+        try:
+            # Enable system metrics collection only if not already configured
+            if not hasattr(self, "_system_metrics_configured"):
+                mlflow.set_system_metrics_sampling_interval(5)  # Sample every 5 seconds
+                mlflow.set_system_metrics_samples_before_logging(
+                    3
+                )  # Log after 3 samples
+                self._system_metrics_configured = True
+                print("✅ System metrics logging enabled")
+        except Exception as e:
+            print(f"⚠️ Could not enable system metrics: {e}")
+            self._system_metrics_configured = (
+                False  # Mark as attempted to avoid retries
+            )
 
     def setup_dataset_logging(self, data_path: str, dvc_path: str = ""):
         """Setup dataset logging in MLflow."""
@@ -59,131 +77,17 @@ class MLflowManager:
             task_id = self.config.get("task_id", "default_task")
             registered_model_name = f"{experiment_name}_{task_id}"
 
-            # Log model using pytorch.log_model for registry support
+            # Log metrics first (simple and reliable)
             try:
-                pytorch_model = trainer.model.model
-
-                # Create a wrapper class that follows MLflow's expected interface
-                class PyTorchModelWrapper:
-                    def __init__(self, model):
-                        self.model = model
-
-                    def predict(self, data):
-                        return self.model(data)
-
-                    def __call__(self, data):
-                        return self.model(data)
-
-                wrapped_model = PyTorchModelWrapper(pytorch_model)
-
-                # Log the model with proper conda environment (without registration)
-                pytorch.log_model(
-                    wrapped_model,
-                    "pytorch_model",
-                    conda_env={
-                        "channels": ["defaults", "pytorch", "conda-forge"],
-                        "dependencies": [
-                            "python=3.8",
-                            "pytorch",
-                            "torchvision",
-                            "ultralytics",
-                            "mlflow",
-                            "numpy",
-                            "pillow",
-                            "pyyaml",
-                        ],
-                    },
-                    registered_model_name=None,  # Explicitly disable registration
-                )
-
-                # Try to register the model separately if needed
-                try:
-                    active_run = mlflow.active_run()
-                    if active_run and active_run.info:
-                        mlflow.register_model(
-                            f"runs:/{active_run.info.run_id}/pytorch_model",
-                            registered_model_name,
-                        )
-                        print(
-                            f"PyTorch model registered with name: {registered_model_name}"
-                        )
-                    else:
-                        print("No active MLflow run found for model registration")
-                except Exception as reg_e:
-                    print(
-                        f"Model registration failed (PyTorch model still logged): {reg_e}"
-                    )
-
-                print("PyTorch model logged successfully")
+                metrics = {
+                    slugify(key): float(value) for key, value in trainer.metrics.items()
+                }
+                mlflow.log_metrics(metrics)
+                print("✅ Training metrics logged successfully")
             except Exception as e:
-                print(f"Error logging PyTorch model to MLflow: {e}")
+                print(f"⚠️ Error logging metrics: {e}")
 
-            # Log YOLO model using the PyTorch model directly from trainer
-            try:
-                # Get the underlying PyTorch model from the trained YOLO model
-                pytorch_model = trainer.model.model
-
-                # Create a simple wrapper that follows MLflow's expected interface
-                class SimpleModelWrapper:
-                    def __init__(self, model):
-                        self.model = model
-
-                    def predict(self, data):
-                        return self.model(data)
-
-                    def __call__(self, data):
-                        return self.model(data)
-
-                wrapped_model = SimpleModelWrapper(pytorch_model)
-
-                # Save model locally first, then log it to avoid registry API issues
-                import tempfile
-                import shutil
-
-                with tempfile.TemporaryDirectory() as temp_dir:
-                    model_path = os.path.join(temp_dir, "yolo_model")
-
-                    # Save the model using MLflow's pytorch flavor (pass the raw PyTorch model)
-                    pytorch.save_model(
-                        pytorch_model,  # Use the raw PyTorch model, not the wrapper
-                        model_path,
-                        conda_env={
-                            "channels": ["defaults", "pytorch", "conda-forge"],
-                            "dependencies": [
-                                "python=3.8",
-                                "pytorch",
-                                "torchvision",
-                                "ultralytics",
-                                "mlflow",
-                                "numpy",
-                                "pillow",
-                                "pyyaml",
-                            ],
-                        },
-                    )
-
-                    # Log the saved model directory as artifact
-                    mlflow.log_artifacts(model_path, "yolo_model")
-                    print(
-                        "✅ YOLO model logged successfully with save_model + log_artifacts"
-                    )
-
-            except Exception as yolo_e:
-                print(f"❌ Error logging YOLO model with log_model: {yolo_e}")
-                # Fallback: log as artifact if log_model fails
-                try:
-                    best_model_path = os.path.join(
-                        str(trainer.save_dir), "weights", "best.pt"
-                    )
-                    if os.path.exists(best_model_path):
-                        mlflow.log_artifact(best_model_path, "yolo_model_fallback")
-                        print("⚠️ YOLO model logged as artifact (fallback)")
-                except Exception as fallback_e:
-                    print(
-                        f"❌ Error logging YOLO model as fallback artifact: {fallback_e}"
-                    )
-
-            # Log model metadata for registry
+            # Log model metadata
             try:
                 model_metadata = {
                     "model_type": "YOLO Classification",
@@ -191,25 +95,34 @@ class MLflowManager:
                     "registered_model_name": registered_model_name,
                     "experiment_name": experiment_name,
                     "task_id": task_id,
-                    "model_file": "best.pt",
-                    "pytorch_model_path": "pytorch_model",
-                    "yolo_model_path": "yolo_model/best.pt",
                 }
                 for key, value in model_metadata.items():
                     mlflow.set_tag(key, value)
-                print("Model metadata logged")
+                print("✅ Model metadata logged")
             except Exception as meta_e:
-                print(f"Error logging model metadata: {meta_e}")
+                print(f"⚠️ Error logging model metadata: {meta_e}")
 
-            # Log metrics
+            # Simple model logging - just log the best.pt as artifact
             try:
-                metrics = {
-                    slugify(key): float(value) for key, value in trainer.metrics.items()
-                }
-                mlflow.log_metrics(metrics)
-                print("Metrics logged successfully")
+                best_model_path = os.path.join(
+                    str(trainer.save_dir), "weights", "best.pt"
+                )
+                if os.path.exists(best_model_path):
+                    mlflow.log_artifact(best_model_path, "model")
+                    print("✅ YOLO model logged successfully as artifact")
+                else:
+                    print("⚠️ Best model file not found, looking for alternatives...")
+                    # Try to find any .pt file
+                    weights_dir = os.path.join(str(trainer.save_dir), "weights")
+                    if os.path.exists(weights_dir):
+                        for file in os.listdir(weights_dir):
+                            if file.endswith(".pt"):
+                                model_path = os.path.join(weights_dir, file)
+                                mlflow.log_artifact(model_path, "model")
+                                print(f"✅ Model logged: {file}")
+                                break
             except Exception as e:
-                print(f"Error logging metrics to MLflow: {e}")
+                print(f"❌ Error logging model: {e}")
 
     def log_system_info(self, gpu_info: str):
         """Log system information to MLflow."""
