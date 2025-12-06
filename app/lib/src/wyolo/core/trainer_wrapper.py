@@ -98,10 +98,20 @@ class TrainerWrapper:
             os.environ["MLFLOW_ARTIFACT_URI"] = "s3://mlflow-artifacts/"
 
             # Configure experiment name and run name
-            os.environ["MLFLOW_EXPERIMENT_NAME"] = self.config.get("sweeper", {}).get(
+            experiment_name = self.config.get("sweeper", {}).get(
                 "study_name", "default_experiment"
             )
+            os.environ["MLFLOW_EXPERIMENT_NAME"] = experiment_name
             os.environ["MLFLOW_RUN_NAME"] = self.config.get("task_id", "default_run")
+
+            # Set MLflow experiment
+            try:
+                import mlflow
+
+                mlflow.set_experiment(experiment_name)
+                print(f"MLflow experiment set: {experiment_name}")
+            except Exception as e:
+                print(f"Error setting MLflow experiment: {e}")
 
     def create_model(
         self, model_path: str = "", model_type: str = "yolo", model_name: str = ""

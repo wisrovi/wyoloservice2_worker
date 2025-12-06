@@ -3,8 +3,8 @@
     remote = minio
 
 [remote "control_server"]
-    url = s3://dvc_storage
-    endpointurl = //192.168.1.84:23444
+    url = s3://dvcstorage
+    endpointurl = //192.168.1.137:23444
     access_key_id = wisrovi
     secret_access_key = wyoloservice
     jobs = 8

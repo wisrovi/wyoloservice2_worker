@@ -114,4 +114,5 @@ if __name__ == "__main__":
         python yolo_train.py --config_path="/datasets/clasificacion/clasificador_arepo_perfil/config_train.yaml" --trial_number=1
     """
 
-    request_config = train()
+    # This section is for direct execution, not used in base.py workflow
+    # request_config = train()
