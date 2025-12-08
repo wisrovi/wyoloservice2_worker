@@ -1,0 +1,80 @@
+config_path: /app/tmp/tasks/test_training_001.yaml
+debug: wisrovi
+default:
+  max_retries: 3
+  override hydra/sweeper: optuna
+  retry_delay: 1
+  threshold: 0.35
+  timeout: 60
+dvc:
+  MINIO_BUCKET: dvcstorage
+  MINIO_ENDPOINT: http://localhost:23444
+  MINIO_ID: wisrovi
+  MINIO_SECRET_KEY: wyoloservice
+extras:
+  gpu:
+    id: 0
+    limit: 0.6
+hydra:
+  run:
+    dir: /var/log/worker/hydra/individual
+  sweep:
+    dir: /var/log/worker/hydra/group
+metadata:
+  author: William Rodriguez
+  content: "Este es un experimento de clasificaci\xF3n de im\xE1genes."
+  documentation: Este modelo fue entrenado con datos del 2025.
+minio:
+  MINIO_BUCKET: models
+  MINIO_ENDPOINT: http://192.168.1.137:23444
+  MINIO_ID: wisrovi
+  MINIO_SECRET_KEY: wyoloservice
+mlflow:
+  MLFLOW_TRACKING_URI: http://192.168.1.137:23435
+model: yolov8n-cls.pt
+redis:
+  REDIS_DB: 0
+  REDIS_HOST: 192.168.1.137
+  REDIS_PASSWORD: ''
+  REDIS_PORT: 23438
+  RESULT_TOPIC: results_queue
+  TOPIC: training_queue
+sweeper:
+  algorithm: optuna
+  direction: maximize
+  fitness: metrics/accuracy_top1
+  grace_period: 5
+  max_concurrent: 1
+  n_trials: 5
+  sampler: TPESampler
+  search_space:
+    model:
+    - choice
+    - yolov8n-cls.pt
+    train:
+      imgsz:
+      - choice
+      - 416
+      - 512
+      - 640
+      - 720
+      - 920
+      - 1024
+      lr0:
+      - loguniform
+      - 1e-5
+      - 1e-2
+  study_name: example_clasification
+  tune: false
+  version: 2
+task_id: test_training_001
+tempfile: /app/tmp/tasks
+train:
+  batch: 16
+  data: /datasets/clasification/colorball.v8i.multiclass/
+  epochs: 1
+  exist_ok: true
+  imgsz: 640
+  plots: true
+  verbose: true
+type: yolo
