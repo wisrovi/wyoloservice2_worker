@@ -5,6 +5,7 @@ import mlflow.data.filesystem_dataset_source
 import mlflow.data.http_dataset_source
 from mlflow import pytorch
 from slugify import slugify
+from ultralytics import YOLO
 
 
 class MLflowManager:
@@ -102,83 +103,145 @@ class MLflowManager:
             except Exception as meta_e:
                 print(f"⚠️ Error logging model metadata: {meta_e}")
 
-            # Log PyTorch model using MLflow's pytorch.log_model
+            # Log model and register it properly
             try:
-                # Get the PyTorch model from trainer
-                pytorch_model = trainer.model.model
+                import torch
+                from mlflow.tracking import MlflowClient
 
-                # Create a simple wrapper for MLflow compatibility
-                class ModelWrapper:
-                    def __init__(self, model):
-                        self.model = model
-
-                    def predict(self, data):
-                        return self.model(data)
-
-                    def __call__(self, data):
-                        return self.model(data)
-
-                wrapped_model = ModelWrapper(pytorch_model)
-
-                # Log the model using pytorch.log_model
-                pytorch.log_model(
-                    wrapped_model,
-                    name="yolo_classification_model",
-                    conda_env={
-                        "channels": ["defaults", "pytorch", "conda-forge"],
-                        "dependencies": [
-                            "python=3.8",
-                            "pytorch",
-                            "torchvision",
-                            "ultralytics",
-                            "mlflow",
-                            "numpy",
-                            "pillow",
-                            "pyyaml",
-                        ],
-                    },
-                    registered_model_name=None,  # Don't auto-register
-                )
-                print("✅ PyTorch model logged successfully with pytorch.log_model")
-
-                # Also log the .pt file as artifact for compatibility
+                # Get's best model file
                 best_model_path = os.path.join(
                     str(trainer.save_dir), "weights", "best.pt"
                 )
+
                 if os.path.exists(best_model_path):
-                    mlflow.log_artifact(best_model_path, "model_artifact")
+                    # Log's .pt file as artifact
+                    mlflow.log_artifact(best_model_path, "model")
                     print("✅ Model .pt file logged as artifact")
 
-            except Exception as e:
-                print(f"❌ Error logging PyTorch model: {e}")
-                # Fallback: just log the .pt file as artifact
-                try:
-                    best_model_path = os.path.join(
-                        str(trainer.save_dir), "weights", "best.pt"
-                    )
+                    # Try to register's model using MLflow log_model
+                    try:
+                        best_model = YOLO(best_model_path)
+                        pytorch_model = best_model.model
+
+                        # Create a proper MLflow-compatible model inheriting from torch.nn.Module
+                        class YOLOMLflowModel(torch.nn.Module):
+                            def __init__(self, model):
+                                super().__init__()
+                                self.model = model
+
+                            def forward(self, x):
+                                return self.model(x)
+
+                            def predict(self, data):
+                                return self.model(data)
+
+                        # Create MLflow model
+                        mlflow_model = YOLOMLflowModel(pytorch_model)
+
+                        # Log using pytorch.log_model (this creates a proper MLflow model)
+                        pytorch.log_model(
+                            pytorch_model=mlflow_model,
+                            artifact_path="model",
+                            conda_env={
+                                "channels": ["defaults", "pytorch", "conda-forge"],
+                                "dependencies": [
+                                    "python=3.8",
+                                    "pytorch",
+                                    "torchvision",
+                                    "ultralytics",
+                                    "mlflow",
+                                    "numpy",
+                                    "pillow",
+                                    "pyyaml",
+                                ],
+                            },
+                        )
+                        print("✅ Model logged successfully with pytorch.log_model")
+                        print(
+                            "🎯 Model saved as proper MLflow model - check UI in Artifacts/model/"
+                        )
+
+                        # Get current run info and show model URI
+                        current_run = mlflow.active_run()
+                        if current_run:
+                            model_uri = f"runs:/{current_run.info.run_id}/model"
+                            print(f"✅ Model saved as MLflow model at: {model_uri}")
+                            print(
+                                f"🔍 Check MLflow UI: {mlflow.get_tracking_uri()}/#/experiments/{current_run.info.experiment_id}/runs/{current_run.info.run_id}"
+                            )
+                            print(
+                                f"📁 Model should be visible in Artifacts section under 'model/' folder"
+                            )
+
+                            # Try to register it (will work if Model Registry is enabled)
+                            try:
+                                mlflow.register_model(
+                                    model_uri=model_uri, name=registered_model_name
+                                )
+                                print(
+                                    f"✅ Model registered as: {registered_model_name}"
+                                )
+                            except Exception as reg_e:
+                                print(f"⚠️ Registration failed: {reg_e}")
+                                print(f"💡 Model is available at: {model_uri}")
+                                print(
+                                    f"💡 Register manually: mlflow.register_model('{model_uri}', '{registered_model_name}')"
+                                )
+
+                    except Exception as log_e:
+                        print(f"⚠️ PyTorch model logging failed: {log_e}")
+                        print("💡 Model .pt file is still available as artifact")
+
+                    # Fallback: log .pt file as artifact
                     if os.path.exists(best_model_path):
-                        mlflow.log_artifact(best_model_path, "model_fallback")
-                        print("⚠️ Model logged as fallback artifact")
+                        mlflow.log_artifact(best_model_path, "model")
+                        print("✅ Model .pt file logged as artifact (fallback)")
 
-                        # Also log using pytorch.log_model for proper model registration
+                    # Try to register's model using MLflow log_model
+                    try:
+                        import torch
+
+                        # Get's PyTorch model from trainer
+
+                        pytorch_model = trainer.model.model
+
+                        # Create a simple wrapper for MLflow compatibility
+                        class YOLOModelWrapper:
+                            def __init__(self, model):
+                                self.model = model
+
+                            def predict(self, data):
+                                return self.model(data)
+
+                            def __call__(self, data):
+                                return self.model(data)
+
+                        wrapped_model = YOLOModelWrapper(pytorch_model)
+
+                        # Log's model using pytorch.log_model properly
                         try:
-                            pytorch_model = trainer.model.model
+                            import torch
 
-                            class SimpleModelWrapper:
+                            # Create a proper MLflow-compatible model inheriting from torch.nn.Module
+                            class MLflowYOLOModel(torch.nn.Module):
                                 def __init__(self, model):
+                                    super().__init__()
                                     self.model = model
+
+                                def forward(self, x):
+                                    return self.model(x)
 
                                 def predict(self, data):
                                     return self.model(data)
 
-                                def __call__(self, data):
-                                    return self.model(data)
+                            # Create the MLflow model
+                            mlflow_model = MLflowYOLOModel(pytorch_model)
 
-                            wrapped_model = SimpleModelWrapper(pytorch_model)
-
+                            # Log using pytorch.log_model (this creates a proper MLflow model)
                             pytorch.log_model(
-                                wrapped_model,
-                                name="yolo_classification_model",
+                                pytorch_model=mlflow_model,
+                                artifact_path="model",
+                                registered_model_name=registered_model_name,
                                 conda_env={
                                     "channels": ["defaults", "pytorch", "conda-forge"],
                                     "dependencies": [
@@ -192,17 +255,59 @@ class MLflowManager:
                                         "pyyaml",
                                     ],
                                 },
-                                registered_model_name=None,
                             )
-                            print(
-                                "✅ PyTorch model logged successfully with pytorch.log_model"
-                            )
-                        except Exception as pytorch_e:
-                            print(
-                                f"⚠️ Could not log with pytorch.log_model: {pytorch_e}"
-                            )
-                except Exception as fallback_e:
-                    print(f"❌ Error in fallback logging: {fallback_e}")
+                            print("✅ Model logged successfully with pytorch.log_model")
+
+                            # Get current run info and show model URI
+                            current_run = mlflow.active_run()
+                            if current_run:
+                                model_uri = f"runs:/{current_run.info.run_id}/model"
+                                print(f"✅ Model saved as MLflow model at: {model_uri}")
+                                print(
+                                    f"🔍 Check MLflow UI at: {mlflow.get_tracking_uri()}/#/experiments/{current_run.info.experiment_id}/runs/{current_run.info.run_id}"
+                                )
+                                print(
+                                    f"📁 Model should be visible in Artifacts section under 'model/' folder"
+                                )
+
+                        except Exception as log_e:
+                            print(f"⚠️ pytorch.log_model failed: {log_e}")
+                            print("💡 Model .pt file is still available as artifact")
+
+                        # Get's current run info
+                        active_run = mlflow.active_run()
+                        if active_run:
+                            model_uri = f"runs:/{active_run.info.run_id}/pytorch_model"
+                            print(f"💡 Model available at: {model_uri}")
+
+                            # Try to register's model
+                            try:
+                                mlflow.register_model(
+                                    model_uri=model_uri, name=registered_model_name
+                                )
+                                print(
+                                    f"✅ Model registered as: {registered_model_name}"
+                                )
+                            except Exception as reg_e:
+                                print(f"⚠️ Registration failed: {reg_e}")
+                                print(
+                                    f"💡 Model is logged and available at: {model_uri}"
+                                )
+                                print(
+                                    f"💡 Register manually: mlflow.register_model('{model_uri}', '{registered_model_name}')"
+                                )
+                        else:
+                            print("⚠️ No active MLflow run found")
+
+                    except Exception as log_e:
+                        print(f"⚠️ PyTorch model logging failed: {log_e}")
+                        print("💡 Model .pt file is still available as artifact")
+                else:
+                    print("❌ Model file not found")
+
+            except Exception as e:
+                print(f"❌ Error in model logging: {e}")
+                print("💡 Model .pt file is still available as artifact")
 
     def log_system_info(self, gpu_info: str):
         """Log system information to MLflow."""
