@@ -53,11 +53,14 @@ dev = [
     "flake8>=5.0.0",
     "isort>=5.10.0",
     "mypy>=1.0.0",
+    "pylint>=2.17.0",
     "pre-commit>=2.20.0",
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.8.0",
     "twine>=4.0.0",
+    "types-PyYAML",
+    "types-Pillow",
 ]
 docs = [
     "mkdocs>=1.4.0",
@@ -106,9 +109,15 @@ profile = "black"
 multi_line_output = 3
 line_length = 88
 known_first_party = ["wyolo"]
+known_third_party = [
+    "ultralytics", "mlflow", "loguru", "click", "yaml", 
+    "PIL", "GPUtil", "pandas", "matplotlib", "seaborn", 
+    "dvc", "wredis", "slugify", "redis"
+]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -121,6 +130,18 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "ultralytics.*",
+    "mlflow.*", 
+    "GPUtil.*",
+    "dvc.*",
+    "wredis.*",
+    "slugify.*"
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "7.0"
@@ -141,6 +162,20 @@ omit = [
     "*/test_*",
     "*/__pycache__/*",
 ]
+
+[tool.pylint.messages_control]
+disable = [
+    "R0903",  # Too few public methods
+    "R0913",  # Too many arguments
+    "W0613",  # Unused argument
+    "W0622",  # Redefining built-in
+    "C0114",  # Missing module docstring (handled separately)
+    "C0115",  # Missing class docstring (handled separately)
+    "C0116",  # Missing function docstring (handled separately)
+]
+
+[tool.pylint.format]
+max-line-length = 88
 
 [tool.coverage.report]
 exclude_lines = [

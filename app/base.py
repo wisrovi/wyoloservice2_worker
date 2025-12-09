@@ -1,5 +1,10 @@
 from setproctitle import setproctitle
-from lib.src.wyolo.core.yolo_train import create_trainer, train
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib", "src"))
+
+from wyolo.cli import create_trainer, train
 from application.utils.util import get_complete_config
 
 setproctitle("train_service")
@@ -11,9 +16,7 @@ def execute(user_config_train):
     fitness = config_dict.get("fitness", "fitness")
     # trial_number = final_config.get("trial_number", 0)
 
-    trainer, request_config = create_trainer(
-        config_path=config_path, trial_number=1
-    )
+    trainer, request_config = create_trainer(config_path=config_path, trial_number=1)
     if "train" in request_config:
         request_config = train(trainer, request_config, fitness)
 
