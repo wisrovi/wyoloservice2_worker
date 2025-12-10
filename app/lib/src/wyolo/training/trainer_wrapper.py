@@ -343,6 +343,12 @@ class TrainerWrapper:
             except Exception as eda_error:
                 logger.warning(f"Could not save EDA: {eda_error}")
 
+            # Create report structure and copy training artifacts
+            try:
+                self._create_training_report(results)
+            except Exception as report_error:
+                logger.warning(f"Could not create training report: {report_error}")
+
             return results
         except Exception as e:
             logger.error(f"Training failed: {e}")
@@ -1485,6 +1491,85 @@ class YOLOClassificationModel:
 
         except Exception as e:
             logger.warning(f"Could not create DVC configuration: {e}")
+
+    def _create_training_report(self, results) -> None:
+        """Create training report structure and copy artifacts.
+
+        Args:
+            results: Training results object from YOLO
+        """
+        try:
+            import shutil
+            from pathlib import Path
+
+            # Get dataset path and create report directory
+            dataset_path = Path(self.config.get("train", {}).get("data", ""))
+
+            # For detection datasets, the actual dataset path is the parent directory
+            if dataset_path.name == "data.yaml":
+                dataset_path = dataset_path.parent
+
+            report_dir = dataset_path / "report" / "train"
+            report_dir.mkdir(parents=True, exist_ok=True)
+
+            # Get training results directory
+            results_dir = Path(self.config.get("path_results", ""))
+            train_results_dir = results_dir / "train_test_training_001"
+
+            if train_results_dir.exists():
+                logger.info(f"Creating training report in: {report_dir}")
+
+                # Copy all files from training results to report/train
+                for item in train_results_dir.iterdir():
+                    if item.is_file():
+                        dest_path = report_dir / item.name
+                        shutil.copy2(item, dest_path)
+                        logger.info(f"Copied training artifact: {item.name}")
+                    elif item.is_dir():
+                        # Copy subdirectories
+                        dest_dir = report_dir / item.name
+                        shutil.copytree(item, dest_dir, dirs_exist_ok=True)
+                        logger.info(f"Copied training directory: {item.name}")
+
+                # Create a summary report file
+                summary_file = report_dir / "training_summary.txt"
+                with open(summary_file, "w", encoding="utf-8") as f:
+                    f.write("=== TRAINING SUMMARY ===\n\n")
+                    f.write(
+                        f"Experiment: {self.config.get('sweeper', {}).get('study_name', 'unknown')}\n"
+                    )
+                    f.write(f"Task ID: {self.config.get('task_id', 'unknown')}\n")
+                    f.write(f"Model: {self.config.get('model', 'unknown')}\n")
+                    f.write(f"Type: {self.config.get('type', 'unknown')}\n")
+                    f.write(f"Dataset: {dataset_path.name}\n")
+                    f.write(
+                        f"Training Time: {self.end_time - self.start_time:.2f} seconds\n"
+                    )
+                    f.write(f"Timestamp: {self.config.get('timestamp', 'unknown')}\n\n")
+
+                    if hasattr(results, "results_dict") and results.results_dict:
+                        f.write("=== METRICS ===\n\n")
+                        for metric, value in results.results_dict.items():
+                            f.write(f"{metric}: {value}\n")
+
+                    f.write("\n=== ARTIFACTS ===\n\n")
+                    f.write("Training artifacts copied to this directory:\n")
+                    for item in sorted(report_dir.iterdir()):
+                        if item.name != "training_summary.txt":
+                            f.write(f"- {item.name}\n")
+
+                logger.info(f"Training report created successfully: {summary_file}")
+
+            else:
+                logger.warning(
+                    f"Training results directory not found: {train_results_dir}"
+                )
+
+        except Exception as e:
+            logger.warning(f"Could not create training report: {e}")
+            import traceback
+
+            logger.warning(f"Full error: {traceback.format_exc()}")
 
 
 # Legacy function name for backward compatibility

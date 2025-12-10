@@ -29,8 +29,19 @@ if __name__ == "__main__":
         python yolo_train.py --config_path="/datasets/clasificacion/clasificador_arepo_perfil/config_train.yaml" --trial_number=1
     """
 
+    # classification example
+    # request_config = execute(
+    #     user_config_train="/datasets/clasification/colorball.v8i.multiclass/config_train.yaml"
+    # )
+    
+    # detection example
     request_config = execute(
-        user_config_train="/datasets/clasification/colorball.v8i.multiclass/config_train.yaml"
+        user_config_train="/datasets/detection/Deteksi komponen elektronik.v1i.yolov8/config_train.yaml"
     )
+    
+    # segmentation example
+    # request_config = execute(
+    #     user_config_train="datasets/segmentation/ArchitecturePlan/config_train.yaml"
+    # )
 
     print(request_config)
