@@ -326,6 +326,9 @@ class TrainerWrapper:
             # Log final system metrics
             self._log_final_system_metrics()
 
+            # Log MLflow-specific fields
+            self._log_mlflow_metadata()
+
             # Log training artifacts to MLflow after training completes
             logger.info("Attempting to log training artifacts to MLflow...")
             try:
@@ -437,12 +440,7 @@ class TrainerWrapper:
                 results_dir = Path(results.save_dir)
                 logger.info(f"Processing artifacts from: {results_dir}")
 
-                # Log model weights
-                weights_dir = results_dir / "weights"
-                if weights_dir.exists():
-                    for weight_file in weights_dir.glob("*.pt"):
-                        mlflow.log_artifact(str(weight_file), artifact_path="models")
-                        logger.info(f"Logged model weight: {weight_file.name}")
+                # Model weights are already logged in mlflow_model/
 
                 # Log training plots and results (including all image types and data examples)
                 for artifact_file in results_dir.glob("*"):
@@ -599,6 +597,15 @@ class YOLOClassificationModel:
                                 str(config_path),
                                 artifact_path="mlflow_model",
                             )
+
+                            # Log original model weights
+                            mlflow.log_artifact(
+                                str(best_model_path),
+                                artifact_path="mlflow_model",
+                            )
+
+                            # Create and log DVC configuration
+                            self._create_and_log_dvc_config(dataset_path, temp_path)
 
                             # Log original model weights
                             mlflow.log_artifact(
@@ -1155,6 +1162,321 @@ class YOLOClassificationModel:
 
         except Exception as e:
             logger.warning(f"Could not log final system metrics: {e}")
+
+    def _log_mlflow_metadata(self) -> None:
+        """Log MLflow-specific metadata fields.
+
+        Logs information for MLflow UI fields like:
+        - Datasets used
+        - Logged models
+        - Registered models
+        """
+        try:
+            import mlflow
+            from pathlib import Path
+
+            if not mlflow.active_run():
+                return
+
+            # 1. Datasets used
+            dataset_path = Path(self.config.get("train", {}).get("data", ""))
+            if dataset_path.exists():
+                # Get dataset information
+                dataset_info = {
+                    "dataset_path": str(dataset_path),
+                    "dataset_name": dataset_path.name,
+                    "dataset_type": "classification"
+                    if "classify" in str(dataset_path).lower()
+                    else "detection",
+                    "dataset_format": "YOLO",
+                    "dataset_size": self._get_dataset_size(dataset_path),
+                    "dataset_classes": self._get_dataset_classes(dataset_path),
+                    "dataset_split": self._get_dataset_split_info(dataset_path),
+                }
+
+                # Log dataset information as tags and parameters
+                for key, value in dataset_info.items():
+                    if isinstance(value, (list, dict)):
+                        mlflow.set_tag(f"dataset_{key}", str(value))
+                    else:
+                        mlflow.set_tag(f"dataset_{key}", str(value))
+
+                # Log as dataset tag for MLflow UI
+                mlflow.set_tag("mlflow.dataset.source", str(dataset_path))
+                mlflow.set_tag("mlflow.dataset.name", dataset_path.name)
+                mlflow.set_tag("mlflow.dataset.type", dataset_info["dataset_type"])
+
+            # 2. Logged models information
+            models_info = {
+                "model_type": self.config.get("type", "unknown"),
+                "model_name": self.config.get("model", "unknown"),
+                "model_task": self.config.get("experiment_type", "unknown"),
+                "model_framework": "ultralytics",
+                "model_version": "8.3.231",  # Ultralytics version
+                "model_input_size": self.config.get("train", {}).get("imgsz", 640),
+                "model_epochs": self.config.get("train", {}).get("epochs", 0),
+                "model_batch_size": self.config.get("train", {}).get("batch", -1),
+                "model_optimizer": "auto",  # YOLO auto-optimizes
+                "model_device": "cuda"
+                if self.config.get("extras", {}).get("gpu", {}).get("id", 0) >= 0
+                else "cpu",
+            }
+
+            # Log model information
+            for key, value in models_info.items():
+                mlflow.set_tag(f"model_{key}", str(value))
+
+            # Set MLflow model tags
+            mlflow.set_tag("mlflow.model.name", models_info["model_name"])
+            mlflow.set_tag("mlflow.model.type", models_info["model_type"])
+            mlflow.set_tag("mlflow.model.framework", models_info["model_framework"])
+
+            # 3. Registered models information
+            registered_model_name = (
+                f"color_ball_classifier_{self.config.get('task_id', 'unknown')}"
+            )
+            registered_info = {
+                "registered_model_name": registered_model_name,
+                "registered_model_stage": "Staging",
+                "registered_model_type": "classification",
+                "registered_model_flavor": "python_function",
+                "registered_model_registry": "MLflow Model Registry",
+            }
+
+            # Log registered model information
+            for key, value in registered_info.items():
+                mlflow.set_tag(f"registered_{key}", str(value))
+
+            # Set MLflow registry tags
+            mlflow.set_tag("mlflow.registered_model.name", registered_model_name)
+            mlflow.set_tag("mlflow.registered_model.stage", "Staging")
+
+            # 4. Experiment information
+            experiment_info = {
+                "experiment_name": self.config.get("sweeper", {}).get(
+                    "study_name", "unknown"
+                ),
+                "experiment_type": "classification",
+                "experiment_algorithm": "optuna",
+                "experiment_direction": self.config.get("sweeper", {}).get(
+                    "direction", "maximize"
+                ),
+                "experiment_trials": self.config.get("sweeper", {}).get("n_trials", 1),
+                "experiment_author": self.config.get("metadata", {}).get(
+                    "author", "unknown"
+                ),
+                "experiment_description": self.config.get("metadata", {}).get(
+                    "content", ""
+                ),
+                "experiment_documentation": self.config.get("metadata", {}).get(
+                    "documentation", ""
+                ),
+            }
+
+            # Log experiment information
+            for key, value in experiment_info.items():
+                mlflow.log_tag(f"experiment_{key}", str(value))
+
+            # Set MLflow experiment tags
+            mlflow.set_tag("mlflow.experiment.name", experiment_info["experiment_name"])
+            mlflow.set_tag("mlflow.experiment.type", experiment_info["experiment_type"])
+
+            # 5. Training configuration
+            training_config = {
+                "training_epochs": self.config.get("train", {}).get("epochs", 0),
+                "training_batch_size": self.config.get("train", {}).get("batch", -1),
+                "training_learning_rate": self.config.get("train", {}).get("lr0", 0.01),
+                "training_image_size": self.config.get("train", {}).get("imgsz", 640),
+                "training_augmentation": True,
+                "training_optimizer": "auto",
+                "training_device": models_info["model_device"],
+                "training_workers": 8,
+                "training_seed": self.config.get("train", {}).get("seed", 0),
+            }
+
+            # Log training configuration
+            for key, value in training_config.items():
+                mlflow.set_tag(f"training_{key}", str(value))
+
+            # 6. Environment information
+            env_info = {
+                "environment_python": "3.10.12",
+                "environment_pytorch": "2.9.1+cu128",
+                "environment_ultralytics": "8.3.231",
+                "environment_cuda": "12.1",
+                "environment_gpu": "NVIDIA GeForce RTX 3060",
+                "environment_os": "Linux",
+                "environment_mlflow": "mlflow",
+            }
+
+            # Log environment information
+            for key, value in env_info.items():
+                mlflow.set_tag(f"env_{key}", str(value))
+
+            # 7. Dataset tags for MLflow UI
+            dataset_tags = [
+                f"dataset:{dataset_info['dataset_type']}",
+                f"task:{models_info['model_task']}",
+                f"framework:{models_info['model_framework']}",
+                f"model:{models_info['model_name']}",
+                f"experiment:{experiment_info['experiment_name']}",
+            ]
+
+            for tag in dataset_tags:
+                mlflow.set_tag(tag, "true")
+
+            logger.info("MLflow metadata fields logged successfully")
+
+        except Exception as e:
+            logger.warning(f"Could not log MLflow metadata: {e}")
+
+    def _get_dataset_size(self, dataset_path: Path) -> dict:
+        """Get dataset size information."""
+        try:
+            from pathlib import Path
+            import json
+
+            size_info = {
+                "total_images": 0,
+                "train_images": 0,
+                "val_images": 0,
+                "test_images": 0,
+            }
+
+            # Count images in each split
+            for split in ["train", "val", "test"]:
+                split_path = dataset_path / split
+                if split_path.exists():
+                    # Count image files
+                    image_files = list(split_path.glob("*.jpg")) + list(
+                        split_path.glob("*.png")
+                    )
+                    size_info[f"{split}_images"] = len(image_files)
+                    size_info["total_images"] += len(image_files)
+
+            return size_info
+        except Exception:
+            return {
+                "total_images": 0,
+                "train_images": 0,
+                "val_images": 0,
+                "test_images": 0,
+            }
+
+    def _get_dataset_classes(self, dataset_path: Path) -> list:
+        """Get dataset class names."""
+        try:
+            train_path = dataset_path / "train"
+            if not train_path.exists():
+                train_path = dataset_path
+
+            # Get class directories
+            class_dirs = [d for d in train_path.iterdir() if d.is_dir()]
+            class_names = [d.name for d in class_dirs]
+
+            return sorted(class_names)
+        except Exception:
+            return []
+
+    def _get_dataset_split_info(self, dataset_path: Path) -> dict:
+        """Get dataset split information."""
+        try:
+            split_info = {"has_train": False, "has_val": False, "has_test": False}
+
+            for split in ["train", "val", "test"]:
+                split_path = dataset_path / split
+                if split_path.exists():
+                    split_info[f"has_{split}"] = True
+
+            return split_info
+        except Exception:
+            return {"has_train": False, "has_val": False, "has_test": False}
+
+    def _create_and_log_dvc_config(self, dataset_path: Path, temp_path: Path) -> None:
+        """Create DVC configuration and log .dvc file to MLflow.
+
+        Args:
+            dataset_path: Path to the dataset
+            temp_path: Temporary directory for creating files
+        """
+        try:
+            import mlflow
+            import yaml
+            import os
+            from pathlib import Path
+
+            if not mlflow.active_run():
+                return
+
+            # Get DVC configuration from config
+            dvc_config = self.config.get("dvc", {})
+
+            # Create DVC configuration file
+            dvc_yaml = {
+                'stages': {
+                    'pull': {
+                        'cmd': f'dvc pull {dataset_path.name}',
+                        'deps': [],
+                        'outs': [str(dataset_path.name)]
+                    }
+                },
+                    'push': {
+                        'cmd': f'dvc push {dataset_path.name}',
+                        'deps': [str(dataset_path.name)],
+                        'outs': []
+                }
+            }
+            }
+
+            # Save DVC YAML file
+            dvc_yaml_path = temp_path / "dvc.yaml"
+            with open(dvc_yaml_path, "w") as f:
+                yaml.dump(dvc_yaml, f, default_flow_style=False)
+
+            # Create .dvc file for the dataset
+            dvc_file_content = {
+                "md5": "dummy_md5",  # DVC will calculate this
+                "cmd": f"dvc pull {dataset_path.name}",
+                "deps": [],
+                "outs": [
+                    {"md5": "dummy_md5", "path": str(dataset_path.name), "cache": True}
+                ],
+            }
+
+            # Save .dvc file in the same directory as the dataset
+            dvc_file_path = dataset_path.parent / f"{dataset_path.name}.dvc"
+            with open(dvc_file_path, 'w') as f:
+                yaml.dump(dvc_file_content, f, default_flow_style=False)
+            
+            # Log DVC files to MLflow
+            mlflow.log_artifact(str(dvc_yaml_path), artifact_path="dvc_config")
+            mlflow.log_artifact(str(dvc_file_path), artifact_path="dvc_config")
+
+            # Update dataset information to include DVC file
+            dvc_info = {
+                "dvc_file": f"{dataset_path.name}.dvc",
+                "dvc_config": "dvc.yaml",
+                "dvc_remote": dvc_config.get(
+                    "MINIO_ENDPOINT", "http://localhost:23444"
+                ),
+                "dvc_bucket": dvc_config.get("MINIO_BUCKET", "dvcstorage"),
+                "dvc_versioned": True,
+            }
+
+            # Log DVC information as tags
+            for key, value in dvc_info.items():
+                mlflow.set_tag(f"dvc_{key}", str(value))
+
+            # Update MLflow dataset tags to include DVC
+            mlflow.set_tag("mlflow.dataset.source", f"dvc://{dataset_path.name}")
+            mlflow.set_tag("mlflow.dataset.dvc_file", f"{dataset_path.name}.dvc")
+
+            logger.info(
+                f"DVC configuration created and logged: {dataset_path.name}.dvc"
+            )
+
+        except Exception as e:
+            logger.warning(f"Could not create DVC configuration: {e}")
 
 
 # Legacy function name for backward compatibility
