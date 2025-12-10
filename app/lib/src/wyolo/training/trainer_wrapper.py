@@ -493,6 +493,7 @@ class TrainerWrapper:
                             logger.info(f"Logged metric: {metric} = {value}")
 
                 # Register the model in MLflow Model Registry
+                weights_dir = results_dir / "weights"
                 best_model_path = weights_dir / "best.pt"
                 if best_model_path.exists():
                     try:
@@ -1413,19 +1414,26 @@ class YOLOClassificationModel:
 
             # Create DVC configuration file
             dvc_yaml = {
-                'stages': {
-                    'pull': {
-                        'cmd': f'dvc pull {dataset_path.name}',
-                        'deps': [],
-                        'outs': [str(dataset_path.name)]
+                "stages": {
+                    "pull": {
+                        "cmd": f"dvc pull {dataset_path.name}",
+                        "deps": [],
+                        "outs": [str(dataset_path.name)],
+                    },
+                    "push": {
+                        "cmd": f"dvc push {dataset_path.name}",
+                        "deps": [str(dataset_path.name)],
+                        "outs": [],
+                    },
+                },
+                "remote": {
+                    "myremote": {
+                        "url": dvc_config.get(
+                            "MINIO_ENDPOINT", "http://localhost:23444"
+                        ),
+                        "path": dvc_config.get("MINIO_BUCKET", "dvcstorage"),
                     }
                 },
-                    'push': {
-                        'cmd': f'dvc push {dataset_path.name}',
-                        'deps': [str(dataset_path.name)],
-                        'outs': []
-                }
-            }
             }
 
             # Save DVC YAML file
@@ -1445,9 +1453,9 @@ class YOLOClassificationModel:
 
             # Save .dvc file in the same directory as the dataset
             dvc_file_path = dataset_path.parent / f"{dataset_path.name}.dvc"
-            with open(dvc_file_path, 'w') as f:
+            with open(dvc_file_path, "w") as f:
                 yaml.dump(dvc_file_content, f, default_flow_style=False)
-            
+
             # Log DVC files to MLflow
             mlflow.log_artifact(str(dvc_yaml_path), artifact_path="dvc_config")
             mlflow.log_artifact(str(dvc_file_path), artifact_path="dvc_config")
