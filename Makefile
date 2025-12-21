@@ -28,14 +28,15 @@ config.py:
 	python config.py
 
 start: user.env config.py
-	docker-compose -f docker-compose.yaml --env-file user.env  --compatibility up -d --build --force-recreate --no-deps  --pull always
+	mv user.env ./config/
+	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --compatibility up -d --build --force-recreate --no-deps  --pull always
 
 build:
-	docker-compose -f docker-compose.yaml  --env-file user.env  build
+	docker-compose -f docker-compose.yaml  --env-file ./config/user.env  build
 
 stop:
-	docker-compose -f docker-compose.yaml --env-file user.env down  --remove-orphans
+	docker-compose -f docker-compose.yaml --env-file ./config/user.env down  --remove-orphans
 
 
 into:
-	docker-compose -f docker-compose.yaml --env-file user.env  exec worker zsh
+	docker-compose -f docker-compose.yaml --env-file ./config/user.env  exec worker zsh
