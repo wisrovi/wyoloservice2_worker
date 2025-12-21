@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../wyoloservice2_control_server/dataset/datasets"
+		}
+	],
+	"settings": {}
+}

@@ -1,0 +1,37 @@
+fastapi
+uvicorn
+SQLAlchemy
+SQLite4
+redis
+boto3
+requests
+psutil
+GPUtil
+numpy
+opencv-python-headless
+python-multipart
+mlflow
+hydra-core
+hydra-optuna-sweeper
+optuna
+wsqlite
+wredis
+wpipe==0.1.8
+loguru
+logbook
+python-slugify
+dvc
+tensorflow==2.12.0
+python-docx
+seaborn
+Pillow
+matplotlib
+setproctitle
+
+qrcode
+Pillow
+rich
+
+# ray[tune]
+# dvclive  # not yet available
+

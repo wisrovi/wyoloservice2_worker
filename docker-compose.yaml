@@ -5,7 +5,7 @@ x-resources:
   # la shm_size es calculada de acuerdo al 80% de la memoria RAM como maximo
   # es importante que el ordenador a entrenar tenga al menos lo mismo de swap que de RAM
   &resources_gpu
-  shm_size: "24g"
+  shm_size: ${WORKER_RAM_MEMORY}
   hostname: ${USER}
   cap_add:
     - SYS_ADMIN
@@ -21,6 +21,7 @@ x-resources:
   environment:
     - NVIDIA_VISIBLE_DEVICES=0
     - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    - TZ=Europe/Madrid
   labels:
     - "autoheal=true"
     - "com.centurylinklabs.watchtower.enable=true" 
@@ -39,28 +40,70 @@ x-resources:
             capabilities: [ gpu ]
 
 services:
-  worker:
+  wyolo_father:
     <<: *resources_gpu
     build:
-      context: ./app
+      context: ./wyolo_father
       dockerfile: Dockerfile
-    image: wisrovi/wyoloservice_worker:v2.0.0
+    image: wisrovi/wyolo_worker:v2.0.0
+    container_name: wyolo_father
     env_file:
       - config/control_host.env
-      - user.env
+      - config/user.env
     # restart: always
     command: tail -f /dev/null    
     volumes:
-      - ./app:/app
+      - ./wyolo_father:/app
+      - /home/wyolo/events:/wyolo/events
+      - /home/wyolo/train_service_results:/wyolo/train_service_results
+      - /var/run/docker.sock:/var/run/docker.sock
       # - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
     network_mode: host
+    depends_on:
+      wyolo_mother:
+        condition: service_started
     # healthcheck:
     #   test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1 && nvidia-smi --query-gpu=name,memory.total,memory.free --format=csv,noheader  && echo 'All systems operational' || echo 'GPU check failed'  || exit 1"]
     #   interval: 20s # Frecuencia de verificación
     #   timeout: 5s # Tiempo máximo para completar la verificación
     #   retries: 3 # Intentos antes de marcar como unhealthy
     #   start_period: 20s # Periodo inicial antes de comenzar las verificaciones
+
+  wyolo_mother:
+    <<: *resources_gpu
+    build:
+      context: ./wyolo_mother
+      dockerfile: Dockerfile.base
+    image: wisrovi/wyolo_base:v1.0.0
+    container_name: wyolo_mother
+    restart: always
+    command: tail -f /dev/null
+
+  wyolo_son:
+    <<: *resources_gpu
+    build:
+      context: ./wyolo_mother
+      dockerfile: Dockerfile
+    image: wisrovi/wyolo_trainer:v2.0.0
+    container_name: wyolo_son
+    env_file:
+      - config/control_host.env
+      - config/user.env
+    # restart: always
+    command: tail -f /dev/null    
+    volumes:
+      - ./wyolo_mother:/app
+      - /home/wyolo/events:/wyolo/worker/events
+      - /home/wyolo/train_service_results:/wyolo/worker/train_service_results
+      # - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      wyolo_father:
+        condition: service_started
+      wyolo_mother:
+        condition: service_started
 
   # watchtower:
   #   image: containrrr/watchtower
@@ -85,3 +128,4 @@ services:
     # restart: always
     # labels:
     #   - "com.centurylinklabs.watchtower.enable=false"
+
