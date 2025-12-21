@@ -1,0 +1,55 @@
+mlflow:
+  MLFLOW_TRACKING_URI: http://localhost:23435
+minio:
+  MINIO_ENDPOINT: http://localhost:23444
+  MINIO_ID: mlflow
+  MINIO_SECRET_KEY: wyoloservice
+  MINIO_BUCKET: models
+redis:
+  REDIS_HOST: localhost
+  REDIS_PORT: 23438
+  REDIS_DB: 0
+  REDIS_PASSWORD: ""
+  TOPIC: training_queue
+  RESULT_TOPIC: results_queue
+dvc:
+  MINIO_ENDPOINT: http://localhost:23444
+  MINIO_ID: mlflow
+  MINIO_SECRET_KEY: wyoloservice
+  MINIO_BUCKET: dvcstorage
+default:
+  timeout: 60
+  max_retries: 3
+  retry_delay: 1
+  threshold: 0.35
+  override hydra/sweeper: optuna
+model: yolov8n.pt
+type: "yolo"
+task_id: "test_training_001"
+tempfile: "/wyolo/worker/tmp/train_service_results"
+train:
+  data: "/app/dataset.yaml"
+  epochs: 10
+  imgsz: 640
+  batch: 16
+  verbose: true
+  plots: true
+  exist_ok: true
+sweeper:
+  study_name: "test_experiment"
+  n_trials: 2
+  tune: false
+  grace_period: 5
+  max_concurrent: 1
+  algorithm: optuna
+  direction: maximize
+  sampler: "TPESampler"
+extras:
+  gpu:
+    id: 0
+    limit: 0.60
+hydra:
+  run:
+    dir: /var/log/worker/hydra/individual
+  sweep:
+    dir: /var/log/worker/hydra/group
