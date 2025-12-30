@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
-            "args": "/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml"
+            // "args": "/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml"
         }
     ]
 }

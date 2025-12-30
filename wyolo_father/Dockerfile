@@ -1,5 +1,5 @@
 
-FROM wisrovi/wyoloservice_wyolo_base:v1.0.0
+FROM wisrovi/wyolo_base:v1.0.0
 
 
 # Configurar el entorno de trabajo

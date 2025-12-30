@@ -35,19 +35,62 @@ train:
   verbose: true
   plots: true
   exist_ok: true
+
+genetic:
+  activate: false
+  # ----------------------------------
+  # base en generaciones
+  min_epochs_by_ind: 5
+  # con ultralytics las poblaciones son no tradicionales
+  # cada generacion es una poblacion de 1 entrenamiento
+  # entonces internamente lo que hace la libreria es correr
+  # varias generaciones con poblacion 1
+  # por ello las generaciones se definen como el numero
+  # de entrenamientos a realizar, calculado como generaciones * poblation_size
+  generations: 5
+  poblation_size: 2
+  # ----------------------------------
+  # base de seleccion
+  # busqueda del genetico
+  # direction es "min" o "max"
+  direction: "max"  
+  fitness: metrics/accuracy_top1
+  # use_genetic en true usa algoritmos geneticos
+  # es mejor pero mas lento
+  # use_genetic: false usa algoritmos de bayesiana
+  # es mas rapido pero menos preciso
+  use_genetic: false # NO es estable en true en ultralytics
+  # ----------------------------------
+  # otros parametros que se pasan al ultralytics
+  other_parameters: 
+    plots: true
+    verbose: true
+    save: true
+    val: true
 sweeper:
   study_name: "test_experiment"
   n_trials: 2
-  tune: false
-  grace_period: 5
   max_concurrent: 1
   algorithm: optuna
   direction: maximize
   sampler: "TPESampler"
 extras:
-  gpu:
-    id: 0
-    limit: 0.60
+  # El sistema primero valida si esta forzada la CPU
+  # si es asi, usa CPU de forma obligatoria
+  
+  # si no, valida si la GPU esta forzada
+  # si es asi, usa GPU de forma obligatoria
+  # sino encuentra una GPU compatible, detiene la ejecucion
+  
+  # si ninguna de las dos esta forzada, valida si hay GPU compatible
+  # si la encuentra, la usa
+  # si no la encuentra, usa CPU
+
+  force_gpu: false
+  force_cpu: false
+  # gpu:
+  #   id: 0
+  #   limit: 0.60
 hydra:
   run:
     dir: /var/log/worker/hydra/individual
