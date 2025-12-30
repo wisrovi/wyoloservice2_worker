@@ -27,11 +27,16 @@ seaborn
 Pillow
 matplotlib
 setproctitle
+langchain
+langchain-ollama
+langchain-core
 
 qrcode
 Pillow
 rich
+colorama
 
-# ray[tune]
+ray[tune]
+ray[air]
 # dvclive  # not yet available
 
