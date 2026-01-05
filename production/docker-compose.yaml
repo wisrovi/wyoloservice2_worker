@@ -13,7 +13,6 @@ x-resources:
     - NET_ADMIN
     - SYS_RESOURCE
   privileged: true
-  restart: always
   logging:
     driver: "json-file"
     options:
@@ -43,9 +42,6 @@ x-resources:
 services:
   wyolo_father:
     <<: *resources_gpu
-    build:
-      context: ./wyolo_father
-      dockerfile: Dockerfile
     image: wisrovi/wyolo_worker:v2.0.0
     container_name: wyolo_father
     env_file:
@@ -54,11 +50,11 @@ services:
     # restart: always
     command: tail -f /dev/null    
     volumes:
-      - ./wyolo_father:/app
       - /home/wyolo/events:/wyolo/events
       - /home/wyolo/train_service_results:/wyolo/train_service_results
       - /var/run/docker.sock:/var/run/docker.sock
       # - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
     network_mode: host
     depends_on:
       wyolo_mother:
@@ -72,11 +68,9 @@ services:
 
   wyolo_mother:
     <<: *resources_gpu
-    build:
-      context: ./wyolo_mother
-      dockerfile: Dockerfile.base
     image: wisrovi/wyolo_base:v1.0.0
     container_name: wyolo_mother
+    restart: always
     command: tail -f /dev/null
 
   # watchtower:

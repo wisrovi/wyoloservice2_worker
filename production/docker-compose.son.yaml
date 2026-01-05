@@ -1,0 +1,62 @@
+version: "3.8"
+
+# Define reusable GPU resource constraints
+x-resources:
+  # la shm_size es calculada de acuerdo al 80% de la memoria RAM como maximo
+  # es importante que el ordenador a entrenar tenga al menos lo mismo de swap que de RAM
+  &resources_gpu
+  shm_size: ${WORKER_RAM_MEMORY}
+  hostname: ${USER}
+  cap_add:
+    - SYS_ADMIN
+    - DAC_READ_SEARCH
+    - NET_ADMIN
+    - SYS_RESOURCE
+  privileged: true
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+  environment:
+    - NVIDIA_VISIBLE_DEVICES=0
+    - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    - TZ=Europe/Madrid
+  labels:
+    - "autoheal=true"
+    - "com.centurylinklabs.watchtower.enable=true"
+  deploy:
+    resources:
+      limits:
+        cpus: "${WORKER_CPU_CORES}"
+        memory: ${WORKER_RAM_MEMORY}
+      reservations:
+        # cpus: "1.0"
+        # memory: 2048M
+        # memory_swap: 500M
+        devices:
+          - driver: nvidia
+            device_ids: [ "0" ]
+            capabilities: [ gpu ]
+
+services:
+  wyolo_son:
+    <<: *resources_gpu
+    image: wisrovi/wyolo_trainer:v2.0.0
+    container_name: wyolo_son
+    env_file:
+      - config/control_host.env
+      - config/user.env
+    # restart: always
+    command: tail -f /dev/null
+    volumes:
+      - /home/wyolo/events:/wyolo/worker/events
+      - /home/wyolo/train_service_results:/wyolo/worker/train_service_results
+      # - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      wyolo_father:
+        condition: service_started
+      wyolo_mother:
+        condition: service_started
