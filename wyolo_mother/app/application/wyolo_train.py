@@ -2,20 +2,23 @@
 import tempfile
 import yaml
 from setproctitle import setproctitle
-from application.utils.util import get_complete_config, get_user_config
+from application.utils.util import (
+    get_complete_config,
+    get_user_config,
+    get_argument_parser,
+)
 
-# from lib.src.wyolo.core.yolo_train import create_trainer, train
-from lib.src.wyolo.trainer.trainer_wrapper import create_trainer, train
+# debug:
+# from lib.src.wyolo.trainer.trainer_wrapper import create_trainer, train
+
+# production:
+from wyolo.trainer.trainer_wrapper import create_trainer, train
 
 
 setproctitle("wyolo_service")
 
 
-def main():
-    # python main.py "/app/lib/datasets_config_examples/clasification/config_train.yaml"
-    # python main.py "/wyolo/control_server/datasets/detection/Deteksi komponen elektronik.v1i.yolov8/config_train.yaml"
-    # python main.py "/wyolo/control_server/datasets/segmentation/ArchitecturePlan/config_train.yaml"
-    user_config_train = get_user_config("/app/lib/datasets_config_examples/clasification/config_train.yaml")
+def main(user_config_train):
 
     config_dict, config_path = get_complete_config(user_config=user_config_train)
     # trial_number = final_config.get("trial_number", 0)
@@ -42,4 +45,8 @@ if __name__ == "__main__":
         python yolo_train.py --config_path="/datasets/clasificacion/clasificador_arepo_perfil/config_train.yaml" --trial_number=1
     """
 
-    main()
+    _user_config_args = get_argument_parser()
+
+    user_config_train = get_user_config(user_config_train=_user_config_args)
+
+    main(user_config_train)
