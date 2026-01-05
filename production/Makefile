@@ -25,7 +25,7 @@ user.env:
 
 config.py:
 	pip install customtkinter
-	python production/config.py
+	python config.py
 
 start: user.env config.py
 	mv user.env ./config/
@@ -33,41 +33,10 @@ start: user.env config.py
 
 build:
 	docker-compose -f docker-compose.yaml  --env-file ./config/user.env  build
-	docker-compose -f docker-compose.son.yaml  --env-file ./config/user.env  build
 
 stop:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env down  --remove-orphans
 
+
 into:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  exec worker zsh
-
-son_prepare:
-	docker-compose -f docker-compose.son.yaml  --env-file ./config/user.env  up -d --build --force-recreate
-	docker-compose -f docker-compose.son.yaml  --env-file ./config/user.env  down
-
-son_test:
-	docker-compose -f docker-compose.son.yaml --env-file ./config/user.env  up --build --force-recreate
-
-trainer_example:
-	docker run --rm \
-	--name wyolo_son \
-	--privileged \
-	--cap-add=SYS_ADMIN \
-	--cap-add=DAC_READ_SEARCH \
-	--cap-add=NET_ADMIN \
-	--cap-add=SYS_RESOURCE \
-	--network host \
-	--hostname "willia.rodriguez" \
-	--shm-size="24g" \
-	--memory="24g" \
-	--cpus=6 \
-	--gpus '"device=0"' \
-	-e NVIDIA_VISIBLE_DEVICES=0 \
-	-e NVIDIA_DRIVER_CAPABILITIES=compute,utility \
-	-e TZ=Europe/Madrid \
-	--env-file config/control_host.env \
-	--env-file config/user.env \
-	-v /home/wyolo/events:/wyolo/worker/events \
-	-v /home/wyolo/train_service_results:/wyolo/worker/train_service_results \
-	wisrovi/wyolo_trainer:v2.0.0 \
-	python /app/wtrain.py --file /app/lib/datasets_config_examples/clasification/config_train.yaml
