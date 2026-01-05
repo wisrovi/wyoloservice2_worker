@@ -8,17 +8,13 @@ import argparse
 import yaml
 import sys
 
-def get_user_config(
-    default_file: str = "/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml",
-):
-    # Configuración de argparse para recibir el archivo
-    parser = argparse.ArgumentParser(description="Procesador de archivos YAML.")
 
-    # Definimos el argumento posicional 'file'
+def get_argument_parser():
+    parser = argparse.ArgumentParser(description="Procesador de archivos YAML.")
     parser.add_argument(
         "--file",
         help="Ruta al archivo .yaml para entrenar el modelo",
-        default=default_file,
+        default="/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml",
         required=False,
     )
 
@@ -27,13 +23,19 @@ def get_user_config(
 
     user_config_train = args.file
 
+    return user_config_train
+
+
+def get_user_config(
+    user_config_file: str = "/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml",
+):
     # Verificamos si el archivo existe antes de intentar abrirlo
-    if not os.path.exists(user_config_train):
-        print(f"Error: El archivo '{user_config_train}' no existe.")
+    if not os.path.exists(user_config_file):
+        print(f"Error: El archivo '{user_config_file}' no existe.")
         sys.exit(1)
 
     try:
-        with open(user_config_train, "r", encoding="utf-8") as archivo:
+        with open(user_config_file, "r", encoding="utf-8") as archivo:
             # Cargamos el contenido del YAML
             user_config_train_data = yaml.safe_load(archivo)
     except yaml.YAMLError as exc:
@@ -58,7 +60,7 @@ def get_user_config(
             allow_unicode=True,
         )
 
-    return user_config_train
+    return user_config_file
 
 
 def read_user_config(task_data: dict):
