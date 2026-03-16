@@ -1,8 +1,0 @@
-celery
-redis
-PyYAML
-docker
-psycopg2-binary
-
-wpipe
-optuna
