@@ -1,218 +1,211 @@
-# Worker - GPU Training Unit (Distributed Mode)
+# Worker Executor - YOLO Training Container
 
-Este componente es una unidad de ejecución autónoma diseñada para **optimización ML distribuida**. Utiliza el patrón **Invoker-Executor** y se conecta a una base de datos **PostgreSQL** centralizada para sincronizar estudios de Optuna a través de múltiples nodos.
-
-## Arquitectura Distribuida (Escenario C)
-
-En esta configuración, la inteligencia está descentralizada a través de una base de datos central.
-
-- **Manager (Control Plane):** Crea estudios y envía tareas vía Celery.
-- **Invoker (Worker):** Recibe tareas, consulta a **PostgreSQL** los siguientes parámetros de trial, los ejecuta en un contenedor efímero, y reporta resultados directamente a la base de datos.
-- **PostgreSQL (Cerebro Central):** Almacena todos los trials, estudios e hiperparámetros. Located at `192.168.10.252:23436`.
-- **Redis (Broker):** Gestiona la distribución de tareas entre Manager y Workers.
-- **Dashboards:** 
-    - **Custom Dashboard (Puerto 8000):** Monitoreo local/global de workers Celery y resúmenes de estudios.
-    - **Optuna Dashboard (Oficial):** Visualización científica (debe desplegarse con el Manager).
+Este componente es el **contenedor efímero** donde se ejecuta el entrenamiento real del modelo YOLO. Es lanzado por el Invoker mediante Docker, ejecuta el entrenamiento, y retorna métricas.
 
 ---
 
-## Flujo de Secuencia (Distribuido)
+## 1. 🚶 Diagram Walkthrough
+
+```mermaid
+flowchart TD
+    subgraph "Contenedor Executor"
+        M[Main Script<br/>run_training.py]
+        C[Lee config.json]
+        T[Entrena YOLO]
+        L[Log a MLflow]
+        S[Guarda results.json]
+    end
+
+    subgraph "Volumen Compartido"
+        V["/app/data/"]
+        VC[config.json]
+        VR[results.json]
+    end
+
+    subgraph "Infraestructura"
+        D[Docker Engine]
+        ML[MLflow]
+        GPU[GPU]
+    end
+
+    D -->|1. Monta volumen| V
+    V -->|2. Lee config| VC
+    VC -->|3. Lee config| C
+    C -->|4. Entrena| T
+    T -->|5. GPU| GPU
+    T -->|6. Log metrics| L
+    L -->|7. MLflow| ML
+    T -->|8. Escribe results| VR
+    VR -->|9. results.json| D
+```
+
+**Flujo Principal:**
+1. Invoker monta volumen temporal en /app/data
+2. Executor lee config.json con parámetros
+3. Descarga modelo YOLO base
+4. Ejecuta entrenamiento con parámetros del trial
+5. Envía métricas a MLflow
+6. Guarda results.json con accuracy
+7. Contenedor termina y se elimina automáticamente
+
+---
+
+## 2. 🗺️ System Workflow
 
 ```mermaid
 sequenceDiagram
-    participant M as Manager (Remote)
-    participant I as Invoker (Local)
-    participant DB as PostgreSQL (Central)
-    participant D as Docker Engine
-    participant E as Executor (Container)
+    participant I as Invoker
+    participant V as Volumen
+    participant E as Executor Container
+    participant ML as MLflow
+    participant GPU as GPU
+    participant D as Docker
 
-    M->>DB: 1. Create Study
-    M->>I: 2. Celery Task: train_on_gpu(config)
-    I->>DB: 3. Ask for next Hyperparameters
-    DB-->>I: 4. Suggested Params
-    I->>I: 5. Create temporary trial folder
-    I->>D: 6. docker run ml_executor -v folder:/app/data
-    D->>E: 7. Train on GPU with Params
-    E->>E: 8. Save results.json
-    E-->>D: 9. Exit and Auto-Remove Container
-    I->>DB: 10. Write Results (Accuracy) to DB
-    I->>M: 11. Celery Task Completed
+    I->>V: 1. Escribe config.json
+    
+    rect rgb(255, 240, 200)
+        note over E: Inicio del contenedor
+        E->>V: 2. Lee config.json
+        E->>E: 3. Parsea parámetros
+    end
+    
+    rect rgb(200, 255, 200)
+        note over E: Entrenamiento
+        E->>E: 4. Descarga modelo
+        E->>GPU: 5. Allocate GPU
+        loop epochs
+            E->>GPU: 6. Training step
+            GPU-->>E: 7. Loss/Grad
+            E->>ML: 8. Log metrics
+        end
+    end
+    
+    rect rgb(240, 200, 255)
+        note over E: Finalización
+        E->>E: 9. Calcula accuracy
+        E->>V: 10. Escribe results.json
+    end
+    
+    E-->>D: 11. Exit (auto-remove)
+    D-->>I: 12. Container finished
 ```
 
 ---
 
-## Gestión de Colas y Prioridad
+## 3. 🏗️ Architecture Components
 
-Cada worker está configurado para escuchar múltiples colas con un orden de prioridad estricto.
+```mermaid
+graph TB
+    subgraph "Executor Container"
+        R[run_training.py]
+        Y[YOLO Model]
+        T[Training Loop]
+        M[Metrics Logger]
+        W[Result Writer]
+    end
 
-### Jerarquía de Consumo (Prioridad Estricta)
-El worker consume tareas en este orden:
-1.  **Cola Privada (`worker_{NAME}`)**: Máxima prioridad. Reservada para tareas críticas o asignación directa.
-2.  **`gpus_high`**: Tareas de alta prioridad.
-3.  **`gpus_medium`**: Tareas estándar (por defecto).
-4.  **`gpus_low`**: Tareas de baja prioridad / experimentales.
+    subgraph "Input"
+        CF[config.json]
+    end
 
-### Configuración del Consumidor
-El comando de inicio define el orden:
-```bash
-celery worker -Q ${PRIVATE_QUEUE},gpus_high,gpus_medium,gpus_low --concurrency=1
+    subgraph "Output"
+        RF[results.json]
+    end
+
+    subgraph "External"
+        ML[MLflow]
+        GP[GPU Device]
+    end
+
+    CF --> R
+    R --> Y
+    Y --> T
+    T --> GP
+    T --> ML
+    T --> M
+    M --> W
+    W --> RF
 ```
-Usar `--concurrency=1` asegura que el worker complete una tarea antes de obtener la siguiente de la cola de mayor prioridad.
+
+### Componentes Clave
+
+| Componente | Descripción |
+|------------|-------------|
+| **run_training.py** | Script principal del contenedor |
+| **YOLO Model** | Modelo base (yolov8, yolo11, etc.) |
+| **Training Loop** | Bucle de entrenamiento epochs |
+| **Metrics Logger** | Envío de métricas a MLflow |
+| **Result Writer** | Escritura de results.json |
 
 ---
 
-## Múltiples Invokers en la Misma Máquina
+## 4. ⚙️ Container Lifecycle
 
-Puedes ejecutar múltiples Invokers en la misma máquina, cada uno con su propia cola privada:
+### Build Process
 
-### Crear Invokers
+1. **Base Image**: Python + CUDA + Ultralytics
+2. **Dependencies**: Instala `ultralytics`, `mlflow`, `pyyaml`
+3. **Code Copy**: Copia run_training.py
+4. **Workdir**: Configura /app como directorio de trabajo
+5. **Entrypoint**: Ejecuta run_training.py
 
-```bash
-# Usando el script launcher
-./launcher_invoker.sh --private_name worker_1
-./launcher_invoker.sh --private_name worker_2
-./launcher_invoker.sh --private_name gpu_node_alpha
-```
+### Runtime Process
 
-Cada Invoker obtiene:
-- Su propia **cola privada** (ej: `worker_1`)
-- Más las **3 colas públicas** (`gpus_high`, `gpus_medium`, `gpus_low`)
-
-### Distribución de Tareas
-
-Cuando las tareas se envían a una cola pública (ej: `gpus_medium`), Celery las distribuye round-robin entre todos los Invokers escuchando esa cola:
-
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  Invoker 1   │     │  Invoker 2   │     │  Invoker 3   │
-│ private: w1  │     │ private: w2  │     │ private: w3  │
-└──────┬───────┘     └──────┬───────┘     └──────┬───────┘
-       │                    │                    │
-       ▼                    ▼                    ▼
-    ┌─────────────────────────────────────────────┐
-    │              gpus_medium queue              │
-    │         (Celery round-robin)                │
-    │   Task1  Task2  Task3  Task4  Task5  ...  │
-    └─────────────────────────────────────────────┘
-```
+1. **Read Config**: Lee /app/data/config.json
+2. **Parse Parameters**: Extrae lr0, imgsz, epochs, etc.
+3. **Model Load**: Descarga modelo base de Ultralytics
+4. **Training**: Ejecuta entrenamiento con parámetros
+5. **Metrics**: Log a MLflow durante entrenamiento
+6. **Results**: Calcula accuracy final
+7. **Write Output**: Guarda /app/data/results.json
+8. **Exit**: Contenedor termina y Docker lo elimina
 
 ---
 
-## Nombrado de Contenedores Executor
+## 5. 📂 File-by-File Guide
 
-Cada contenedor Executor se nombra automáticamente siguiendo el patrón:
-
-```
-{private_name}_son_{timestamp}
-```
-
-**Ejemplos:**
-- `worker_1_son_20260312_143022`
-- `worker_2_son_20260312_145501`
-- `gpu_node_alpha_son_20260312_151200`
-
-Esta convención permite:
-- Rastrear qué Invoker lanzó qué Executor
-- Identificar el orden de ejecuciones
-- Depurar y monitorear recursos
-
-El Invoker lee la variable de entorno `PRIVATE_QUEUE` para determinar el prefijo de nombres.
+| Archivo/Carpeta | Propósito |
+|-----------------|-----------|
+| `executor/run_training.py` | Script principal de entrenamiento |
+| `executor/requirements.txt` | Dependencias Python |
+| `executor/Dockerfile` | Imagen del contenedor |
+| `executor_v2.0/wyolo_mother/` | Versión avanzada con MLflow real |
 
 ---
 
-## Despliegue Portable
-
-### Inicio Rápido
-
-```bash
-# Navegar al directorio worker
-cd worker
-
-# Crear un Invoker con una cola privada específica
-./launcher_invoker.sh --private_name worker_1
-```
-
-### Opciones de Configuración
-
-1. **Variables de Entorno:**
-   - `REDIS_URL`: URL del broker central (por defecto: `redis://redis:6379/0`)
-   - `PRIVATE_QUEUE`: Nombre de la cola privada (por defecto: `worker_default`)
-
-2. **Monitoreo y Visibilidad:**
-   - Para asegurar que el worker sea visible en **Flower** o el **Dashboard Custom**, no usar `--without-heartbeat` ni `--without-gossip` en el comando de inicio.
-   - La configuración `worker_send_task_events: True` está habilitada en `celery_config.py` para prevenir errores de inicialización durante monitoreo remoto.
-
-3. **Docker Compose:**
-   ```bash
-   PRIVATE_QUEUE=worker_alpha docker-compose up -d
-   ```
-
----
-
-## Construcción de Executor Personalizado
-
-Si necesitas personalizar el executor:
-
-```bash
-cd worker/executor
-docker build -t my-custom-executor:v1.0.0 .
-```
-
-Luego actualiza `invoker/config.yaml`:
+## Configuración de Entrenamiento
 
 ```yaml
-worker:
-  executor_image: "my-custom-executor:v1.0.0"
+# config.json (entregado por Invoker)
+model: "yolov8n-cls.pt"
+train:
+  data: /dataset/
+  epochs: 250
+  imgsz: 640
+  lr0: 0.01
+sweeper:
+  study_name: "mi_estudio"
+```
+
+### Resultados
+
+```json
+// results.json (escrito por Executor)
+{
+  "status": "success",
+  "accuracy": 0.85,
+  "study_name": "mi_estudio"
+}
 ```
 
 ---
 
-## Monitoreo
+## Construcción
 
-Ver contenedores en ejecución:
 ```bash
-docker ps | grep worker_
+cd wyoloservice2_worker/executor
+docker build -t wisrovi/train_service:worker_executor_v1.0.0 .
 ```
-
-Ver logs del Invoker:
-```bash
-docker logs worker_worker_1
-```
-
-Ver logs del Executor (por nombre):
-```bash
-docker logs worker_1_son_20260312_143022
-```
-
----
-
-## Estructura del Proyecto
-
-```
-wyoloservice2_worker/
-├── executor/                    # Versión simple (simulado)
-│   ├── run_training.py         # Script de entrenamiento
-│   └── requirements.txt
-├── executor_v2.0/              # Versión completa (YOLO real)
-│   ├── wyolo_mother/          # Contenedor principal
-│   │   ├── app/application/   # Lógica de aplicación
-│   │   └── lib/               # Biblioteca wyolo
-│   ├── wyolo_father/          # Contenedor alternativo
-│   └── production/            # Configuración de producción
-├── docker-compose.yml          # Orquestación Docker
-└── start_environment.sh       # Script de inicio
-```
-
----
-
-## Variables de Entorno
-
-| Variable | Descripción | Por defecto |
-|----------|-------------|-------------|
-| `REDIS_URL` | URL de Redis broker | `redis://192.168.10.252:23437/0` |
-| `OPTUNA_DB_URL` | URL de PostgreSQL | `postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice` |
-| `WORKER_NAME` | Nombre del worker | `default` |
-| `PRIVATE_QUEUE` | Cola privada | `worker_default` |
 
 ---
 
