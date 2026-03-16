@@ -1,0 +1,35 @@
+
+FROM wisrovi/agents:gpu-slim-yolo
+
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y \
+    net-tools \
+    git \
+    iputils-ping \
+    libgl1-mesa-glx \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    make \
+    cifs-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear directorios de montaje
+RUN mkdir -p /wyolo/control_server//config_versions \
+    && mkdir -p /wyolo/control_server/datasets
+
+RUN chmod 755 /wyolo/control_server/config_versions \
+    && chmod 755 /wyolo/control_server/datasets    
+
+
+# Limpiar caché y archivos temporales
+RUN rm -rf /tmp/*
+RUN apt-get clean
+
+
+# Configurar el entorno de trabajo
+WORKDIR /requirements
+
+COPY docker/requirements.txt .
+RUN pip install --no-cache-dir --timeout 300 --retries 3 -r requirements.txt
+
