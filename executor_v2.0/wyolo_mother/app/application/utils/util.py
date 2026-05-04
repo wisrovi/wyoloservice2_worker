@@ -14,7 +14,7 @@ def get_argument_parser():
     parser.add_argument(
         "--file",
         help="Ruta al archivo .yaml para entrenar el modelo",
-        default="/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml",
+        default="/app/data/config.yaml",
         required=False,
     )
 
