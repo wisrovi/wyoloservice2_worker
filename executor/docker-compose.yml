@@ -6,6 +6,8 @@ version: '3.8'
 
 services:
   ml_executor:
-    build: ./executor
+    build: 
+      context: .
+      dockerfile: Dockerfile
     image: wisrovi/train_service:worker_executor_v1.0.0
     entrypoint: [ "echo", "Executor image ready" ]
