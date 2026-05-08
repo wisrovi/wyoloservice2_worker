@@ -33,7 +33,6 @@ start: user.env config.py
 
 build:
 	docker-compose -f docker-compose.yaml  --env-file ./config/user.env  build
-	docker-compose -f docker-compose.son.yaml  --env-file ./config/user.env  build
 
 stop:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env down  --remove-orphans
@@ -41,12 +40,8 @@ stop:
 into:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  exec worker zsh
 
-son_prepare:
-	docker-compose -f docker-compose.son.yaml  --env-file ./config/user.env  up -d --build --force-recreate
-	docker-compose -f docker-compose.son.yaml  --env-file ./config/user.env  down
-
 son_test:
-	docker-compose -f docker-compose.son.yaml --env-file ./config/user.env  up --build --force-recreate
+	docker-compose -f docker-compose.yaml --env-file ./config/user.env  up --build --force-recreate
 
 trainer_example:
 	docker run --rm \
