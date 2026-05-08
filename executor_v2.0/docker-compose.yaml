@@ -25,7 +25,7 @@ x-resources:
     - TZ=Europe/Madrid
   labels:
     - "autoheal=true"
-    - "com.centurylinklabs.watchtower.enable=true" 
+    - "com.centurylinklabs.watchtower.enable=true"
   deploy:
     resources:
       limits:
@@ -41,65 +41,20 @@ x-resources:
             capabilities: [ gpu ]
 
 services:
-  wyolo_father:
+  executor:
     <<: *resources_gpu
     build:
-      context: ./wyolo_father
+      context: ./wyolo
       dockerfile: Dockerfile
-    image: wisrovi/wyolo_worker:v2.0.0
-    container_name: wyolo_father
+    image: wisrovi/wyolo_trainer:v2.0.0
     env_file:
       - config/control_host.env
       - config/user.env
-    # restart: always
-    command: tail -f /dev/null    
     volumes:
-      - ./wyolo_father:/app
-      - /home/wyolo/events:/wyolo/events
-      - /home/wyolo/train_service_results:/wyolo/train_service_results
-      - /var/run/docker.sock:/var/run/docker.sock
-      # - /etc/localtime:/etc/localtime:ro
+      - /home/wyolo/events:/wyolo/worker/events
+      - /home/wyolo/train_service_results:/wyolo/worker/train_service_results
+      # development only
+      - ./wyolo/app:/app
     network_mode: host
-    depends_on:
-      wyolo_mother:
-        condition: service_started
-    # healthcheck:
-    #   test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1 && nvidia-smi --query-gpu=name,memory.total,memory.free --format=csv,noheader  && echo 'All systems operational' || echo 'GPU check failed'  || exit 1"]
-    #   interval: 20s # Frecuencia de verificación
-    #   timeout: 5s # Tiempo máximo para completar la verificación
-    #   retries: 3 # Intentos antes de marcar como unhealthy
-    #   start_period: 20s # Periodo inicial antes de comenzar las verificaciones
-
-  wyolo_mother:
-    <<: *resources_gpu
-    build:
-      context: ./wyolo_mother
-      dockerfile: Dockerfile.base
-    image: wisrovi/wyolo_base:v1.0.0
-    container_name: wyolo_mother
+    # command: bash -c python wtrain.py --file "/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml"
     command: tail -f /dev/null
-
-  # watchtower:
-  #   image: containrrr/watchtower
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   restart: always
-  #   environment:
-  #     - WATCHTOWER_LABEL_ENABLE=true # Habilita el control por etiquetas
-  #     - WATCHTOWER_SCHEDULE=0 0 0,2,4,6,8,10,12,14,16,18,20,22 * * * # todos los segundos, minutos, dias, semanas, meses, a las horas 0,2,...,22
-  #     - WATCHTOWER_CLEANUP=true # Elimina imágenes antiguas después de actualizar
-  #   labels:
-  #     - "com.centurylinklabs.watchtower.enable=false"
-
-  # autoheal:
-    # environment:
-    #   - AUTOHEAL_INTERVAL=10
-    #   - CURL_TIMEOUT=30
-    #   - AUTOHEAL_CONTAINER_LABEL=all
-    # volumes:
-    #   - "/var/run/docker.sock:/var/run/docker.sock"
-    # image: willfarrell/autoheal
-    # restart: always
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=false"
-
