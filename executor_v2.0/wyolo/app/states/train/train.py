@@ -35,6 +35,8 @@ def train_model(data_input: UserInput):
 
     config_dict, config_path = get_complete_config(user_config=user_config_path)
 
+    results = None
+
     with tempfile.TemporaryDirectory(prefix="wyolo_") as temp_dir:
         config_dict["tempfile"] = temp_dir
 
@@ -54,7 +56,7 @@ def train_model(data_input: UserInput):
             fitness = config_dict.get("sweeper", {}).get("fitness", "fitness")
             request_config = train(trainer, request_config, fitness)
 
-            results = round(request_config["train"]["results"][fitness], 4)
+            results = request_config["train"]
 
         # print(request_config)
 

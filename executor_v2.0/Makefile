@@ -38,10 +38,7 @@ stop:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env down  --remove-orphans
 
 into:
-	docker-compose -f docker-compose.yaml --env-file ./config/user.env  exec worker zsh
-
-son_test:
-	docker-compose -f docker-compose.yaml --env-file ./config/user.env  up --build --force-recreate
+	docker-compose -f docker-compose.yaml --env-file ./config/user.env  exec executor zsh
 
 trainer_example:
 	docker run --rm \
