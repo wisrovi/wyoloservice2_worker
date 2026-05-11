@@ -32,7 +32,7 @@ WORKDIR /requirements
 
 COPY docker/requirements.txt .
 RUN pip install --no-cache-dir --timeout 300 --retries 3 -r requirements.txt
-
+RUN pip install wsqlite==1.2.1
 
 
 # -------------------------------------
