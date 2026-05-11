@@ -64,5 +64,5 @@ trainer_example:
 	--env-file config/user.env \
 	-v /home/wyolo/events:/wyolo/worker/events \
 	-v /home/wyolo/train_service_results:/wyolo/worker/train_service_results \
-	wisrovi/wyolo_trainer:v2.0.0 \
-	python /app/wtrain.py --file /app/lib/datasets_config_examples/clasification/config_train.yaml
+	wisrovi/wyolo_trainer:v2.1.0 \
+	python /app/main.py --file /wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml

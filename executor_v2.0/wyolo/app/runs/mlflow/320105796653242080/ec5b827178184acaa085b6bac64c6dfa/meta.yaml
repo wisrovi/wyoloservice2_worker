@@ -1,0 +1,14 @@
+artifact_uri: /app/runs/mlflow/320105796653242080/ec5b827178184acaa085b6bac64c6dfa/artifacts
+end_time: 1778511731782
+entry_point_name: ''
+experiment_id: '320105796653242080'
+lifecycle_stage: active
+run_id: ec5b827178184acaa085b6bac64c6dfa
+run_name: train
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778511723002
+status: 3
+tags: []
+user_id: william.rodriguez
