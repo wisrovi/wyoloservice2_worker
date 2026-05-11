@@ -1,0 +1,25 @@
+name: wtrain_pipeline
+registered_at: '2026-05-11T14:55:50.526855'
+step_count: 5
+steps:
+- func: <function load_yaml at 0x752cfa367f40>
+  name: load_yaml
+  type: task
+  version: v1.0
+- func: <function check_minio_buckets at 0x752d11270550>
+  name: check_minio_buckets
+  type: task
+  version: v1.0
+- func: <function check_gpu_available at 0x752d441d8790>
+  name: check_gpu_available
+  type: task
+  version: v1.0
+- func: <function check_dataset at 0x752d441d92d0>
+  name: check_dataset
+  type: task
+  version: v1.0
+- branch_false: []
+  branch_true:
+  - <function train_model at 0x752cfa367ac0>
+  expression: gpu_status == 1 and dataset_status == 1
+  type: condition

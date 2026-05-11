@@ -1,7 +1,7 @@
 mlflow:
   MLFLOW_TRACKING_URI: http://localhost:23435
 minio:
-  MINIO_ENDPOINT: http://localhost:23444
+  MINIO_ENDPOINT: http://localhost:23439
   MINIO_ID: mlflow
   MINIO_SECRET_KEY: wyoloservice
   MINIO_BUCKET: models
@@ -13,7 +13,7 @@ redis:
   TOPIC: training_queue
   RESULT_TOPIC: results_queue
 dvc:
-  MINIO_ENDPOINT: http://localhost:23444
+  MINIO_ENDPOINT: http://localhost:23439
   MINIO_ID: mlflow
   MINIO_SECRET_KEY: wyoloservice
   MINIO_BUCKET: dvcstorage
