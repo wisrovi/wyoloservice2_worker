@@ -14,9 +14,9 @@ mlflow
 hydra-core
 hydra-optuna-sweeper
 optuna
-wpipe
-wsqlite==2.1.0
+wsqlite
 wredis
+wpipe
 loguru
 logbook
 python-slugify
