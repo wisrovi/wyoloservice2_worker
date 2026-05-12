@@ -1,8 +1,5 @@
 fastapi
 uvicorn
-SQLAlchemy
-SQLite4
-redis
 boto3
 requests
 psutil
@@ -27,13 +24,13 @@ seaborn
 Pillow
 matplotlib
 setproctitle
-langchain
-langchain-ollama
-langchain-core
+# langchain
+# langchain-ollama
+# langchain-core
 
-qrcode
+# qrcode
 Pillow
-rich
+# rich
 colorama
 
 ray[tune]
