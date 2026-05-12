@@ -72,7 +72,7 @@ trainer_example:
 		-v /home/wyolo/events:/wyolo/worker/events \
 		-v /home/wyolo/request:/wyolo/worker/request \
 		-v /home/wyolo/train_service_results:/wyolo/worker/train_service_results \
-		wisrovi/wyolo_trainer:v2.1.0 \
+		wisrovi/train_service:worker_executor_v1.0.0 \
 		zsh
 
 trainer_example_2:
@@ -101,5 +101,5 @@ trainer_example_2:
 		-v /home/wyolo/events:/wyolo/worker/events \
 		-v /home/wyolo/request:/wyolo/worker/request \
 		-v /home/wyolo/train_service_results:/wyolo/worker/train_service_results \
-		wisrovi/wyolo_trainer:v2.1.0 \
+		wisrovi/train_service:worker_executor_v1.0.0 \
 		bash -c '/usr/local/bin/mount-cifs.sh && python main.py --file "/wyolo/worker/request/config_train_CLS.yaml"'
