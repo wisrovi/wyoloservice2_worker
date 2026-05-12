@@ -59,7 +59,7 @@ def main(user_config_train):
 
     with ResourceMonitor("eyesdcar_pipeline_ResourceMonitor") as monitor:
         with TaskTimer("eyesdcar_pipeline_TaskTimer", timeout_seconds=900) as timer:
-            results = pipeline.run(args_dict)
+            results = pipeline.run(user_config_train)
 
             if timer.exceeded_timeout():
                 # print("⚠ Work exceeded timeout!")
@@ -103,3 +103,5 @@ if __name__ == "__main__":
     results = main(args_dict)
 
     print(f"\nResults: {results.get('results_trained_model')}")
+
+    print(f"\nResults: {results}")

@@ -40,26 +40,66 @@ stop:
 into:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  exec executor zsh
 
+
+
+
+
+
+# python main.py --file "/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml"
 trainer_example:
-	docker run --rm \
-	--name wyolo_son \
-	--privileged \
-	--cap-add=SYS_ADMIN \
-	--cap-add=DAC_READ_SEARCH \
-	--cap-add=NET_ADMIN \
-	--cap-add=SYS_RESOURCE \
-	--network host \
-	--hostname "willia.rodriguez" \
-	--shm-size="24g" \
-	--memory="24g" \
-	--cpus=6 \
-	--gpus '"device=0"' \
-	-e NVIDIA_VISIBLE_DEVICES=0 \
-	-e NVIDIA_DRIVER_CAPABILITIES=compute,utility \
-	-e TZ=Europe/Madrid \
-	--env-file config/control_host.env \
-	--env-file config/user.env \
-	-v /home/wyolo/events:/wyolo/worker/events \
-	-v /home/wyolo/train_service_results:/wyolo/worker/train_service_results \
-	wisrovi/wyolo_trainer:v2.1.0 \
-	python /app/main.py --file "/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml"
+	docker run --rm -it \
+		--name executor \
+		--hostname "${USER}" \
+		--privileged \
+		--network host \
+		--shm-size=16g \
+		--cpus=8 \
+		--memory=24g \
+		--cap-add=SYS_ADMIN \
+		--cap-add=DAC_READ_SEARCH \
+		--cap-add=NET_ADMIN \
+		--cap-add=SYS_RESOURCE \
+		--gpus '"device=0"' \
+		--env NVIDIA_VISIBLE_DEVICES=0 \
+		--env NVIDIA_DRIVER_CAPABILITIES=compute,utility \
+		--env TZ=Europe/Madrid \
+		--env-file config/control_host.env \
+		--env-file config/user.env \
+		--label autoheal=true \
+		--label com.centurylinklabs.watchtower.enable=true \
+		--log-driver json-file \
+		--log-opt max-size=10m \
+		--log-opt max-file=3 \
+		-v /home/wyolo/events:/wyolo/worker/events \
+		-v /home/wyolo/train_service_results:/wyolo/worker/train_service_results \
+		wisrovi/wyolo_trainer:v2.1.0 \
+		zsh
+
+trainer_example_2:
+	docker run --rm -it \
+		--name executor \
+		--hostname "${USER}" \
+		--privileged \
+		--network host \
+		--shm-size=16g \
+		--cpus=8 \
+		--memory=24g \
+		--cap-add=SYS_ADMIN \
+		--cap-add=DAC_READ_SEARCH \
+		--cap-add=NET_ADMIN \
+		--cap-add=SYS_RESOURCE \
+		--gpus '"device=0"' \
+		--env NVIDIA_VISIBLE_DEVICES=0 \
+		--env NVIDIA_DRIVER_CAPABILITIES=compute,utility \
+		--env TZ=Europe/Madrid \
+		--env-file config/control_host.env \
+		--env-file config/user.env \
+		--label autoheal=true \
+		--label com.centurylinklabs.watchtower.enable=true \
+		--log-driver json-file \
+		--log-opt max-size=10m \
+		--log-opt max-file=3 \
+		-v /home/wyolo/events:/wyolo/worker/events \
+		-v /home/wyolo/train_service_results:/wyolo/worker/train_service_results \
+		wisrovi/wyolo_trainer:v2.1.0 \
+		bash -c '/usr/local/bin/mount-cifs.sh && python main.py --file "/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml"'
