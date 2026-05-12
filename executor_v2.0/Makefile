@@ -45,10 +45,9 @@ into:
 
 
 
-# python main.py --file "/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml"
+# python main.py --file "/wyolo/worker/request/config_train_CLS.yaml"
 trainer_example:
 	docker run --rm -it \
-		--name executor \
 		--hostname "${USER}" \
 		--privileged \
 		--network host \
@@ -71,13 +70,13 @@ trainer_example:
 		--log-opt max-size=10m \
 		--log-opt max-file=3 \
 		-v /home/wyolo/events:/wyolo/worker/events \
+		-v /home/wyolo/request:/wyolo/worker/request \
 		-v /home/wyolo/train_service_results:/wyolo/worker/train_service_results \
 		wisrovi/wyolo_trainer:v2.1.0 \
 		zsh
 
 trainer_example_2:
 	docker run --rm -it \
-		--name executor \
 		--hostname "${USER}" \
 		--privileged \
 		--network host \
@@ -100,6 +99,7 @@ trainer_example_2:
 		--log-opt max-size=10m \
 		--log-opt max-file=3 \
 		-v /home/wyolo/events:/wyolo/worker/events \
+		-v /home/wyolo/request:/wyolo/worker/request \
 		-v /home/wyolo/train_service_results:/wyolo/worker/train_service_results \
 		wisrovi/wyolo_trainer:v2.1.0 \
-		bash -c '/usr/local/bin/mount-cifs.sh && python main.py --file "/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml"'
+		bash -c '/usr/local/bin/mount-cifs.sh && python main.py --file "/wyolo/worker/request/config_train_CLS.yaml"'

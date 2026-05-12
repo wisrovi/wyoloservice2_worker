@@ -419,17 +419,30 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
         # ---------------------------------------
         # ---------------------------------------
         train_params = request_config["train"]
+
+        # calculate better batch based on gpu info and configured batch
+        batch = int(os.environ.get("MAX_GPU", -1))
+        batch = batch / 100 if batch > 0 else 0.1
+        train_params["batch"] = batch
+
         results = trainer.train(config_train=train_params)
         # ---------------------------------------
         # ---------------------------------------
 
-        request_config["experiment_type"] = str(results.task)
+        try:
+            request_config["experiment_type"] = str(results.task)
+        except:
+            request_config["experiment_type"] = "not-specified"
+
         request_config["train"]["results"] = results.results_dict
 
         try:
             final_result = request_config["train"]["results"][fitness]
         except:
-            final_result = request_config["train"]["results"]["fitness"]
+            try:
+                final_result = request_config["train"]["results"]["fitness"]
+            except:
+                final_result = request_config["train"]["results"]
 
     print(f"ResultadoFinal:{final_result}")
     return final_result

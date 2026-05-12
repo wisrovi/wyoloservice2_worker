@@ -14,6 +14,7 @@ from states import (
     check_minio_buckets,
     train_model,
     load_yaml,
+    public_results,
 )
 
 setproctitle("wtrain-service")
@@ -45,7 +46,10 @@ def config_pipeline():
                 check_dataset,
                 Condition(
                     expression="gpu_status == 1 and dataset_status == 1",
-                    branch_true=[train_model],
+                    branch_true=[
+                        train_model,
+                        public_results,
+                    ],
                     branch_false=[],
                 ),
             ]
@@ -103,5 +107,3 @@ if __name__ == "__main__":
     results = main(args_dict)
 
     print(f"\nResults: {results.get('results_trained_model')}")
-
-    print(f"\nResults: {results}")

@@ -1,6 +1,7 @@
 from .check import check_dataset, check_gpu_available, check_minio_buckets
 from .error_process import error_capture
 from .train.train import train_model
+from .train.public_results import  public_results
 from .load_yaml.load_yaml import load_yaml
 import os
 
@@ -15,4 +16,5 @@ __all__ = [
     "check_minio_buckets",
     "train_model",
     "load_yaml",
+    "public_results",
 ]

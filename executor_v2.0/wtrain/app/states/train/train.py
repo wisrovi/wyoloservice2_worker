@@ -3,12 +3,10 @@
 
 # production:
 from pydantic import BaseModel
-from mlflow.store.db.base_sql_model import Base
 from wyolo.trainer.trainer_wrapper import create_trainer, train
 
 import os
 import tempfile
-from loguru import logger
 from wpipe import step, to_obj
 import yaml
 
@@ -53,11 +51,12 @@ def train_model(data_input: UserInput):
 
             request_config["train"]["data"] = DATASET
 
+            if config_dict.get("sweeper", {}).get("fitness") is None:
+                raise ValueError(
+                    "La clave 'fitness' no se encuentra en la configuración del sweeper."
+                )
+
             fitness = config_dict.get("sweeper", {}).get("fitness", "fitness")
-            request_config = train(trainer, request_config, fitness)
-
-            results = request_config["train"]
-
-        # print(request_config)
+            results = train(trainer, request_config, fitness)
 
     return {"results_trained_model": results}
