@@ -44,14 +44,15 @@ services:
   executor:
     <<: *resources_gpu
     build:
-      context: ./wyolo
+      context: ./wtrain
       dockerfile: Dockerfile
-    image: wisrovi/wyolo_trainer:v2.1.0
+    image: wisrovi/train_service:worker_executor_v1.0.0
     env_file:
       - config/control_host.env
       - config/user.env
     volumes:
       - /home/wyolo/events:/wyolo/worker/events
+      - /home/wyolo/request:/wyolo/worker/request
       - /home/wyolo/train_service_results:/wyolo/worker/train_service_results
       # development only
       # - ./wyolo/app:/app
