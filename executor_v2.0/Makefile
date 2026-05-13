@@ -25,7 +25,7 @@ user.env:
 
 config.py:
 	pip install customtkinter
-	python production/config.py
+	python config/config.py
 
 start: user.env config.py
 	mv user.env ./config/
