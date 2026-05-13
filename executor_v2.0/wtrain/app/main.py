@@ -15,6 +15,7 @@ from states import (
     train_model,
     load_yaml,
     public_results,
+    not_train,
 )
 
 setproctitle("wtrain-service")
@@ -22,7 +23,7 @@ setproctitle("wtrain-service")
 
 def config_pipeline():
     pipeline = Pipeline(
-        pipeline_name="wtrain_pipeline",
+        pipeline_name="wtrain_pipe",
         verbose=False,
         tracking_db="/wyolo/worker/events/wtrain.db",
         #
@@ -50,7 +51,7 @@ def config_pipeline():
                         train_model,
                         public_results,
                     ],
-                    branch_false=[],
+                    branch_false=[not_train],
                 ),
             ]
         )
@@ -99,6 +100,8 @@ def get_argument(arg_name, default=None):
 
 if __name__ == "__main__":
     # python main.py --file /wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml
+    # python main.py --file "/wyolo/worker/request/config_train_CLS.yaml"
+    # python -m wpipe.dashboard --db /wyolo/worker/events/wtrain.db --port 8036
 
     _user_config_file = get_argument("file", default="/wyolo/config_train.yaml")
 

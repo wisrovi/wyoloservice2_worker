@@ -55,7 +55,19 @@ services:
       - /home/wyolo/request:/wyolo/worker/request
       - /home/wyolo/train_service_results:/wyolo/worker/train_service_results
       # development only
-      # - ./wyolo/app:/app
+      - ./wtrain/app:/app
     network_mode: host
     # command: bash -c python main.py --file "/wyolo/control_server/datasets/clasification/colorball.v8i.multiclass/config_train.yaml"
     command: tail -f /dev/null
+    # development only
+
+  # dashboard:
+  #   build:
+  #     context: ./wtrain
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - /home/wyolo/events:/wyolo/worker/events
+  #   network_mode: host
+  #   ports:
+  #     - "8082:8036"
+  #   command: python -m wpipe.dashboard --db /wyolo/worker/events/wtrain.db --port 8036
