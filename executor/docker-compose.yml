@@ -1,0 +1,13 @@
+# The INVOKER: Hierarchical queue consumption (Private > High > Medium > Low)
+# Usage: PRIVATE_QUEUE=worker_gpu1 docker-compose up -d
+# Or edit .env file to set PRIVATE_QUEUE=worker_yourname
+
+version: '3.8'
+
+services:
+  ml_executor:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: wisrovi/train_service:worker_executor_v1.0.0
+    entrypoint: [ "echo", "Executor image ready" ]
