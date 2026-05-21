@@ -257,12 +257,12 @@ def create_trainer(config_path: str, trial_number):
     timestamp = get_datetime()
     request_config["timestamp"] = timestamp
 
-    if request_config["train"]["batch"] > 0:
-        better_batch = trainer.get_better_batch(
-            batch_to_use=request_config["train"]["batch"]
-        )
-        if request_config["train"]["batch"] > better_batch:
-            request_config["train"]["batch"] = better_batch
+    # if request_config["train"]["batch"] > 0:
+    #     better_batch = trainer.get_better_batch(
+    #         batch_to_use=request_config["train"]["batch"]
+    #     )
+    #     if request_config["train"]["batch"] > better_batch:
+    #         request_config["train"]["batch"] = better_batch
 
     request_config["train"]["project"] = f"{RESULT_PATH}/{trial_number}/"
     request_config["train"]["name"] = f"train_{request_config.get('task_id')}"
@@ -279,18 +279,20 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
     if "train" in request_config:
         results = trainer.train(config_train=request_config["train"])
 
-        final_result = 0
+        final_result = 0.0
 
-        if results:
+        if results and hasattr(results, 'results_dict'):
             request_config["experiment_type"] = str(results.task)
             request_config["train"]["results"] = results.results_dict
 
             try:
-                final_result = request_config["train"]["results"][fitness]
+                final_result = request_config["train"]["results"].get(fitness, 0.0)
             except:
-                final_result = request_config["train"]["results"]["fitness"]
+                final_result = 0.0
 
             print(f"ResultadoFinal:{final_result}")
+        else:
+            print("--- [TRAINER] Warning: No results_dict found in YOLO results ---")
     return final_result
 
 

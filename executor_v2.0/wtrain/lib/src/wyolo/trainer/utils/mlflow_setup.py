@@ -129,7 +129,11 @@ class Mlflow_setup:
             }
 
             trial_number = config.get("trial_number", 1)
-            total_trails = config.get("sweeper", 1).get("n_trials", 10)
+            sweeper_config = config.get("sweeper")
+            if isinstance(sweeper_config, dict):
+                total_trails = sweeper_config.get("n_trials", 10)
+            else:
+                total_trails = 10
 
             total_epochs = config.get("train", {}).get("epochs", 10)
 
