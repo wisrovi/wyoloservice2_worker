@@ -12,7 +12,7 @@ class PublicResultsInput(BaseModel):
     results_trained_model: Any
 
 
-@step(name="train_model", version="v1.0", tags=["train_model"])
+@step(name="public_results", version="v1.0", tags=["train_model"])
 @to_obj(PublicResultsInput)
 def public_results(data_input: PublicResultsInput):
     if os.path.exists(os.path.join(BASE_PATH, FILE)):
@@ -20,9 +20,14 @@ def public_results(data_input: PublicResultsInput):
         os.remove(os.path.join(BASE_PATH, FILE))
 
     accuracy = data_input.results_trained_model
+    
+    if accuracy is None:
+        print("--- [PUBLIC_RESULTS] Warning: accuracy is None, using 0.0 ---")
+        accuracy = 0.0
 
     with open(os.path.join(BASE_PATH, FILE), "w") as f:
-        save = {"accuracy": round(accuracy, 4)}
+        save = {"accuracy": round(float(accuracy), 4)}
         json.dump(save, f)
+        print(f"--- [PUBLIC_RESULTS] Saved results.json with accuracy={save['accuracy']} ---")
 
     return {"public_results": True}

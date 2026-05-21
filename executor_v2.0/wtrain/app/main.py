@@ -109,4 +109,5 @@ if __name__ == "__main__":
 
     results = main(args_dict)
 
+    print(f"\n--- [DEBUG] Full Pipeline Results: {results} ---")
     print(f"\nResults: {results.get('results_trained_model')}")

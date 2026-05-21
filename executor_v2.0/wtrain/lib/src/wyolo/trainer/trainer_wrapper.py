@@ -209,14 +209,14 @@ class TrainerWrapper(Elemental, Mlflow_setup):
 
     def train(self, config_train: dict):
         if self.model:
-            # read env var MAX_GPU (user defined) for max gpu (value between 0 and 100)
-            # if not set, use default value (60%),
-            # if set to -1, use 60% of the gpu
-            MAX_GPU = float(os.environ.get("MAX_GPU", -5000.1))
-
-            config_train["batch"] = max(MAX_GPU / 100, -1)
-
-            return self.model.train(**config_train)
+            print(f"--- [TRAINER] Executing model.train() ---")
+            try:
+                return self.model.train(**config_train)
+            except Exception as e:
+                print(f"--- [TRAINER] Exception in model.train(): {e} ---")
+                import traceback
+                traceback.print_exc()
+                return None
 
     def create_model(self, model_name, model_type):
         if model_type == "yolo":
@@ -276,12 +276,12 @@ def create_trainer(config_path: str, trial_number):
     timestamp = get_datetime()
     request_config["timestamp"] = timestamp
 
-    if request_config["train"]["batch"] > 0:
-        better_batch = trainer.get_better_batch(
-            batch_to_use=request_config["train"]["batch"]
-        )
-        if request_config["train"]["batch"] > better_batch:
-            request_config["train"]["batch"] = better_batch
+    # if request_config["train"]["batch"] > 0:
+    #     better_batch = trainer.get_better_batch(
+    #         batch_to_use=request_config["train"]["batch"]
+    #     )
+    #     if request_config["train"]["batch"] > better_batch:
+    #         request_config["train"]["batch"] = better_batch
 
     request_config["train"]["project"] = f"{RESULT_PATH}/{trial_number}/"
     request_config["train"]["name"] = f"train_{request_config.get('task_id')}"
@@ -421,28 +421,30 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
         train_params = request_config["train"]
 
         # calculate better batch based on gpu info and configured batch
-        batch = int(os.environ.get("MAX_GPU", -1))
-        batch = batch / 100 if batch > 0 else 0.1
-        train_params["batch"] = batch
+        if train_params.get("batch") != -1:
+            batch = int(os.environ.get("MAX_GPU", -1))
+            batch = batch / 100 if batch > 0 else 0.1
+            train_params["batch"] = batch
 
+        print(f"--- [TRAINER] Starting YOLO train with config: {train_params} ---")
         results = trainer.train(config_train=train_params)
         # ---------------------------------------
         # ---------------------------------------
 
-        try:
-            request_config["experiment_type"] = str(results.task)
-        except:
-            request_config["experiment_type"] = "not-specified"
-
-        request_config["train"]["results"] = results.results_dict
-
-        try:
-            final_result = request_config["train"]["results"][fitness]
-        except:
+        if results and hasattr(results, 'results_dict'):
+            request_config["train"]["results"] = results.results_dict
             try:
-                final_result = request_config["train"]["results"]["fitness"]
+                request_config["experiment_type"] = str(results.task)
             except:
-                final_result = request_config["train"]["results"]
+                request_config["experiment_type"] = "not-specified"
+
+            try:
+                final_result = request_config["train"]["results"].get(fitness, 0.0)
+            except:
+                final_result = 0.0
+        else:
+            print("--- [TRAINER] Warning: No results_dict found in YOLO results ---")
+            final_result = 0.0
 
     print(f"ResultadoFinal:{final_result}")
     return final_result
