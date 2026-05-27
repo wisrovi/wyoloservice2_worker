@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLO Executor | WDarwin Ops Performance</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%23ef4444'/><stop offset='100%25' style='stop-color:%23f59e0b'/></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23g)'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ef4444;
+            --accent: #f59e0b;
+            --bg-deep: #020617;
+            --bg-card: rgba(15, 23, 42, 0.6);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --gradient-linear: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-deep); color: var(--text-main); background-image: radial-gradient(at 100% 100%, hsla(0, 100%, 50%, 0.1) 0, transparent 50%); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+        .hero { height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .gradient-text { background: var(--gradient-linear); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero h1 { font-size: clamp(3rem, 8vw, 6rem); font-weight: 800; line-height: 1.1; margin-bottom: 2rem; }
+        .hero p { font-size: 1.25rem; color: var(--text-dim); max-width: 800px; margin: 0 auto 3rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; padding-bottom: 100px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); padding: 3rem; border-radius: 24px; text-align: left; }
+        .card h3 { color: var(--primary); margin-bottom: 1rem; }
+        .card i { font-size: 2.5rem; margin-bottom: 1.5rem; color: var(--primary); }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="container">
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.5rem 1.5rem; border-radius: 100px; display: inline-block; font-weight: 700; font-size: 0.8rem; margin-bottom: 2rem; letter-spacing: 0.1em;">RAW MUSCLE</div>
+            <h1>The <span class="gradient-text">Neural Engine</span></h1>
+            <p>
+                The Worker service is the high-performance execution layer. 
+                Dedicated to running pure YOLOv8 and YOLOv11 training pipelines, 
+                it interacts directly with NVIDIA hardware to deliver maximum throughput 
+                and precision.
+            </p>
+            <div class="grid">
+                <div class="card">
+                    <i class="fas fa-bolt"></i>
+                    <h3>Peak Performance</h3>
+                    <p>Optimized C++ and CUDA bindings for the fastest possible training iterations on YOLO architectures.</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Metric Logging</h3>
+                    <p>Native integration with MLflow Tracking to record loss, mAP, and confusion matrices every epoch.</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Container Isolation</h3>
+                    <p>Strict resource limits and isolated networking to prevent interference between concurrent training trials.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
