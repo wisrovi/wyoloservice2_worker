@@ -12,9 +12,9 @@ class PublicResultsInput(BaseModel):
     results_trained_model: Any
 
 
-@step(name="public_results", version="v1.0", tags=["train_model"])
+@step(name="publish_results_mlflow", version="v1.0", tags=["train_model"])
 @to_obj(PublicResultsInput)
-def public_results(data_input: PublicResultsInput):
+def publish_results_mlflow(data_input: PublicResultsInput):
     if os.path.exists(os.path.join(BASE_PATH, FILE)):
         # delete existing file to avoid confusion
         os.remove(os.path.join(BASE_PATH, FILE))
