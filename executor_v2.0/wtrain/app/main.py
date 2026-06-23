@@ -14,8 +14,10 @@ from states import (
     check_minio_buckets,
     train_model,
     load_yaml,
-    public_results,
+    publish_results_mlflow,
     not_train,
+    publish_request_redis,
+    publish_results_redis,
 )
 
 setproctitle("wtrain-service")
@@ -42,6 +44,7 @@ def config_pipeline():
         pipeline.set_steps(
             [
                 load_yaml,
+                publish_request_redis,
                 check_minio_buckets,
                 check_gpu_available,
                 check_dataset,
@@ -49,10 +52,13 @@ def config_pipeline():
                     expression="gpu_status == 1 and dataset_status == 1",
                     branch_true=[
                         train_model,
-                        public_results,
+                        publish_results_mlflow,
                     ],
-                    branch_false=[not_train],
+                    branch_false=[
+                        not_train,
+                    ],
                 ),
+                publish_results_redis,
             ]
         )
 

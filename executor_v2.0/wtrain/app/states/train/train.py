@@ -1,7 +1,3 @@
-# debug:
-# from lib.src.wyolo.trainer.trainer_wrapper import create_trainer, train
-
-# production:
 from pydantic import BaseModel
 from wyolo.trainer.trainer_wrapper import create_trainer, train
 

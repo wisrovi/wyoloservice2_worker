@@ -1,9 +1,10 @@
 from .check import check_dataset, check_gpu_available, check_minio_buckets
 from .error_process import error_capture
 from .train.train import train_model
-from .train.public_results import  public_results
+from .train.public_results import  publish_results_mlflow
 from .train.not_train import not_train
 from .load_yaml.load_yaml import load_yaml
+from .publish_results.publish_results import publish_request_redis, publish_results_redis
 
 import os
 
@@ -18,6 +19,8 @@ __all__ = [
     "check_minio_buckets",
     "train_model",
     "load_yaml",
-    "public_results",
+    "publish_results_mlflow",
     "not_train",
+    "publish_request_redis",
+    "publish_results_redis",
 ]
