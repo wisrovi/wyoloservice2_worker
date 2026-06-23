@@ -1,0 +1,35 @@
+name: wtrain_pipe
+registered_at: '2026-06-23T12:33:57.909525'
+step_count: 7
+steps:
+- func: <function load_yaml at 0x70d7c817bd90>
+  name: load_yaml
+  type: task
+  version: v1.0
+- func: <function publish_request_redis at 0x70d7c7d5b760>
+  name: publish_request_redis
+  type: task
+  version: v1.0
+- func: <function check_minio_buckets at 0x70d7e6ba4ee0>
+  name: check_minio_buckets
+  type: task
+  version: v1.0
+- func: <function check_gpu_available at 0x70d819d8cdc0>
+  name: check_gpu_available
+  type: task
+  version: v1.0
+- func: <function check_dataset at 0x70d819d8d7e0>
+  name: check_dataset
+  type: task
+  version: v1.0
+- branch_false:
+  - <function not_train at 0x70d7c817bac0>
+  branch_true:
+  - <function train_model at 0x70d7c817b520>
+  - <function publish_results_mlflow at 0x70d7c817b910>
+  expression: gpu_status == 1 and dataset_status == 1
+  type: condition
+- func: <function publish_results_redis at 0x70d7c7d5b910>
+  name: publish_results_redis
+  type: task
+  version: v1.0
