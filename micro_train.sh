@@ -104,6 +104,5 @@ docker run "${DOCKER_RUN_ARGS[@]}" \
   -v /home/wyolo/events:/wyolo/worker/events:rw \
   -v /home/wyolo/train_service_results:/wyolo/worker/train_service_results:rw \
   -v /home/wyolo/request:/wyolo/worker/request:rw \
-  -v /home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_worker/executor_v2.0/wtrain/app:/app \
   wisrovi/train_service:worker_executor_v1.0.0 \
   bash -c "$CMD"
