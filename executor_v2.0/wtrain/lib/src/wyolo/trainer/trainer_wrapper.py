@@ -49,6 +49,11 @@ class TrainerWrapper(Elemental, Mlflow_setup):
 
             registered_model_name = f"{experiment_name}_{task_id}"
             # Log the model as artifact instead (simpler approach)
+
+            # 1. train
+
+            # 2. up result to mlflow
+
             try:
                 import torch
 
@@ -66,9 +71,13 @@ class TrainerWrapper(Elemental, Mlflow_setup):
             self.artifacts_organice()
             mlflow.log_artifacts(self.ARTIFACTS_PATH)
 
+            # 3. grapCam
+            # TODO: 4. force up train document
+            # TODO: 5. force up valid examples
+            # TODO: 6. force up test examples
+
     def on_train_start(self, trainer):
         if "minio" in self.config and "mlflow" in self.config:
-
             # remove batch of self.config
             config_copy = self.config.copy()
             config_copy["train"].pop("batch")
@@ -135,7 +144,6 @@ class TrainerWrapper(Elemental, Mlflow_setup):
             os.remove(self.STOP_TRAIN_PATH)
 
     def force_stop_train(self, trainer):
-
         if self.model:
             self.model.stop_training = True
             self.model.stop_training = False
@@ -161,7 +169,6 @@ class TrainerWrapper(Elemental, Mlflow_setup):
 
     def tune(self, CONFIG_TRAIN: dict, _generations: int):
         if self.model:
-
             _grace_period = self.config.get("genetic", {}).get("min_epochs_by_ind", 10)
             _other_parameters = self.config.get("genetic", {}).get(
                 "other_parameters", {}
@@ -215,6 +222,7 @@ class TrainerWrapper(Elemental, Mlflow_setup):
             except Exception as e:
                 print(f"--- [TRAINER] Exception in model.train(): {e} ---")
                 import traceback
+
                 traceback.print_exc()
                 return None
 
@@ -318,7 +326,6 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
     final_result = 0.0
 
     if "train" in request_config:
-
         if trainer.config.get("genetic", {}).get("activate", False):
             # 0. Validacion que existan los parametros necesarios
             NEED_PARAMS = [
@@ -427,11 +434,12 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
             train_params["batch"] = batch
 
         print(f"--- [TRAINER] Starting YOLO train with config: {train_params} ---")
+
         results = trainer.train(config_train=train_params)
         # ---------------------------------------
         # ---------------------------------------
 
-        if results and hasattr(results, 'results_dict'):
+        if results and hasattr(results, "results_dict"):
             request_config["train"]["results"] = results.results_dict
             try:
                 request_config["experiment_type"] = str(results.task)
