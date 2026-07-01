@@ -7,10 +7,11 @@ CIFS_PASS=${CIFS_PASS:-wyoloservice}
 
 # Imprimir variables de entorno para depuración
 echo
-echo "Credenciales samba"
-echo "control_server_HOST: $CONTROL_HOST"
-echo "USER: $CIFS_USER"
-echo "PASS: $CIFS_PASS"
+echo "╭────────────── Credenciales Samba ──────────────╮"
+echo "│ control_server_HOST : $(printf '%-26s' "$CONTROL_HOST") │"
+echo "│ USER                : $(printf '%-26s' "$CIFS_USER") │"
+echo "│ PASS                : $(printf '%-26s' "$CIFS_PASS") │"
+echo "╰────────────────────────────────────────────────╯"
 
 # Instalar paquetes necesarios si no están disponibles
 if ! command -v mount.cifs &> /dev/null; then
