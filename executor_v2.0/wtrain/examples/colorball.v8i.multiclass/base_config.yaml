@@ -15,6 +15,7 @@ sweeper:
   algorithm: optuna
   direction: maximize
   study_name: "color_ball_v2"
+  fitness: "metrics/accuracy_top1"
   tune: false
   sampler: "TPESampler"
   n_trials: 1
