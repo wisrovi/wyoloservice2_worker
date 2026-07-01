@@ -36,6 +36,9 @@ RUN pip install --no-cache-dir --timeout 300 --retries 3 -r requirements.txt
 
 # -------------------------------------
 
+WORKDIR /examples/clasifier
+COPY examples .
+
 
 FROM base
 
