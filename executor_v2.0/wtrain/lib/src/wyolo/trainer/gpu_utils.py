@@ -108,6 +108,41 @@ def print_gpu_report(hardware_gpu_count):
         )
     )
 
+    # 4. Hito: Recursos del Contenedor
+    res_table = Table(
+        show_header=True,
+        header_style="bold magenta",
+        title="\n[bold]Recursos Asignados (Límites Docker)[/bold]",
+    )
+    res_table.add_column("Recurso", style="dim")
+    res_table.add_column("Asignación", justify="right")
+
+    max_gpu_env = os.environ.get("MAX_GPU", "-1")
+    gpu_asignada = f"{max_gpu_env}%" if max_gpu_env != "-1" else "Sin límite (100%)"
+    res_table.add_row("Uso máximo VRAM (Autobatch)", gpu_asignada)
+
+    try:
+        import psutil
+        ram_total = f"{psutil.virtual_memory().total / 1024**3:.1f} GB"
+    except Exception:
+        ram_total = "Desconocido"
+    res_table.add_row("RAM Total Disponible", ram_total)
+
+    try:
+        cpu_count = str(len(os.sched_getaffinity(0)))
+    except AttributeError:
+        cpu_count = str(os.cpu_count())
+    res_table.add_row("CPU Cores (Afinidad)", cpu_count)
+
+    try:
+        shm_stats = os.statvfs('/dev/shm')
+        shm_size = f"{(shm_stats.f_bsize * shm_stats.f_blocks) / 1024**3:.1f} GB"
+    except Exception:
+        shm_size = "Desconocido"
+    res_table.add_row("Memoria Compartida (SHM)", shm_size)
+
+    console.print(res_table)
+
 
 def gpu_compatibility_check(force_gpu: bool):
     available_gpu = torch.cuda.is_available()
