@@ -33,7 +33,7 @@ train:
   imgsz: 640
   batch: 16
   verbose: true
-  plots: true
+  plots: false
   exist_ok: true
 
 genetic:
@@ -63,7 +63,7 @@ genetic:
   # ----------------------------------
   # otros parametros que se pasan al ultralytics
   other_parameters: 
-    plots: true
+    plots: false
     verbose: true
     save: true
     val: true

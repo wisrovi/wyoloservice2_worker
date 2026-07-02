@@ -17,7 +17,7 @@ class Mlflow_setup:
     STOP_TRAIN_PATH = "/wyolo/worker/events/stop_training.yaml"
 
     COPY_MOVE = (
-        ModeArtifacts.MOVE
+        ModeArtifacts.COPY
     )  # Change to ModeArtifacts.COPY to copy files instead of moving
 
     worker_metadata = [
@@ -42,8 +42,8 @@ class Mlflow_setup:
     ]
 
     EXTENSION_PERMIT = [
-        # ".pt",
-        # ".csv",
+        ".pt",
+        ".csv",
         ".png",
         ".jpg",
         ".jpeg",
@@ -160,7 +160,7 @@ class Mlflow_setup:
 
         return metadata
 
-    def artifacts_organice(self):
+    def artifacts_organice(self, trainer=None):
         organized_dirs = [
             Path(self.ARTIFACTS_PATH) / "evaluation_metrics",
             Path(self.ARTIFACTS_PATH) / "model_weights",
@@ -171,7 +171,38 @@ class Mlflow_setup:
         ]
 
         for dir_path in organized_dirs:
+            if dir_path.exists():
+                shutil.rmtree(dir_path)
             dir_path.mkdir(parents=True, exist_ok=True)
+
+        # Write/Update results.json with current fitness value if available
+        if trainer is not None:
+            try:
+                import json
+                from slugify import slugify
+                fitness_key = self.config.get("sweeper", {}).get("fitness", "metrics/accuracy_top1")
+                accuracy = 0.0
+                
+                if hasattr(trainer, "metrics") and trainer.metrics:
+                    if fitness_key in trainer.metrics:
+                        accuracy = float(trainer.metrics[fitness_key])
+                    else:
+                        slugified_fitness = slugify(fitness_key)
+                        metrics = {slugify(k): float(v) for k, v in trainer.metrics.items()}
+                        if slugified_fitness in metrics:
+                            accuracy = metrics[slugified_fitness]
+                        else:
+                            for k, v in metrics.items():
+                                if "accuracy" in k or "top1" in k:
+                                    accuracy = v
+                                    break
+                
+                results_file_path = os.path.join(self.ARTIFACTS_PATH, "results.json")
+                if accuracy > 0.0 or not os.path.exists(results_file_path):
+                    with open(results_file_path, "w") as f:
+                        json.dump({"accuracy": round(float(accuracy), 4)}, f)
+            except Exception as e:
+                print(f"Failed to write results.json during artifacts organization: {e}")
 
         # Get the training results directory
         results_dir = self.config.get("tempfile")
@@ -222,9 +253,6 @@ class Mlflow_setup:
                     if self.COPY_MOVE == ModeArtifacts.COPY:
                         shutil.copy2(str(original_file), str(destinity_dir))
                     else:
-                        if os.path.exists(destinity_dir):
-                            shutil.rmtree(destinity_dir)
-                            os.makedirs(destinity_dir, exist_ok=True)
                         shutil.move(str(original_file), str(destinity_dir))
                 except Exception as copy_error:
                     print(copy_error)

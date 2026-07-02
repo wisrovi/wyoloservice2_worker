@@ -68,7 +68,7 @@ class TrainerWrapper(Elemental, Mlflow_setup):
             }
             mlflow.log_metrics(metrics)
 
-            self.artifacts_organice()
+            self.artifacts_organice(trainer)
             mlflow.log_artifacts(self.ARTIFACTS_PATH)
 
             # 3. grapCam
@@ -78,6 +78,18 @@ class TrainerWrapper(Elemental, Mlflow_setup):
 
     def on_train_start(self, trainer):
         if "minio" in self.config and "mlflow" in self.config:
+            # Clean the entire artifacts directory to prevent leakage from previous runs
+            if os.path.exists(self.ARTIFACTS_PATH):
+                for item in os.listdir(self.ARTIFACTS_PATH):
+                    item_path = os.path.join(self.ARTIFACTS_PATH, item)
+                    try:
+                        if os.path.isfile(item_path) or os.path.islink(item_path):
+                            os.unlink(item_path)
+                        elif os.path.isdir(item_path):
+                            shutil.rmtree(item_path)
+                    except Exception as clean_error:
+                        print(f"Failed to clean {item_path}: {clean_error}")
+
             # remove batch of self.config
             config_copy = self.config.copy()
             config_copy["train"].pop("batch")
@@ -103,7 +115,7 @@ class TrainerWrapper(Elemental, Mlflow_setup):
                 except:
                     pass
 
-            self.artifacts_organice()
+            self.artifacts_organice(trainer)
             mlflow.log_artifacts(self.ARTIFACTS_PATH)
 
             current_run = mlflow.active_run()
@@ -114,7 +126,7 @@ class TrainerWrapper(Elemental, Mlflow_setup):
     def on_epoch_end(self, trainer):
         if self.firts_epoch:
             # self.firts_epoch = False
-            self.artifacts_organice()
+            self.artifacts_organice(trainer)
             mlflow.log_artifacts(self.ARTIFACTS_PATH)
 
         self.end_time = time.time()
@@ -224,6 +236,11 @@ class TrainerWrapper(Elemental, Mlflow_setup):
                 import traceback
 
                 traceback.print_exc()
+                
+                # Check if training completed and metrics were populated
+                if hasattr(self.model, 'trainer') and self.model.trainer and getattr(self.model.trainer, 'metrics', None) is not None:
+                    print("--- [TRAINER] Training completed before the exception. Returning populated metrics. ---")
+                    return self.model.trainer.metrics
                 return None
 
     def create_model(self, model_name, model_type):
@@ -439,19 +456,36 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
         # ---------------------------------------
         # ---------------------------------------
 
-        if results and hasattr(results, "results_dict"):
-            request_config["train"]["results"] = results.results_dict
-            try:
-                request_config["experiment_type"] = str(results.task)
-            except:
+        if results:
+            if hasattr(results, "results_dict"):
+                request_config["train"]["results"] = results.results_dict
+                try:
+                    request_config["experiment_type"] = str(results.task)
+                except:
+                    request_config["experiment_type"] = "not-specified"
+            elif isinstance(results, dict):
+                request_config["train"]["results"] = results
+                request_config["experiment_type"] = getattr(trainer.model, "task", "not-specified")
+            else:
+                request_config["train"]["results"] = {}
                 request_config["experiment_type"] = "not-specified"
 
             try:
-                final_result = request_config["train"]["results"].get(fitness, 0.0)
+                results_dict = request_config["train"]["results"]
+                if fitness in results_dict:
+                    final_result = results_dict[fitness]
+                else:
+                    # Look for key matching or with suffix (B) or (M)
+                    matching_keys = [k for k in results_dict.keys() if fitness in k or k in fitness]
+                    if matching_keys:
+                        final_result = results_dict[matching_keys[0]]
+                        print(f"--- [TRAINER] Metric '{fitness}' not found directly. Using matching key '{matching_keys[0]}': {final_result} ---")
+                    else:
+                        final_result = 0.0
             except:
                 final_result = 0.0
         else:
-            print("--- [TRAINER] Warning: No results_dict found in YOLO results ---")
+            print("--- [TRAINER] Warning: No results found in YOLO training ---")
             final_result = 0.0
 
     print(f"ResultadoFinal:{final_result}")

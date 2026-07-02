@@ -5,6 +5,7 @@ train:
   data: /examples/clasifier/colorball.v8i.multiclass/
   epochs: 5
   imgsz: 640
+  plots: false
 # val:
 #   conf: 0.01
 # test:
