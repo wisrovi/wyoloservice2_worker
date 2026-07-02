@@ -3,7 +3,7 @@ type: "yolo"
 train:
   batch: -1
   data: /examples/clasifier/colorball.v8i.multiclass/
-  epochs: 2
+  epochs: 5
   imgsz: 640
 # val:
 #   conf: 0.01
