@@ -1,4 +1,5 @@
-model: "yolov8n-seg.pt"
+model: "yolo26n-seg.pt"
+#"yolov8n-seg.pt"
 type: "yolo"
 train:
   batch: -1
@@ -15,7 +16,7 @@ sweeper:
   version: 1
   algorithm: optuna
   direction: maximize
-  study_name: "color_ball_v2"
+  study_name: "architecture_segmentation"
   fitness: "metrics/mAP50(M)"
   tune: false
   sampler: "TPESampler"

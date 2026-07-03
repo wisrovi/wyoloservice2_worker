@@ -66,6 +66,21 @@ def config_pipeline():
 
 
 def main(user_config_train):
+    # Clean the entire train_service_results directory to prevent leakage from previous runs
+    import os
+    import shutil
+    artifacts_path = "/wyolo/worker/train_service_results"
+    if os.path.exists(artifacts_path):
+        for item in os.listdir(artifacts_path):
+            item_path = os.path.join(artifacts_path, item)
+            try:
+                if os.path.isfile(item_path) or os.path.islink(item_path):
+                    os.unlink(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+            except Exception as clean_error:
+                print(f"Failed to clean {item_path}: {clean_error}")
+
     pipeline = config_pipeline()
 
     with ResourceMonitor("eyesdcar_pipeline_ResourceMonitor") as monitor:

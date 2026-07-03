@@ -1,4 +1,5 @@
-model: "yolov8n-cls.pt"
+model: "yolo26n-cls.pt" 
+#"yolov8n-cls.pt"
 type: "yolo"
 train:
   batch: -1
@@ -15,7 +16,7 @@ sweeper:
   version: 1
   algorithm: optuna
   direction: maximize
-  study_name: "color_ball_v2"
+  study_name: "color_ball_classification"
   fitness: "metrics/accuracy_top1"
   tune: false
   sampler: "TPESampler"

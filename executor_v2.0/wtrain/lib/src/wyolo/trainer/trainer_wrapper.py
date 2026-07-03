@@ -78,18 +78,6 @@ class TrainerWrapper(Elemental, Mlflow_setup):
 
     def on_train_start(self, trainer):
         if "minio" in self.config and "mlflow" in self.config:
-            # Clean the entire artifacts directory to prevent leakage from previous runs
-            if os.path.exists(self.ARTIFACTS_PATH):
-                for item in os.listdir(self.ARTIFACTS_PATH):
-                    item_path = os.path.join(self.ARTIFACTS_PATH, item)
-                    try:
-                        if os.path.isfile(item_path) or os.path.islink(item_path):
-                            os.unlink(item_path)
-                        elif os.path.isdir(item_path):
-                            shutil.rmtree(item_path)
-                    except Exception as clean_error:
-                        print(f"Failed to clean {item_path}: {clean_error}")
-
             # remove batch of self.config
             config_copy = self.config.copy()
             config_copy["train"].pop("batch")
