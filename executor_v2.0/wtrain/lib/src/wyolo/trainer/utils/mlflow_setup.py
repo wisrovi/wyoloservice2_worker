@@ -192,10 +192,16 @@ class Mlflow_setup:
                         if slugified_fitness in metrics:
                             accuracy = metrics[slugified_fitness]
                         else:
-                            for k, v in metrics.items():
-                                if "accuracy" in k or "top1" in k:
-                                    accuracy = v
-                                    break
+                            # Robust fallback matching
+                            matching_keys = [k for k, v in trainer.metrics.items() if fitness_key in k or k in fitness_key]
+                            if matching_keys:
+                                accuracy = float(trainer.metrics[matching_keys[0]])
+                                print(f"--- [ARTIFACTS] Metric '{fitness_key}' not found directly. Using '{matching_keys[0]}': {accuracy} ---")
+                            else:
+                                for k, v in metrics.items():
+                                    if "accuracy" in k or "top1" in k:
+                                        accuracy = v
+                                        break
                 
                 results_file_path = os.path.join(self.ARTIFACTS_PATH, "results.json")
                 if accuracy > 0.0 or not os.path.exists(results_file_path):
