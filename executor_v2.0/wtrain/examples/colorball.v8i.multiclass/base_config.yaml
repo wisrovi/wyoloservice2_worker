@@ -3,7 +3,7 @@ model: "yolo26n-cls.pt"
 type: "yolo"
 train:
   batch: -1
-  data: /examples/clasifier/colorball.v8i.multiclass/
+  data: /examples/colorball.v8i.multiclass/
   epochs: 5
   imgsz: 640
   plots: false
