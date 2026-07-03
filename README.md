@@ -1,251 +1,124 @@
-# Worker Executor - YOLO Training Container
+# Worker Executor v2.0 - YOLO Distributed Training Container
 
-Este componente es el **contenedor efímero** donde se ejecuta el entrenamiento real del modelo YOLO. Es lanzado por el Invoker mediante Docker, ejecuta el entrenamiento, y retorna métricas.
+Este componente es el **contenedor de ejecución efímero** de alto rendimiento donde se realiza el entrenamiento real de los modelos YOLO (clasificación, detección y segmentación). Es lanzado dinámicamente por el Invoker, procesa las configuraciones a través del motor de pipelines `wpipe` y reporta resultados a MLflow, MinIO y Redis.
 
 ---
 
-## 1. 🚶 Diagram Walkthrough
+## 1. 🚶 Diagrama de Flujo del Proceso (Pipeline Stack)
+
+El Executor corre un pipeline secuencial basado en la biblioteca corporativa `wpipe`, asegurando que cada paso intermedio del ciclo de vida se valide y registre.
 
 ```mermaid
 flowchart TD
-    subgraph "Contenedor Executor"
-        M[Main Script<br/>run_training.py]
-        C[Lee config.json]
-        T[Entrena YOLO]
-        L[Log a MLflow]
-        S[Guarda results.json]
+    subgraph Contenedor_Worker [Contenedor Worker]
+        M[main.py Entrada] -->|1. Limpia directorio| C[Limpia /wyolo/worker/train_service_results]
+        C -->|2. Carga YAML| L[load_yaml]
+        L -->|3. Publica a Redis| PR[publish_request_redis]
+        PR -->|4. Valida MinIO| MIN[check_minio_buckets]
+        MIN -->|5. Asigna GPU| GPU[check_gpu_available]
+        GPU -->|6. Valida Datos| DS[check_dataset]
+        
+        DS --> Dec{¿Todo listo?}
+        Dec -->|Sí| T[train_model]
+        Dec -->|No| NT[not_train]
+        
+        T -->|7. Registra en S3| PML[publish_results_mlflow]
+        PML --> End((Termina))
+        NT --> End
+        End -->|8. Cierra en Redis| RED[publish_results_redis]
     end
 
-    subgraph "Volumen Compartido"
-        V["/app/data/"]
-        VC[config.json]
-        VR[results.json]
+    subgraph Host_y_Servicios [Infraestructura Externa]
+        SM[Samba CIFS] -.->|Montado en| DS
+        RED -->|Métricas| R[(Redis)]
+        PML -->|Artefactos y results.json| MINIO[(MinIO S3 / MLflow)]
     end
-
-    subgraph "Infraestructura"
-        D[Docker Engine]
-        ML[MLflow]
-        GPU[GPU]
-    end
-
-    D -->|1. Monta volumen| V
-    V -->|2. Lee config| VC
-    VC -->|3. Lee config| C
-    C -->|4. Entrena| T
-    T -->|5. GPU| GPU
-    T -->|6. Log metrics| L
-    L -->|7. MLflow| ML
-    T -->|8. Escribe results| VR
-    VR -->|9. results.json| D
-```
-
-**Flujo Principal:**
-1. Invoker monta volumen temporal en /app/data
-2. Executor lee config.json con parámetros
-3. Descarga modelo YOLO base
-4. Ejecuta entrenamiento con parámetros del trial
-5. Envía métricas a MLflow
-6. Guarda results.json con accuracy
-7. Contenedor termina y se elimina automáticamente
-
----
-
-## 2. 🗺️ System Workflow
-
-```mermaid
-sequenceDiagram
-    participant I as Invoker
-    participant V as Volumen
-    participant E as Executor Container
-    participant ML as MLflow
-    participant GPU as GPU
-    participant D as Docker
-
-    I->>V: 1. Escribe config.json
-    
-    rect rgb(255, 240, 200)
-        note over E: Inicio del contenedor
-        E->>V: 2. Lee config.json
-        E->>E: 3. Parsea parámetros
-    end
-    
-    rect rgb(200, 255, 200)
-        note over E: Entrenamiento
-        E->>E: 4. Descarga modelo
-        E->>GPU: 5. Allocate GPU
-        loop epochs
-            E->>GPU: 6. Training step
-            GPU-->>E: 7. Loss/Grad
-            E->>ML: 8. Log metrics
-        end
-    end
-    
-    rect rgb(240, 200, 255)
-        note over E: Finalización
-        E->>E: 9. Calcula accuracy
-        E->>V: 10. Escribe results.json
-    end
-    
-    E-->>D: 11. Exit (auto-remove)
-    D-->>I: 12. Container finished
 ```
 
 ---
 
-## 3. 🏗️ Architecture Components
+## 2. 🛡️ Características Principales de la versión 2.0
 
-```mermaid
-graph TB
-    subgraph "Executor Container"
-        R[run_training.py]
-        Y[YOLO Model]
-        T[Training Loop]
-        M[Metrics Logger]
-        W[Result Writer]
-    end
-
-    subgraph "Input"
-        CF[config.json]
-    end
-
-    subgraph "Output"
-        RF[results.json]
-    end
-
-    subgraph "External"
-        ML[MLflow]
-        GP[GPU Device]
-    end
-
-    CF --> R
-    R --> Y
-    Y --> T
-    T --> GP
-    T --> ML
-    T --> M
-    M --> W
-    W --> RF
-```
-
-
-### Componentes Clave
-
-| Componente | Descripción |
-|------------|-------------|
-| **run_training.py** | Script principal del contenedor |
-| **YOLO Model** | Modelo base (yolov8, yolo11, etc.) |
-| **Training Loop** | Bucle de entrenamiento epochs |
-| **Metrics Logger** | Envío de métricas a MLflow |
-| **Result Writer** | Escritura de results.json |
+* **Soporte Nativo de YOLO26:** Totalmente validado para arquitecturas clásicas y la nueva versión `yolo26` (ej. `yolo26n.pt`, `yolo26n-cls.pt`, `yolo26n-seg.pt`).
+* **Aislamiento Absoluto de Experimentos:** El inicio del pipeline realiza una limpieza física rigurosa sobre el volumen del host montado para evitar la filtración de residuos de ejecuciones anteriores.
+* **Extracción de Métricas Difusa (Fuzzy Matching):** Mapeo robusto de métricas entre el tipo de tarea y el formato nativo de Ultralytics (por ejemplo, resolución automática de `metrics/mAP50` hacia `metrics/mAP50(B)` para detección o `metrics/mAP50(M)` para segmentación).
+* **Test de Conectividad Samba:** El punto de entrada realiza validaciones automáticas de lectura y permisos de escritura en caliente sobre `/wyolo/control_server/...` antes de iniciar tareas para alertar inmediatamente si el montaje de red se encuentra inestable.
 
 ---
 
+## 3. 🏗️ Organización de Artefactos en MinIO / S3
 
-## 4. flow process
+Al finalizar exitosamente el entrenamiento, los archivos resultantes se organizan en caliente bajo la siguiente jerarquía estructurada en el bucket S3:
 
-```mermaid
-%% Generated by WPipe Tools
-flowchart TD
-  classDef step fill:#1e1e1e,stroke:#007acc,stroke-width:2px,color:#fff,rx:5,ry:5,cursor:pointer
-  classDef logic fill:#1e1e1e,stroke:#ce9178,stroke-width:2px,color:#fff,rx:2,ry:2,cursor:pointer
-  classDef startN fill:#007acc,stroke:#007acc,color:#fff
-  subgraph sg_iazo9 ["📦 pipeline (in main.py)"]
-    direction TD
-    start_iazo9(( )):::startN
-      start_iazo9 --> nLiazo90_L45[" 🚀 load_yaml "]:::step
-      click nLiazo90_L45 call handleNodeClick("45")
-      nLiazo90_L45 --> nLiazo91_L46[" 🚀 publish_request_redis "]:::step
-      click nLiazo91_L46 call handleNodeClick("46")
-      nLiazo91_L46 --> nLiazo92_L47[" 🚀 check_minio_buckets "]:::step
-      click nLiazo92_L47 call handleNodeClick("47")
-      nLiazo92_L47 --> nLiazo93_L48[" 🚀 check_gpu_available "]:::step
-      click nLiazo93_L48 call handleNodeClick("48")
-      nLiazo93_L48 --> nLiazo94_L49[" 🚀 check_dataset "]:::step
-      click nLiazo94_L49 call handleNodeClick("49")
-      nLiazo94_L49 --> nLiazo95_L50{"gpu_status == 1 and dataset_status == 1"}:::logic
-      click nLiazo95_L50 call handleNodeClick("50")
-      nLiazo95_L50 -- True --> nnLiazo95_L50T0_L53[" 🚀 train_model "]:::step
-      click nnLiazo95_L50T0_L53 call handleNodeClick("53")
-      nnLiazo95_L50T0_L53 --> nnLiazo95_L50T1_L54[" 🚀 publish_results_mlflow "]:::step
-      click nnLiazo95_L50T1_L54 call handleNodeClick("54")
-      nnLiazo95_L50T1_L54 --> nLiazo95_L50_m(( ))
-      nLiazo95_L50 -- False --> nnLiazo95_L50F0_L57[" 🚀 not_train "]:::step
-      click nnLiazo95_L50F0_L57 call handleNodeClick("57")
-      nnLiazo95_L50F0_L57 --> nLiazo95_L50_m(( ))
-      nLiazo95_L50_m --> nLiazo96_L60[" 🚀 publish_results_redis "]:::step
-      click nLiazo96_L60 call handleNodeClick("60")
-
-  end
-```
-
-
-
-## 5. ⚙️ Container Lifecycle
-
-### Build Process
-
-1. **Base Image**: Python + CUDA + Ultralytics
-2. **Dependencies**: Instala `ultralytics`, `mlflow`, `pyyaml`
-3. **Code Copy**: Copia run_training.py
-4. **Workdir**: Configura /app como directorio de trabajo
-5. **Entrypoint**: Ejecuta run_training.py
-
-### Runtime Process
-
-1. **Read Config**: Lee /app/data/config.json
-2. **Parse Parameters**: Extrae lr0, imgsz, epochs, etc.
-3. **Model Load**: Descarga modelo base de Ultralytics
-4. **Training**: Ejecuta entrenamiento con parámetros
-5. **Metrics**: Log a MLflow durante entrenamiento
-6. **Results**: Calcula accuracy final
-7. **Write Output**: Guarda /app/data/results.json
-8. **Exit**: Contenedor termina y Docker lo elimina
+* `results.json` (Archivo JSON en la raíz del Run con la métrica exacta calculada, ej. `{"accuracy": 0.6635}`).
+* `model_weights/` (Contiene `best.pt` y `last.pt`).
+* `evaluation_metrics/` (Resultados cuantitativos y gráficas como curvas F1, PR, matrices de confusión y CSVs).
+* `training_examples/` (Imágenes y batches de entrenamiento de control).
+* `validation_examples/` (Predicciones visuales sobre los batches de validación).
+* `training_artifacts/` (Copias de los argumentos YAML y configuraciones de ejecución activa).
 
 ---
 
-## 6. 📂 File-by-File Guide
+## 4. ⚙️ Plantillas de Configuración
 
-| Archivo/Carpeta | Propósito |
-|-----------------|-----------|
-| `executor/run_training.py` | Script principal de entrenamiento |
-| `executor/requirements.txt` | Dependencias Python |
-| `executor/Dockerfile` | Imagen del contenedor |
-| `executor_v2.0/wyolo_mother/` | Versión avanzada con MLflow real |
-
----
-
-## Configuración de Entrenamiento
+### Archivo de Entrada (`base_config.yaml`)
 
 ```yaml
-# config.json (entregado por Invoker)
-model: "yolov8n-cls.pt"
+model: "yolo26n.pt"  # o yolo26n-cls.pt, yolo26n-seg.pt
+type: "yolo"
 train:
-  data: /dataset/
-  epochs: 250
+  batch: -1
+  data: "/examples/Deteksi komponen elektronik.v1i.yolov8/data.yaml"
+  epochs: 2
   imgsz: 640
-  lr0: 0.01
+  plots: true
 sweeper:
-  study_name: "mi_estudio"
+  version: 1
+  algorithm: optuna
+  direction: maximize
+  study_name: "component_detection"
+  fitness: "metrics/mAP50"
+  tune: false
+  sampler: "TPESampler"
+  n_trials: 1
+  search_space:
+    model: [ "choice", "yolov8n.pt" ]
+    train:
+      imgsz: [ "choice", 416 ]
+      lr0: [ "loguniform", 1e-5, 1e-2 ]
+extras:
+  gpu:
+    id: 0
+    limit: 0.95
+metadata:
+  content: "Experimento de detección de componentes electrónicos."
+  author: "William Rodriguez"
+  documentation: "Modelo entrenado con pesos yolo26."
 ```
 
-### Resultados
+### Archivo de Resultados (`results.json`)
 
 ```json
-// results.json (escrito por Executor)
 {
-  "status": "success",
-  "accuracy": 0.85,
-  "study_name": "mi_estudio"
+  "accuracy": 0.6635
 }
 ```
 
 ---
 
-## Construcción
+## 5. 🐳 Construcción y Despliegue
+
+Para compilar la imagen localmente e incluir la última pila de ejemplos:
 
 ```bash
-cd wyoloservice2_worker/executor
-docker build -t wisrovi/train_service:worker_executor_v1.0.0 .
+# Navegar a la base del subproyecto wtrain
+cd executor_v2.0/wtrain
+
+# Compilar de forma clásica para evitar conflictos de caché con volúmenes montados
+DOCKER_BUILDKIT=0 docker build --no-cache -t wisrovi/train_service:worker_executor_v1.0.0 -f Dockerfile .
+
+# Subir la imagen final a Docker Hub
+docker push wisrovi/train_service:worker_executor_v1.0.0
 ```
 
 ---
