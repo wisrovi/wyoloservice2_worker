@@ -79,6 +79,15 @@ cat << EOF > /app/.dvc/config
     secret_access_key = $CIFS_PASS
     jobs = 8
     read_timeout = 300
-    connect_timeout = 60
 EOF
+
+# Validar que los montajes sean funcionales e intentar tocar un archivo de control
+echo "Validando permisos de escritura en los montajes CIFS..."
+touch "$FOLDER_MOUNT_DATASETS/.mount_test" 2>/dev/null
+if [ $? -eq 0 ]; then
+    rm "$FOLDER_MOUNT_DATASETS/.mount_test"
+    echo "✓ Verificación exitosa: Directorios montados con permisos de escritura."
+else
+    echo "⚠️ ADVERTENCIA: No se pudo verificar la escritura en el recurso Samba. El entrenamiento podría fallar si se requieren permisos de escritura en el volumen montado."
+fi
 
