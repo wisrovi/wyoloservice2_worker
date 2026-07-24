@@ -1,19 +1,12 @@
-import sys
-import os
-import torch
-import sys
-
-
-import os
-import torch
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-
-
 import json
+import os
+import sys
 
 import GPUtil
+import torch
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 
 
 def obtener_info_gpu_json():
@@ -127,6 +120,7 @@ def print_gpu_report(hardware_gpu_count):
     else:
         try:
             import psutil
+
             ram_total = f"{psutil.virtual_memory().total / 1024**3:.1f} GB"
         except Exception:
             ram_total = "Desconocido"
@@ -142,12 +136,14 @@ def print_gpu_report(hardware_gpu_count):
             cpu_count = str(os.cpu_count())
     res_table.add_row("CPU Cores (Afinidad)", cpu_count)
 
-    limit_shm = os.environ.get("WORKER_SHM_MEMORY") or os.environ.get("WORKER_RAM_MEMORY")
+    limit_shm = os.environ.get("WORKER_SHM_MEMORY") or os.environ.get(
+        "WORKER_RAM_MEMORY"
+    )
     if limit_shm:
         shm_size = f"{limit_shm}"
     else:
         try:
-            shm_stats = os.statvfs('/dev/shm')
+            shm_stats = os.statvfs("/dev/shm")
             shm_size = f"{(shm_stats.f_bsize * shm_stats.f_blocks) / 1024**3:.1f} GB"
         except Exception:
             shm_size = "Desconocido"
