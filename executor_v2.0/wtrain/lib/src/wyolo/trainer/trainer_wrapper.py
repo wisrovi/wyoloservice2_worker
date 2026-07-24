@@ -20,6 +20,8 @@ from .cte.elemental import Elemental
 from .dto.model_wrapper import MLflowYOLOModel
 from .gpu_utils import gpu_compatibility_check, obtener_info_gpu_json
 from .utils.mlflow_setup import Mlflow_setup
+from .post_train import pipeline_post_train
+
 
 console = Console()
 
@@ -107,16 +109,29 @@ class TrainerWrapper(Elemental, Mlflow_setup):
             mlflow.log_metrics(metrics)
 
             self.artifacts_organice(trainer)
-            mlflow.log_artifacts(self.ARTIFACTS_PATH)
 
             # 3. grapCam
 
             new_model_trained = trainer.model.model
-            new_yolo_for_test = YOLO(new_model_trained)
+
+            pipeline_post_train.run({"model": new_model_trained})
 
             # TODO: 4. force up train document
             # TODO: 5. force up valid examples
             # TODO: 6. force up test examples
+
+            # 4. up result to mlflow
+            mlflow.log_artifacts(self.ARTIFACTS_PATH)
+
+            console.print(
+                Panel(
+                    "[bold green]✔ Training process finished with status: SUCCESS[/bold green]\n"
+                    "[dim]Artifacts and weights saved to mlflow.[/dim]",
+                    title="[bold white] STATUS [/bold white]",
+                    border_style="green",
+                    expand=False,
+                )
+            )
 
     def on_train_start(self, trainer):
         if "minio" in self.config and "mlflow" in self.config:

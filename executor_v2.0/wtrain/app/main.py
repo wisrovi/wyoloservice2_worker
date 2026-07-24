@@ -10,6 +10,7 @@ import argparse
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from rich.pretty import Pretty
 
 
 from states import (
@@ -168,5 +169,21 @@ if __name__ == "__main__":
 
     results = main(args_dict)
 
-    print(f"\n--- [DEBUG] Full Pipeline Results: {results} ---")
+    # 1. Full Pipeline Results en un panel estilizado de debug
+    console.print(
+        Panel(
+            Pretty(results, expand_all=True),
+            title="[bold yellow]🔍 DEBUG: Full Pipeline Results[/bold yellow]",
+            border_style="yellow",
+            expand=False,
+        )
+    )
+
+    # 2. Results especifica del modelo entrenado
+    trained_results = results.get("results_trained_model", "N/A")
+    console.print(
+        f"\n[bold cyan]📊 Results (Trained Model):[/bold cyan] [green]{trained_results}[/green]\n"
+    )
+
+    # print(f"\n--- [DEBUG] Full Pipeline Results: {results} ---")
     print(f"\nResults: {results.get('results_trained_model')}")
