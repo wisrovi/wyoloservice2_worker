@@ -1,6 +1,6 @@
-train: /examples/Deteksi komponen elektronik.v1i.yolov8/train/images
-val: /examples/Deteksi komponen elektronik.v1i.yolov8/valid/images
-test: /examples/Deteksi komponen elektronik.v1i.yolov8/test/images
+train: /examples/Deteksi_komponen_elektronik.v1i/train/images
+val: /examples/Deteksi_komponen_elektronik.v1i/valid/images
+test: /examples/Deteksi_komponen_elektronik.v1i/test/images
 
 nc: 2
 names: ['multimeter', 'stm32']
