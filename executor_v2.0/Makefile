@@ -40,9 +40,8 @@ stop:
 into:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  exec executor zsh
 
-
-
-
+publish: build start stop
+	docker push wisrovi/train_service:worker_executor_v1.0.0
 
 
 # python main.py --file "/wyolo/worker/request/config_train_CLS.yaml"
