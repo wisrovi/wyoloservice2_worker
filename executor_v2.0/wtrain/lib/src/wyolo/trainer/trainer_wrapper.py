@@ -1,22 +1,60 @@
-import sys
 import os
+import shutil
+import sys
 import time
+import uuid
 from datetime import datetime
 from typing import List
-import shutil
-import uuid
-import torch
 
 import mlflow
+import torch
+import yaml
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 from slugify import slugify
 from ultralytics import RTDETR, YOLO
 from ultralytics.utils.autobatch import autobatch
-import yaml
-from .gpu_utils import obtener_info_gpu_json
+
 from .cte.elemental import Elemental
-from .utils.mlflow_setup import Mlflow_setup
 from .dto.model_wrapper import MLflowYOLOModel
-from .gpu_utils import gpu_compatibility_check
+from .gpu_utils import gpu_compatibility_check, obtener_info_gpu_json
+from .utils.mlflow_setup import Mlflow_setup
+
+console = Console()
+
+
+def display_config_banner(
+    base_config: str,
+    dataset_path_data_yaml: str,
+    model_arch: str,
+    epochs: int,
+    batch_size: int,
+    project: str,
+):
+    # Tabla estructurada para los parámetros de configuración
+    table = Table(show_header=False, box=None, padding=(0, 2))
+    table.add_column("Parameter", style="bold cyan", justify="right")
+    table.add_column("Value", style="white")
+
+    # Mapeo de parámetros
+    table.add_row("Base Config:", f"[bold green]{base_config}[/bold green]")
+    table.add_row("Dataset YAML:", f"[yellow]{dataset_path_data_yaml}[/yellow]")
+    table.add_row("Model Architecture:", model_arch)
+    table.add_row("Epochs / Batch:", f"{epochs} / {batch_size}")
+    table.add_row("Project:", f"[dim]{project}[/dim]")
+
+    # Panel contenedor estilo CLI
+    panel = Panel(
+        table,
+        title="[bold bright_blue]⚙️  TRAINING CONFIGURATION [/bold bright_blue]",
+        subtitle="[dim]Initializing pipeline...[/dim]",
+        border_style="cyan",
+        padding=(1, 2),
+        expand=False,
+    )
+
+    console.print(panel)
 
 
 class TrainerWrapper(Elemental, Mlflow_setup):
@@ -72,6 +110,10 @@ class TrainerWrapper(Elemental, Mlflow_setup):
             mlflow.log_artifacts(self.ARTIFACTS_PATH)
 
             # 3. grapCam
+
+            new_model_trained = trainer.model.model
+            new_yolo_for_test = YOLO(new_model_trained)
+
             # TODO: 4. force up train document
             # TODO: 5. force up valid examples
             # TODO: 6. force up test examples
@@ -218,16 +260,31 @@ class TrainerWrapper(Elemental, Mlflow_setup):
         if self.model:
             print(f"--- [TRAINER] Executing model.train() ---")
             try:
+                display_config_banner(
+                    base_config=self.config.get("base_config", "N/A"),
+                    dataset_path_data_yaml=config_train["data"],
+                    model_arch=config_train.get("model", "YOLOvx-?"),
+                    epochs=config_train.get("epochs", "N/A"),
+                    batch_size=config_train.get("batch", "N/A"),
+                    project=config_train.get("project", "N/A"),
+                )
+
                 return self.model.train(**config_train)
             except Exception as e:
                 print(f"--- [TRAINER] Exception in model.train(): {e} ---")
                 import traceback
 
                 traceback.print_exc()
-                
+
                 # Check if training completed and metrics were populated
-                if hasattr(self.model, 'trainer') and self.model.trainer and getattr(self.model.trainer, 'metrics', None) is not None:
-                    print("--- [TRAINER] Training completed before the exception. Returning populated metrics. ---")
+                if (
+                    hasattr(self.model, "trainer")
+                    and self.model.trainer
+                    and getattr(self.model.trainer, "metrics", None) is not None
+                ):
+                    print(
+                        "--- [TRAINER] Training completed before the exception. Returning populated metrics. ---"
+                    )
                     return self.model.trainer.metrics
                 return None
 
@@ -301,6 +358,53 @@ def create_trainer(config_path: str, trial_number):
     request_config["train"]["verbose"] = True
     request_config["train"]["plots"] = True
     request_config["train"]["exist_ok"] = True
+
+    if request_config["train"]["data"].startswith("/datasets/"):
+        request_config["train"]["data"] = request_config["train"]["data"].replace(
+            "/datasets/", "/wyolo/control_server/datasets/"
+        )
+
+    # change route for internal route, because the train service is in a container with a different route
+    # 1. validate if the data path is a folder or yaml file
+    if os.path.isdir(request_config["train"]["data"]):
+        # don't do anything, because the dataset is a clasification dataset
+        # so, is not necessary to change the path of train, val and test
+        pass
+    elif os.path.isfile(request_config["train"]["data"]):
+        # do something, because the dataset is a detection dataset
+        # so, is necessary to change the path of train, val and test
+        old_data_path = request_config["train"]["data"]
+
+        new_data_path = f"{tempfile}/data.yaml"
+        shutil.copy(old_data_path, new_data_path)
+
+        # 2. into new data.yaml change the path of train, val and test
+        with open(new_data_path, "r") as file:
+            data_yaml_config = yaml.safe_load(file)
+
+        if data_yaml_config["train"].startswith("/datasets/"):
+            data_yaml_config["train"] = data_yaml_config["train"].replace(
+                "/datasets/", "/wyolo/control_server/datasets/"
+            )
+
+        if "val" in data_yaml_config and data_yaml_config["val"].startswith(
+            "/datasets/"
+        ):
+            data_yaml_config["val"] = data_yaml_config["val"].replace(
+                "/datasets/", "/wyolo/control_server/datasets/"
+            )
+
+        if "test" in data_yaml_config and data_yaml_config["test"].startswith(
+            "/datasets/"
+        ):
+            data_yaml_config["test"] = data_yaml_config["test"].replace(
+                "/datasets/", "/wyolo/control_server/datasets/"
+            )
+
+        with open(new_data_path, "w") as file:
+            yaml.dump(data_yaml_config, file)
+
+        request_config["train"]["data"] = new_data_path
 
     trainer.config_train = request_config
 
@@ -453,7 +557,9 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
                     request_config["experiment_type"] = "not-specified"
             elif isinstance(results, dict):
                 request_config["train"]["results"] = results
-                request_config["experiment_type"] = getattr(trainer.model, "task", "not-specified")
+                request_config["experiment_type"] = getattr(
+                    trainer.model, "task", "not-specified"
+                )
             else:
                 request_config["train"]["results"] = {}
                 request_config["experiment_type"] = "not-specified"
@@ -464,10 +570,14 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
                     final_result = results_dict[fitness]
                 else:
                     # Look for key matching or with suffix (B) or (M)
-                    matching_keys = [k for k in results_dict.keys() if fitness in k or k in fitness]
+                    matching_keys = [
+                        k for k in results_dict.keys() if fitness in k or k in fitness
+                    ]
                     if matching_keys:
                         final_result = results_dict[matching_keys[0]]
-                        print(f"--- [TRAINER] Metric '{fitness}' not found directly. Using matching key '{matching_keys[0]}': {final_result} ---")
+                        print(
+                            f"--- [TRAINER] Metric '{fitness}' not found directly. Using matching key '{matching_keys[0]}': {final_result} ---"
+                        )
                     else:
                         final_result = 0.0
             except:
