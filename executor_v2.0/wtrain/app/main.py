@@ -7,6 +7,11 @@ from wpipe import (
 )
 import argparse
 
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+
 from states import (
     error_capture,
     check_dataset,
@@ -20,7 +25,37 @@ from states import (
     publish_results_redis,
 )
 
+
 setproctitle("wtrain-service")
+
+console = Console()
+
+__VERSION__ = "2.0.0"
+
+
+def display_banner():
+    # Creamos una tabla limpia sin bordes para estructurar los datos
+    info_table = Table(show_header=False, box=None, padding=(0, 1))
+    info_table.add_column("Key", style="bold cyan")
+    info_table.add_column("Value", style="white")
+
+    info_table.add_row("🚀 Script:", "Wtrain Service")
+    info_table.add_row("📌 Versión:", __VERSION__)
+    info_table.add_row("👤 Autor:", "Wisrovi Rodríguez - wisrovi")
+    info_table.add_row("🐍 Python:", "3.12+")
+    info_table.add_row("⚡ Estado:", "[bold green]Ready[/bold green]")
+
+    # Envolvemos la tabla en un Panel estilizado
+    panel = Panel(
+        info_table,
+        title="[bold yellow] SYSTEM INFO [/bold yellow]",
+        subtitle="[dim]Press CTRL+C to exit[/dim]",
+        border_style="bright_blue",
+        padding=(1, 2),
+        expand=False,
+    )
+
+    console.print(panel)
 
 
 def config_pipeline():
@@ -69,6 +104,7 @@ def main(user_config_train):
     # Clean the entire train_service_results directory to prevent leakage from previous runs
     import os
     import shutil
+
     artifacts_path = "/wyolo/worker/train_service_results"
     if os.path.exists(artifacts_path):
         for item in os.listdir(artifacts_path):
@@ -127,6 +163,8 @@ if __name__ == "__main__":
     _user_config_file = get_argument("file", default="/wyolo/config_train.yaml")
 
     args_dict = {"user_config_train": _user_config_file}
+
+    display_banner()
 
     results = main(args_dict)
 
