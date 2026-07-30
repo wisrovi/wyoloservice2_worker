@@ -172,7 +172,10 @@ class TrainerWrapper(Elemental, Mlflow_setup):
         if self.firts_epoch:
             # self.firts_epoch = False
             self.artifacts_organice(trainer)
-            mlflow.log_artifacts(self.ARTIFACTS_PATH)
+            try:
+                mlflow.log_artifacts(self.ARTIFACTS_PATH)
+            except Exception as e:
+                print(f"Failed to log artifacts: {e}")
 
         self.end_time = time.time()
 
