@@ -125,7 +125,11 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.5 (Current Release) - 2026-07-31
+### Version 2.2.6 (Current Release) - 2026-07-31
+*   **Support valid/ Dataset Folder & Debug Info:** Integrated support for scanning the `valid/images/` folder (Roboflow notation) and added print statements detailing the number of found images and verification examples.
+*   **Exclude results.png Plot:** Added the `"results"` prefix to the image filter to completely ignore training progress graphs like `results.png` or `results.txt`.
+
+### Version 2.2.5 - 2026-07-31
 *   **Precision Filtering for YOLO Metric Plots:** Replaced the broad folder keyword filter with a highly specific filename prefix/suffix check (targeting `confusion_matrix`, `curve`, `train_batch`, `val_batch`, `labels.jpg`), ensuring Roboflow dataset images with `val_` or `train_` filename prefixes are processed correctly and uploaded to MLflow.
 
 ### Version 2.2.4 - 2026-07-31
