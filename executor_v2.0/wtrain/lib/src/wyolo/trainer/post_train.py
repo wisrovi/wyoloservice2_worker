@@ -66,10 +66,11 @@ class PostTrain:
             basename_lower = os.path.basename(img).lower()
             path_lower = img.lower()
             
-            # Skip if it matches any excluded keyword (YOLO artifacts)
+            # Skip if the filename contains any excluded keyword (YOLO metrics and result plots)
             if any(kw in basename_lower for kw in excluded_keywords):
                 continue
-            if any(kw in path_lower for kw in ("runs/", "post_train", "results/", "train/")):
+            # Skip if it is within a known YOLO output folder (like runs or post_train_results)
+            if any(folder in path_lower for folder in ("runs/", "post_train_results/")):
                 continue
                 
             filtered_images.append(img)
