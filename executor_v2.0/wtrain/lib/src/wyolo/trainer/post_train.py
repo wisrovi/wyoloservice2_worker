@@ -37,10 +37,25 @@ class StepClass:
         # get the folder path of the images_test_path
         folder_path = os.path.dirname(images_test_path)
 
-        all_images = glob(os.path.join(folder_path, "*"))
+        # Try to find images in standard directories (test/images/ or val/images/)
+        test_images_glob = os.path.join(folder_path, "test", "images", "*")
+        all_images = glob(test_images_glob)
+        
+        if not all_images:
+            val_images_glob = os.path.join(folder_path, "val", "images", "*")
+            all_images = glob(val_images_glob)
+            
+        if not all_images:
+            # Fallback to search recursively for image extensions inside the folder_path
+            all_images = []
+            for ext in ("*.jpg", "*.jpeg", "*.png", "*.bmp"):
+                all_images.extend(glob(os.path.join(folder_path, "**", ext), recursive=True))
+
+        # Filter out directories if any are returned
+        all_images = [img for img in all_images if os.path.isfile(img)]
+
         for image in all_images:
             print(f"Processing image: {image}")
-            # Here you can add your processing logic for each image
 
             try:
                 # Ensure the model has a predict method
@@ -54,11 +69,10 @@ class StepClass:
                     project=project_path,
                     name="post_train_results",
                     verbose=False,
-                )  # Assuming the model has a predict method
+                )
 
             except Exception as e:
                 print(f"Error processing image {image}: {e}")
-                # Optionally, you can log the error or handle it as needed
 
             # only for development purposes, we will break after processing the first image
             break  # Remove this break if you want to process all images
