@@ -55,8 +55,26 @@ class PostTrain:
                     glob(os.path.join(folder_path, "**", ext), recursive=True)
                 )
 
-        # Filter out directories if any are returned
-        all_images = [img for img in all_images if os.path.isfile(img)]
+        # Filter out directories and training results artifacts (curves, confusion matrices, etc.)
+        excluded_keywords = ("confusion", "curve", "batch", "labels", "val_", "results", "train_")
+        filtered_images = []
+        for img in all_images:
+            if not os.path.isfile(img):
+                continue
+            
+            # Get lowercased filename and path to inspect
+            basename_lower = os.path.basename(img).lower()
+            path_lower = img.lower()
+            
+            # Skip if it matches any excluded keyword (YOLO artifacts)
+            if any(kw in basename_lower for kw in excluded_keywords):
+                continue
+            if any(kw in path_lower for kw in ("runs/", "post_train", "results/", "train/")):
+                continue
+                
+            filtered_images.append(img)
+            
+        all_images = filtered_images
 
         # if the folder post_train_results exists, delete it and create a new one
         post_train_results_path = os.path.join(project_path, "post_train_results")
