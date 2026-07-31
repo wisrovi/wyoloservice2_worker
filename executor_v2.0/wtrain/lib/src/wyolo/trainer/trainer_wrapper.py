@@ -17,11 +17,9 @@ from ultralytics import RTDETR, YOLO
 from ultralytics.utils.autobatch import autobatch
 
 from .cte.elemental import Elemental
-from .dto.model_wrapper import MLflowYOLOModel
 from .gpu_utils import gpu_compatibility_check, obtener_info_gpu_json
-from .utils.mlflow_setup import Mlflow_setup
 from .post_train import pipeline_post_train
-
+from .utils.mlflow_setup import Mlflow_setup
 
 console = Console()
 
@@ -95,7 +93,6 @@ class TrainerWrapper(Elemental, Mlflow_setup):
             # 2. up result to mlflow
 
             try:
-                import torch
 
                 model_path = f"{self.ARTIFACTS_PATH}/pytorch_model.pth"
                 torch.save(pytorch_model.state_dict(), model_path)
@@ -114,7 +111,15 @@ class TrainerWrapper(Elemental, Mlflow_setup):
 
             new_model_trained = trainer.model.model
 
-            pipeline_post_train.run({"model": new_model_trained})
+            pipeline_post_train.run(
+                {
+                    "model": new_model_trained,
+                    "images_test_path": self.config.get("train", {}).get(
+                        "data", None
+                    ),
+                    "project_path": self.config.get("tempfile", {}),
+                }
+            )
 
             # TODO: 4. force up train document
             # TODO: 5. force up valid examples
