@@ -125,7 +125,11 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.0 (Current Release) - 2026-07-31
+### Version 2.2.1 (Current Release) - 2026-07-31
+*   **Massive Docker Broadcast Pull Command:** Registered a new custom Celery remote control handler (`force_docker_pull`) inside the worker invoker to enable fast, massive cluster-wide image pulling.
+*   **AI Agent Workflows Sync:** Added rules in `AGENTS.md` to require AI agents to propose massive node updates using the MCP tool `trigger_broadcast_docker_pull` after any docker image push.
+
+### Version 2.2.0 - 2026-07-31
 *   **Robust Preview Predictions:** Patched prediction execution in `post_train.py` and `trainer_wrapper.py` by instantiating the high-level `YOLO` wrapper with final best weights (resolving the missing `.predict()` method error), and recursive image subfolder scanning.
 *   **MLflow Artifact Path Correction:** Routed the post-training predictions output directory to `self.ARTIFACTS_PATH`, ensuring that the generated `post_train_results/` preview images are uploaded as runs artifacts.
 
