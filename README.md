@@ -125,7 +125,10 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.3 (Current Release) - 2026-07-31
+### Version 2.2.4 (Current Release) - 2026-07-31
+*   **Permit Dataset Subfolders in Filter:** Patched the image filter in `post_train.py` to allow image paths containing `train/` and `val/` directories, preventing valid test dataset images from being discarded.
+
+### Version 2.2.3 - 2026-07-31
 *   **Filter Training Results Artifacts:** Added advanced filtering in `post_train.py` to exclude training artifacts (confusion matrices, curves, batches) from being processed and drawn with bounding boxes during validation.
 
 ### Version 2.2.2 - 2026-07-31
