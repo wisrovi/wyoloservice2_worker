@@ -24,8 +24,10 @@ user.env:
 	echo "WORKER_CPU_CORES=$$((`nproc` - 1)).0" >> user.env
 
 config.py:
-	pip install customtkinter
-	python config/config.py
+	@if [ ! -f config/control_host.env ]; then \
+		pip install customtkinter; \
+		python config/config.py; \
+	fi
 
 start: user.env config.py
 	mv user.env ./config/
