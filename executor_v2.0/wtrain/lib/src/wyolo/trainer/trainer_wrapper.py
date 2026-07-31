@@ -130,7 +130,7 @@ class TrainerWrapper(Elemental, Mlflow_setup):
                 {
                     "model": new_model_trained,
                     "images_test_path": self.config.get("train", {}).get("data", None),
-                    "project_path": self.config.get("tempfile", {}),
+                    "project_path": self.ARTIFACTS_PATH,
                 }
             )
 
