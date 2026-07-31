@@ -25,5 +25,5 @@ Rules:
 ## 🐳 Docker Deployment & Test Verification Workflow
 Every time you modify the source code of this worker (e.g., inside `executor_v2.0` or `app/`):
 1. **Build and push the updated image:** You MUST compile the Docker image and push it to Docker Hub under the tag `wisrovi/train_service:worker_executor_v1.0.0` (or the corresponding tag).
-2. **Propose massive nodes update:** Proactively ask the user if they want to perform a massive broadcast update (trigger a `docker pull` on all active nodes in the cluster) using the MCP tool `trigger_broadcast_docker_pull` to instantly pull the new image on all nodes.
-3. **Propose a verification test:** Ask the user if they want to launch a private test training via the MCP server (`launch_private_test_training`) to verify that the changes are stable in production.
+2. **Explain the Diagnosis:** Before proposing any pull or test, you MUST explicitly explain to the user what failed, what was fixed, and the technical rationale behind the changes.
+3. **Request Explicit Authorization:** Do NOT perform docker pulls, pushes, broadcasts, or test runs automatically. You must ask the user for explicit authorization to execute these commands (e.g. asking "Would you like me to trigger the broadcast update on all nodes?"). Only execute them upon receiving direct confirmation.
