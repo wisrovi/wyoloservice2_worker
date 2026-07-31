@@ -125,7 +125,12 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.1 (Current Release) - 2026-07-31
+### Version 2.2.2 (Current Release) - 2026-07-31
+*   **Wipe-out Previous Predictions:** Added automatic folder cleanup for `post_train_results/` using `shutil.rmtree` before executing new trials, preventing prediction outputs from overlapping across runs.
+*   **Refactor Pipeline Steps:** Renamed the wpipe step `StepClass` to `PostTrain` for cleaner code naming conventions.
+*   **Bump Version:** Bumped version to `2.2.2` in `main.py`.
+
+### Version 2.2.1 - 2026-07-31
 *   **Checkpoint Optimization:** Increased `EPOCH_TO_SAVE` limit to 25 epochs to minimize intermediate metric logging and artifact uploads to MLflow during long runs.
 *   **Version and Imports Saneation:** Bumped internal version to `2.2.1` in `main.py` and removed unused Tkinter/NumPy imports in `post_train.py`.
 *   **Massive Docker Broadcast Pull Command:** Registered a new custom Celery remote control handler (`force_docker_pull`) inside the worker invoker to enable fast, massive cluster-wide image pulling.
