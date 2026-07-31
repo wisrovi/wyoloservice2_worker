@@ -1,3 +1,4 @@
+from calendar import EPOCH
 import os
 import shutil
 import sys
@@ -61,6 +62,10 @@ class TrainerWrapper(Elemental, Mlflow_setup):
     # https://github.com/ultralytics/ultralytics/issues/8214
     config = {}
 
+    counter_epoch = 0
+    EPOCH_TO_SAVE = 10
+    firts_epoch = True
+
     def __init__(self, config: dict):
         self.config = config
 
@@ -114,9 +119,7 @@ class TrainerWrapper(Elemental, Mlflow_setup):
             pipeline_post_train.run(
                 {
                     "model": new_model_trained,
-                    "images_test_path": self.config.get("train", {}).get(
-                        "data", None
-                    ),
+                    "images_test_path": self.config.get("train", {}).get("data", None),
                     "project_path": self.config.get("tempfile", {}),
                 }
             )
@@ -174,8 +177,12 @@ class TrainerWrapper(Elemental, Mlflow_setup):
         self.start_time = time.time()
 
     def on_epoch_end(self, trainer):
-        if self.firts_epoch:
-            # self.firts_epoch = False
+        self.counter_epoch += 1
+
+        if self.firts_epoch or self.counter_epoch == self.EPOCH_TO_SAVE:
+            self.firts_epoch = False
+            self.counter_epoch = 0
+
             self.artifacts_organice(trainer)
             try:
                 mlflow.log_artifacts(self.ARTIFACTS_PATH)
