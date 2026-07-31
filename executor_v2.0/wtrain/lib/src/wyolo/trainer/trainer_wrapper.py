@@ -114,7 +114,17 @@ class TrainerWrapper(Elemental, Mlflow_setup):
 
             # 3. grapCam
 
-            new_model_trained = trainer.model.model
+            # Instantiate the high-level YOLO wrapper with best weights for predictions
+            try:
+                from ultralytics import YOLO
+                best_weights_path = f"{trainer.save_dir}/weights/best.pt"
+                if os.path.exists(best_weights_path):
+                    new_model_trained = YOLO(best_weights_path)
+                else:
+                    new_model_trained = YOLO(trainer.best) if hasattr(trainer, "best") else trainer.model
+            except Exception as e:
+                print(f"Failed to load YOLO model wrapper for post_train: {e}")
+                new_model_trained = trainer.model
 
             pipeline_post_train.run(
                 {
