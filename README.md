@@ -125,7 +125,10 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.4 (Current Release) - 2026-07-31
+### Version 2.2.5 (Current Release) - 2026-07-31
+*   **Precision Filtering for YOLO Metric Plots:** Replaced the broad folder keyword filter with a highly specific filename prefix/suffix check (targeting `confusion_matrix`, `curve`, `train_batch`, `val_batch`, `labels.jpg`), ensuring Roboflow dataset images with `val_` or `train_` filename prefixes are processed correctly and uploaded to MLflow.
+
+### Version 2.2.4 - 2026-07-31
 *   **Permit Dataset Subfolders in Filter:** Patched the image filter in `post_train.py` to allow image paths containing `train/` and `val/` directories, preventing valid test dataset images from being discarded.
 
 ### Version 2.2.3 - 2026-07-31
