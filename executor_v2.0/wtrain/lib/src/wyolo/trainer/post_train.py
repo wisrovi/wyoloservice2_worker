@@ -1,4 +1,5 @@
 import os
+import shutil
 from glob import glob
 
 from ultralytics import YOLO
@@ -23,7 +24,7 @@ class MyContext(PipelineContext):
 
 
 @step(name="step_name", version="v1.0")
-class StepClass:
+class PostTrain:
 
     MAX_IMAGES_TO_PROCESS = 10  # Limit to processing up to 10 images for now
 
@@ -56,6 +57,13 @@ class StepClass:
 
         # Filter out directories if any are returned
         all_images = [img for img in all_images if os.path.isfile(img)]
+
+        # if the folder post_train_results exists, delete it and create a new one
+        post_train_results_path = os.path.join(project_path, "post_train_results")
+        if os.path.exists(post_train_results_path):
+
+            shutil.rmtree(post_train_results_path)
+        os.makedirs(post_train_results_path, exist_ok=True)
 
         counter = 0
         for image in all_images:
@@ -91,7 +99,7 @@ class StepClass:
 
 pipeline_post_train.set_steps(
     [
-        StepClass(),
+        PostTrain(),
     ]
 )
 
