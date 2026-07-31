@@ -125,7 +125,11 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.0.0 (Current Release) - 2026-07-03
+### Version 2.1.0 (Current Release) - 2026-07-31
+*   **Post-Train Preview Predictions:** Added a new post-training preview execution step to the pipeline. It reads test images from the dataset and executes YOLO preview predictions, saving outputs to the project temp directory.
+*   **Cleaned Imports and Core Bump:** Upgraded the internal version to `v2.1.0` in `main.py` and consolidated trainer imports.
+
+### Version 2.0.0 - 2026-07-03
 *   **YOLO26 & /examples/ Re-structuring:** Migrated dataset examples directory from `/examples/clasifier` to clean `/examples` path and updated all 3 training YAML models.
 *   **Fuzzy Metrics Matching:** Integrated regex parsing to automatically extract validation metrics (`mAP50(B)` / `mAP50(M)`) for MLflow logs.
 *   **Pre-execution Mount Cleanups:** Shifted output directory wipe out to container startup in `main.py` to prevent metrics overlaps.
