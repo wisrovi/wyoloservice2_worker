@@ -55,22 +55,25 @@ class PostTrain:
                     glob(os.path.join(folder_path, "**", ext), recursive=True)
                 )
 
-        # Filter out directories and training results artifacts (curves, confusion matrices, etc.)
-        excluded_keywords = ("confusion", "curve", "batch", "labels", "val_", "results", "train_")
+        # Selectively filter out YOLO training metrics plots and charts
         filtered_images = []
         for img in all_images:
             if not os.path.isfile(img):
                 continue
             
-            # Get lowercased filename and path to inspect
             basename_lower = os.path.basename(img).lower()
             path_lower = img.lower()
             
-            # Skip if the filename contains any excluded keyword (YOLO metrics and result plots)
-            if any(kw in basename_lower for kw in excluded_keywords):
-                continue
-            # Skip if it is within a known YOLO output folder (like runs or post_train_results)
+            # Skip runs and post_train directories
             if any(folder in path_lower for folder in ("runs/", "post_train_results/")):
+                continue
+                
+            # Skip specific YOLO metric graphs and plots
+            if "confusion_matrix" in basename_lower or "curve" in basename_lower:
+                continue
+            if basename_lower.startswith(("train_batch", "val_batch")):
+                continue
+            if basename_lower in ("labels.jpg", "labels_correlogram.jpg"):
                 continue
                 
             filtered_images.append(img)
