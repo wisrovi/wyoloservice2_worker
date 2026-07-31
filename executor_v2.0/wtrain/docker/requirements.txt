@@ -37,4 +37,4 @@ ray[tune]
 ray[air]
 # dvclive  # not yet available
 
-ultralytics==8.4.72
+ultralytics==8.4.113
