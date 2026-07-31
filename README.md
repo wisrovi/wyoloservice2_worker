@@ -125,7 +125,10 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.1.0 (Current Release) - 2026-07-31
+### Version 2.1.1 (Current Release) - 2026-07-31
+*   **Intermediate Checkpoint Optimization:** Optimized MLflow artifact upload intervals in `on_epoch_end`. The trainer now saves and logs metrics only during the first epoch and then at every 10-epoch interval (`EPOCH_TO_SAVE = 10`), reducing runtime bandwidth and disk consumption.
+
+### Version 2.1.0 - 2026-07-31
 *   **Post-Train Preview Predictions:** Added a new post-training preview execution step to the pipeline. It reads test images from the dataset and executes YOLO preview predictions, saving outputs to the project temp directory.
 *   **Cleaned Imports and Core Bump:** Upgraded the internal version to `v2.1.0` in `main.py` and consolidated trainer imports.
 
