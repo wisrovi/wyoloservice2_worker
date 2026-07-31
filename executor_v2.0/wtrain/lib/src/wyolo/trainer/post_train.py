@@ -42,14 +42,23 @@ class StepClass:
             print(f"Processing image: {image}")
             # Here you can add your processing logic for each image
 
-            results = model.predict(
-                image,
-                save=True,
-                conf=0.15,
-                project=project_path,
-                name="post_train_results",
-                verbose=False,
-            )  # Assuming the model has a predict method
+            try:
+                # Ensure the model has a predict method
+                if not hasattr(model, "predict"):
+                    raise AttributeError("The model does not have a 'predict' method.")
+
+                model.predict(
+                    image,
+                    save=True,
+                    conf=0.15,
+                    project=project_path,
+                    name="post_train_results",
+                    verbose=False,
+                )  # Assuming the model has a predict method
+
+            except Exception as e:
+                print(f"Error processing image {image}: {e}")
+                # Optionally, you can log the error or handle it as needed
 
             # only for development purposes, we will break after processing the first image
             break  # Remove this break if you want to process all images
