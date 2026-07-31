@@ -126,6 +126,8 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 ## 📜 Changelog & Version History
 
 ### Version 2.2.1 (Current Release) - 2026-07-31
+*   **Checkpoint Optimization:** Increased `EPOCH_TO_SAVE` limit to 25 epochs to minimize intermediate metric logging and artifact uploads to MLflow during long runs.
+*   **Version and Imports Saneation:** Bumped internal version to `2.2.1` in `main.py` and removed unused Tkinter/NumPy imports in `post_train.py`.
 *   **Massive Docker Broadcast Pull Command:** Registered a new custom Celery remote control handler (`force_docker_pull`) inside the worker invoker to enable fast, massive cluster-wide image pulling.
 *   **AI Agent Workflows Sync:** Added rules in `AGENTS.md` to require AI agents to propose massive node updates using the MCP tool `trigger_broadcast_docker_pull` after any docker image push.
 
