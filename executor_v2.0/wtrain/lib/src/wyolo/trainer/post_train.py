@@ -1,9 +1,6 @@
 import os
 from glob import glob
-from tkinter.tix import MAX
 
-from numpy.core.defchararray import count
-from numpy.testing import verbose
 from ultralytics import YOLO
 from wpipe import Pipeline, PipelineContext, step, to_obj
 from wpipe.exception.api_error import ProcessError
