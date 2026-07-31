@@ -63,7 +63,7 @@ class TrainerWrapper(Elemental, Mlflow_setup):
     config = {}
 
     counter_epoch = 0
-    EPOCH_TO_SAVE = 10
+    EPOCH_TO_SAVE = 25
     firts_epoch = True
 
     def __init__(self, config: dict):
