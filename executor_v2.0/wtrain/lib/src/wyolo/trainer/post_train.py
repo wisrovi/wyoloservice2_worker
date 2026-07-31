@@ -1,6 +1,8 @@
 import os
 from glob import glob
+from tkinter.tix import MAX
 
+from numpy.core.defchararray import count
 from numpy.testing import verbose
 from ultralytics import YOLO
 from wpipe import Pipeline, PipelineContext, step, to_obj
@@ -26,6 +28,8 @@ class MyContext(PipelineContext):
 @step(name="step_name", version="v1.0")
 class StepClass:
 
+    MAX_IMAGES_TO_PROCESS = 10  # Limit to processing up to 10 images for now
+
     @to_obj(MyContext)
     def __call__(self, ctx: MyContext):
         # Access typed data with ctx.field
@@ -40,20 +44,23 @@ class StepClass:
         # Try to find images in standard directories (test/images/ or val/images/)
         test_images_glob = os.path.join(folder_path, "test", "images", "*")
         all_images = glob(test_images_glob)
-        
+
         if not all_images:
             val_images_glob = os.path.join(folder_path, "val", "images", "*")
             all_images = glob(val_images_glob)
-            
+
         if not all_images:
             # Fallback to search recursively for image extensions inside the folder_path
             all_images = []
             for ext in ("*.jpg", "*.jpeg", "*.png", "*.bmp"):
-                all_images.extend(glob(os.path.join(folder_path, "**", ext), recursive=True))
+                all_images.extend(
+                    glob(os.path.join(folder_path, "**", ext), recursive=True)
+                )
 
         # Filter out directories if any are returned
         all_images = [img for img in all_images if os.path.isfile(img)]
 
+        counter = 0
         for image in all_images:
             print(f"Processing image: {image}")
 
@@ -65,7 +72,8 @@ class StepClass:
                 model.predict(
                     image,
                     save=True,
-                    conf=0.15,
+                    conf=0.005,
+                    exist_ok=True,
                     project=project_path,
                     name="post_train_results",
                     verbose=False,
@@ -74,8 +82,12 @@ class StepClass:
             except Exception as e:
                 print(f"Error processing image {image}: {e}")
 
-            # only for development purposes, we will break after processing the first image
-            break  # Remove this break if you want to process all images
+            counter += 1
+            if (
+                counter >= self.MAX_IMAGES_TO_PROCESS
+            ):  # Limit to processing only one image for now
+                print("Processed one image, stopping further processing for now.")
+                break  # Remove this break if you want to process all images
 
         return {}
 
