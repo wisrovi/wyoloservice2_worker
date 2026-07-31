@@ -1,7 +1,10 @@
-from wpipe import Pipeline
-from wpipe import step, to_obj, PipelineContext
-from wpipe.exception.api_error import ProcessError
+import os
+from glob import glob
 
+from numpy.testing import verbose
+from ultralytics import YOLO
+from wpipe import Pipeline, PipelineContext, step, to_obj
+from wpipe.exception.api_error import ProcessError
 
 db_path = "output/tracking.db"  # Path to tracking database for to save metrics, events, alerts and execution history (with error capture)
 config_dir = "configs"
@@ -15,7 +18,9 @@ pipeline_post_train = Pipeline(
 
 
 class MyContext(PipelineContext):
-    model: str
+    model: YOLO
+    project_path: str
+    images_test_path: str
 
 
 @step(name="step_name", version="v1.0")
@@ -25,7 +30,29 @@ class StepClass:
     def __call__(self, ctx: MyContext):
         # Access typed data with ctx.field
 
-        print(ctx.model)
+        model = ctx.model
+        images_test_path = ctx.images_test_path
+        project_path = ctx.project_path
+
+        # get the folder path of the images_test_path
+        folder_path = os.path.dirname(images_test_path)
+
+        all_images = glob(os.path.join(folder_path, "*"))
+        for image in all_images:
+            print(f"Processing image: {image}")
+            # Here you can add your processing logic for each image
+
+            results = model.predict(
+                image,
+                save=True,
+                conf=0.15,
+                project=project_path,
+                name="post_train_results",
+                verbose=False,
+            )  # Assuming the model has a predict method
+
+            # only for development purposes, we will break after processing the first image
+            break  # Remove this break if you want to process all images
 
         return {}
 
