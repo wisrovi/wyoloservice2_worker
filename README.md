@@ -125,7 +125,10 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.6 (Current Release) - 2026-07-31
+### Version 2.2.7 (Current Release) - 2026-08-03
+*   **Dataset Analyzer Integration:** Embedded `DatasetAnalyzer` directly into `app/states/utils/dataset_analyzer.py` inside the executor container. This allows the invoker's EDA state to run analysis natively via the executor container environment without transferring scripts.
+
+### Version 2.2.6 - 2026-07-31
 *   **Support valid/ Dataset Folder & Debug Info:** Integrated support for scanning the `valid/images/` folder (Roboflow notation) and added print statements detailing the number of found images and verification examples.
 *   **Exclude results.png Plot:** Added the `"results"` prefix to the image filter to completely ignore training progress graphs like `results.png` or `results.txt`.
 
