@@ -125,7 +125,11 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.7 (Current Release) - 2026-08-03
+### Version 2.2.8 (Current Release) - 2026-08-04
+*   **Fix get_base_config Missing /config Directory:** `get_base_config` in `app/states/utils/util.py` now creates the `/config` directory before writing `final_config.yaml`. The `check_minio_buckets` step called `read_base_config` early in the pipeline and crashed with `[Error Code: 502] No such file or directory: '/config/final_config.yaml'` (captured as a pipeline error, leaving the run flagged as `failed` even though training completed and `results.json` was written).
+*   **Version Update to v2.2.8:** Bumped executor version to `v2.2.8`.
+
+### Version 2.2.7 - 2026-08-03
 *   **Dataset Analyzer Integration:** Embedded `DatasetAnalyzer` directly into `app/states/utils/dataset_analyzer.py` inside the executor container. This allows the invoker's EDA state to run analysis natively via the executor container environment without transferring scripts.
 
 ### Version 2.2.6 - 2026-07-31
