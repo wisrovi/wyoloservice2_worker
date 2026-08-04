@@ -77,6 +77,30 @@ class Mlflow_setup:
             )
             os.environ["MLFLOW_RUN_NAME"] = config.get("task_id")
 
+            # Ensure the experiment exists and is not deleted, otherwise the
+            # ultralytics MLflow callback fails with a REST exception when
+            # calling set_experiment, which aborts on_train_end and leaves the
+            # artifacts (e.g. evaluation_metrics/results.csv) unpublished.
+            try:
+                import mlflow
+                from mlflow.tracking import MlflowClient
+
+                experiment_name = config.get("sweeper", {}).get(
+                    "study_name", "default_experiment"
+                )
+                client = MlflowClient()
+                experiment = client.get_experiment_by_name(experiment_name)
+                if experiment is not None and experiment.lifecycle_stage == "deleted":
+                    client.restore_experiment(experiment.experiment_id)
+                    print(
+                        f"--- [MLFLOW] Restored deleted experiment '{experiment_name}' ---"
+                    )
+                elif experiment is None:
+                    mlflow.create_experiment(experiment_name)
+                    print(f"--- [MLFLOW] Created experiment '{experiment_name}' ---")
+            except Exception as exc:
+                print(f"--- [MLFLOW] Could not prepare experiment: {exc} ---")
+
             os.environ["RAY_DISABLE_DOCKER_CPU_WARNING"] = "1"
         else:
             settings.update({"mlflow": False})
