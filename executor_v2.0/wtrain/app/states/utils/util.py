@@ -99,6 +99,8 @@ def merge_configs(default_config, user_config):
 def get_base_config():
     DEFAULT_CONFIG = {}
 
+    os.makedirs("/config", exist_ok=True)
+
     CONTROL_HOST = os.getenv("CONTROL_HOST", "localhost")
 
     # Cargar configuración base
