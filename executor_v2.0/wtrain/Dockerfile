@@ -12,6 +12,7 @@ RUN apt-get update && apt-get upgrade -y && \
     libxext6 \
     make \
     cifs-utils \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Crear directorios de montaje
@@ -33,6 +34,9 @@ WORKDIR /requirements
 COPY docker/requirements.txt .
 RUN pip install --no-cache-dir --timeout 300 --retries 3 -r requirements.txt
 # RUN pip install wyolo
+
+# Instalar OpenCode para el análisis LLM post-entrenamiento
+RUN curl -fsSL https://opencode.ai/install | bash
 
 # -------------------------------------
 
