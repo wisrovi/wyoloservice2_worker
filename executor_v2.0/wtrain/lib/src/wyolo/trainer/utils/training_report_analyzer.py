@@ -43,7 +43,20 @@ class TrainingReportAnalyzer:
             print(f"OpenCode analysis failed, using fallback: {exc}")
 
         # Fallback: generate basic report from CSV data
-        return self._generate_fallback_report(results_file)
+        try:
+            return self._generate_fallback_report(results_file)
+        except Exception as exc:
+            print(f"Fallback report generation failed: {exc}")
+            return (
+                "TRAINING SUMMARY\n"
+                "Training completed, but no detailed report could be generated.\n"
+                "\n"
+                "METRICS ANALYSIS\n"
+                "Review the evaluation_metrics results.csv for detailed metrics.\n"
+                "\n"
+                "CONCLUSION\n"
+                "Training run finished successfully; detailed analysis unavailable."
+            )
 
     def _analyze_with_opencode(self, results_file: Path) -> str | None:
         """Attempt to generate report using OpenCode with timeout."""
@@ -119,6 +132,14 @@ class TrainingReportAnalyzer:
 
         return output
 
+    @staticmethod
+    def _as_float(value, default: float = 0.0) -> float:
+        """Safely convert a CSV cell to float, returning default on failure."""
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+
     def _generate_fallback_report(self, results_file: Path) -> str:
         """Generate a basic report from CSV data when OpenCode fails."""
         try:
@@ -131,31 +152,53 @@ class TrainingReportAnalyzer:
         if not rows:
             return "No training data available for analysis."
 
-        # Parse key metrics
+        # Parse key metrics (handle different column names)
         epochs = len(rows)
         last_row = rows[-1]
+        first_row = rows[0]
 
-        # Extract metrics (handle different column names)
-        train_loss = last_row.get('train/loss', last_row.get('train_loss', 'N/A'))
-        val_loss = last_row.get('val/loss', last_row.get('val_loss', 'N/A'))
-        precision = last_row.get('metrics/precision', last_row.get('precision', 'N/A'))
-        recall = last_row.get('metrics/recall', last_row.get('recall', 'N/A'))
-        mAP50 = last_row.get('metrics/mAP50(B)', last_row.get('mAP50', 'N/A'))
-        mAP50_95 = last_row.get('metrics/mAP50-95(B)', last_row.get('mAP50-95', 'N/A'))
-        accuracy = last_row.get('metrics/accuracy_top1', last_row.get('accuracy', 'N/A'))
+        def col(row, *names: str) -> str:
+            for name in names:
+                if name in row and row[name] not in (None, ""):
+                    return row[name]
+            return "N/A"
+
+        train_loss = col(last_row, 'train/loss', 'train_loss', 'train/box_loss', 'train/total_loss')
+        val_loss = col(last_row, 'val/loss', 'val_loss', 'val/box_loss', 'val/total_loss')
+        precision = col(last_row, 'metrics/precision', 'precision', 'metrics/precision(B)')
+        recall = col(last_row, 'metrics/recall', 'recall', 'metrics/recall(B)')
+        mAP50 = col(last_row, 'metrics/mAP50(B)', 'mAP50', 'metrics/mAP50')
+        mAP50_95 = col(last_row, 'metrics/mAP50-95(B)', 'mAP50-95', 'metrics/mAP50-95')
+        accuracy = col(last_row, 'metrics/accuracy_top1', 'accuracy', 'metrics/accuracy')
 
         # Check for overfitting
-        train_loss_first = rows[0].get('train/loss', rows[0].get('train_loss', '0'))
+        train_loss_first = col(first_row, 'train/loss', 'train_loss', 'train/box_loss', 'train/total_loss')
         train_loss_last = train_loss
-        val_loss_first = rows[0].get('val/loss', rows[0].get('val_loss', '0'))
+        val_loss_first = col(first_row, 'val/loss', 'val_loss', 'val/box_loss', 'val/total_loss')
         val_loss_last = val_loss
 
         overfitting_risk = "Low"
         try:
-            if float(train_loss_last) < float(train_loss_first) and float(val_loss_last) > float(val_loss_first):
+            tl_first, tl_last = float(train_loss_first), float(train_loss_last)
+            vl_first, vl_last = float(val_loss_first), float(val_loss_last)
+            if tl_last < tl_first and vl_last > vl_first:
                 overfitting_risk = "High"
-            elif float(val_loss_last) > float(val_loss_first) * 1.2:
+            elif vl_last > vl_first * 1.2:
                 overfitting_risk = "Medium"
+        except (ValueError, TypeError):
+            pass
+
+        train_trend = "stable/increasing"
+        val_trend = "increasing/stable"
+        try:
+            train_trend = (
+                "decreasing" if float(train_loss_last) < float(train_loss_first)
+                else "stable/increasing"
+            )
+            val_trend = (
+                "decreasing" if float(val_loss_last) < float(val_loss_first)
+                else "increasing/stable"
+            )
         except (ValueError, TypeError):
             pass
 
@@ -167,8 +210,8 @@ class TrainingReportAnalyzer:
             "",
             "METRICS ANALYSIS",
             f"Precision: {precision}, Recall: {recall}. mAP@50: {mAP50}, mAP@50-95: {mAP50_95}.",
-            f"Overfitting risk: {overfitting_risk}. Training loss trend: {'decreasing' if float(train_loss_last) < float(train_loss_first) else 'stable/increasing'}.",
-            f"Validation loss trend: {'decreasing' if float(val_loss_last) < float(val_loss_first) else 'increasing/stable'}.",
+            f"Overfitting risk: {overfitting_risk}. Training loss trend: {train_trend}.",
+            f"Validation loss trend: {val_trend}.",
             "",
             "CONCLUSION",
             f"Model trained for {epochs} epochs with final accuracy {accuracy}.",
