@@ -39,7 +39,7 @@ class PostTrain:
                 model.predict(
                     image,
                     save=True,
-                    conf=0.005,
+                    conf=0.15,
                     exist_ok=True,
                     project=project_path,
                     name="post_train_results",
@@ -52,9 +52,7 @@ class PostTrain:
             if counter >= self.MAX_IMAGES_TO_PROCESS:
                 break
 
-        print(
-            f"[PostTrain] Done. Predictions saved to {post_train_results_path}."
-        )
+        print(f"[PostTrain] Done. Predictions saved to {post_train_results_path}.")
         return {}
 
     def _find_images(self, images_test_path: str) -> list[str]:
@@ -86,7 +84,8 @@ class PostTrain:
 
         for pattern in candidates:
             images = [
-                img for img in glob(pattern)
+                img
+                for img in glob(pattern)
                 if os.path.isfile(img) and self._is_valid_image(img)
             ]
             if images:
@@ -95,9 +94,7 @@ class PostTrain:
         train_images = []
         if image_dirs:
             for ext in ("*.jpg", "*.jpeg", "*.png", "*.bmp"):
-                train_images.extend(
-                    glob(os.path.join(image_dirs["train"], ext))
-                )
+                train_images.extend(glob(os.path.join(image_dirs["train"], ext)))
         else:
             folder_path = (
                 os.path.dirname(images_test_path)
@@ -111,7 +108,8 @@ class PostTrain:
         if train_images:
             print("[PostTrain] No test/val images found, falling back to train images.")
             return [
-                img for img in train_images
+                img
+                for img in train_images
                 if os.path.isfile(img) and self._is_valid_image(img)
             ]
 

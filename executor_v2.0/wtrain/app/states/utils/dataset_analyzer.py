@@ -56,7 +56,10 @@ class DatasetAnalyzer:
         try:
             EDAReportGenerator().generate_report(stats, Path(dataset_path).name)
         except Exception as e:
-            print(f"Failed to generate EDA report: {e}")
+            import traceback
+            error_msg = f"Failed to generate EDA report: {e}\n{traceback.format_exc()}"
+            print(error_msg)
+            stats["eda_report_error"] = error_msg
 
         return stats
 
