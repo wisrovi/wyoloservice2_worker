@@ -125,7 +125,13 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.11 (Current Release) - 2026-08-05
+### Version 2.2.12 (Current Release) - 2026-08-05
+*   **PostTrain train-image fallback:** `PostTrain._find_images` now falls back to `train/images` when the dataset has no images in `test/`, `val/`, or `valid/`, so `post_train_results` is always populated with prediction images (previously empty for datasets without a test split, e.g. `Deteksi_komponen_elektronik`).
+*   **Decluttered post-train logging:** Removed excessive prints from `PostTrain` and `TrainingReportAnalyzer` (full OpenCode stdout/stderr dump, per-image processing lines); only concise summary lines remain.
+*   **Robust CSV fallback report:** `_generate_fallback_report` handles real YOLO column names (`train/box_loss`, `val/box_loss`, `metrics/precision(B)`, ...) and protects all float conversions, so `llm.md` is always written even when OpenCode fails.
+*   **Version Update to v2.2.12:** Bumped executor version to `v2.2.12`.
+
+### Version 2.2.11 - 2026-08-05
 *   **LLM Report Generation in Executor:** Added `LlmAnalyzer` step to `pipeline_post_train.set_steps` in `lib/src/wyolo/trainer/post_train.py`. It runs the ported `TrainingReportAnalyzer` (OpenCode with 180s timeout + CSV fallback) on `evaluation_metrics/results.csv` and writes `llm.md` into the shared results directory (`/wyolo/worker/train_service_results`). Because `mlflow.log_artifacts(ARTIFACTS_PATH)` runs after `pipeline_post_train.run` in `on_train_end`, `llm.md` is automatically uploaded to MLflow as an artifact. The invoker no longer calls OpenCode itself — it reads the generated `llm.md` and its Gradio renders it directly.
 *   **OpenCode Installed in Executor Image:** Added `curl` and `RUN curl -fsSL https://opencode.ai/install | bash` to the executor Dockerfile so the LLM analysis runs natively inside the executor container.
 *   **Version Update to v2.2.11:** Bumped executor version to `v2.2.11`.
