@@ -125,6 +125,11 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
+### Version 2.2.11 (Current Release) - 2026-08-05
+*   **LLM Report Generation in Executor:** Added `LlmAnalyzer` step to `pipeline_post_train.set_steps` in `lib/src/wyolo/trainer/post_train.py`. It runs the ported `TrainingReportAnalyzer` (OpenCode with 180s timeout + CSV fallback) on `evaluation_metrics/results.csv` and writes `llm.md` into the shared results directory (`/wyolo/worker/train_service_results`). Because `mlflow.log_artifacts(ARTIFACTS_PATH)` runs after `pipeline_post_train.run` in `on_train_end`, `llm.md` is automatically uploaded to MLflow as an artifact. The invoker no longer calls OpenCode itself — it reads the generated `llm.md` and its Gradio renders it directly.
+*   **OpenCode Installed in Executor Image:** Added `curl` and `RUN curl -fsSL https://opencode.ai/install | bash` to the executor Dockerfile so the LLM analysis runs natively inside the executor container.
+*   **Version Update to v2.2.11:** Bumped executor version to `v2.2.11`.
+
 ### Version 2.2.10 (Current Release) - 2026-08-05
 *   **Version Update to v2.2.10:** Bumped executor version to `v2.2.10`.
 *   **Host env snapshot refresh:** Updated `config/user.env` with the current worker host date/time snapshot.
