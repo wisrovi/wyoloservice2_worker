@@ -18,5 +18,7 @@ def load_yaml(data_input: UserInput):
         )
 
     _, USER_CONFIG = get_user_config(user_config_file=data_input.user_config_train)
-
-    return {"user_config": USER_CONFIG}
+    print(f"[DEBUG] load_yaml USER_CONFIG: {USER_CONFIG}")
+    result = {"user_config": USER_CONFIG}
+    print(f"[DEBUG] load_yaml returning: {result}")
+    return result

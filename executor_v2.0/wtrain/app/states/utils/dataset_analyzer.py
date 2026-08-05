@@ -1,3 +1,8 @@
+from PIL import Image
+import matplotlib.pyplot as plt
+import seaborn as sns
+from docx import Document
+from docx.shared import Inches
 from pathlib import Path
 from typing import Any
 import yaml
@@ -37,23 +42,20 @@ class DatasetAnalyzer:
 
 
         if dataset_type == "classification":
-            return ClassificationAnalyzer().analyze(
-                dataset_path
-            )
+            stats = ClassificationAnalyzer().analyze(dataset_path)
+        elif dataset_type == "detection":
+            stats = DetectionAnalyzer().analyze(dataset_path)
+        elif dataset_type == "segmentation":
+            stats = SegmentationAnalyzer().analyze(dataset_path)
+        else:
+            return {"error": "Invalid dataset type"}
+            
+        try:
+            EDAReportGenerator().generate_report(stats, Path(dataset_path).name)
+        except Exception as e:
+            print(f"Failed to generate EDA report: {e}")
 
-        if dataset_type == "detection":
-            return DetectionAnalyzer().analyze(
-                dataset_path
-            )
-
-        if dataset_type == "segmentation":
-            return SegmentationAnalyzer().analyze(
-                dataset_path
-            )
-
-        return {
-            "dataset_type": "unknown"
-        }
+        return stats
 
     def detect_dataset_type(
         self,
@@ -150,7 +152,12 @@ class DatasetAnalyzer:
         yaml_files = list(dataset_path.glob("*.yaml"))
 
         if not yaml_files:
-            return {}
+           yaml_path = dataset_path / "data.yaml"
+           if os.path.exists(yaml_path):
+            with open(yaml_path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+                return data.get("names", {})
+        return {}
 
         with open(yaml_files[0], encoding="utf-8") as f:
             data = yaml.safe_load(f)
@@ -341,6 +348,7 @@ class DetectionAnalyzer:
         imbalanced_dataset = False
 
         imbalanced_pairs = []
+        bbox_areas = []
 
         splits = ["train", "val", "test", "inference"]
 
@@ -385,6 +393,13 @@ class DetectionAnalyzer:
                         total_annotations += 1
 
                         split_distribution[split]["annotations"] += 1
+                        
+                        if len(values) >= 5:
+                            try:
+                                _, x_center, y_center, box_width, box_height = map(float, values[:5])
+                                bbox_areas.append(box_width * box_height)
+                            except ValueError:
+                                pass
 
                         class_id = values[0]
 
@@ -441,7 +456,8 @@ class DetectionAnalyzer:
             "split_distribution": split_distribution,
             "split_percentage_distribution": split_percentage_distribution,
             "imbalanced_dataset": imbalanced_dataset,
-            "imbalanced_pairs": imbalanced_pairs
+            "imbalanced_pairs": imbalanced_pairs,
+            "bbox_areas": bbox_areas
         }
 
 
@@ -659,3 +675,89 @@ if __name__ == "__main__":
             indent=4
         )
     )
+
+import os
+import shutil
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pathlib import Path
+from docx import Document
+from docx.shared import Inches
+
+class EDAReportGenerator:
+    def __init__(self, results_dir="/wyolo/worker/train_service_results/eda"):
+        self.results_dir = Path(results_dir)
+        if self.results_dir.exists():
+            shutil.rmtree(self.results_dir)
+        self.results_dir.mkdir(parents=True, exist_ok=True)
+        self.plots_dir = self.results_dir / "plots"
+        self.plots_dir.mkdir(exist_ok=True)
+
+    def generate_report(self, stats: dict, dataset_name: str):
+        md_content = f"# EDA Report: {dataset_name}\n\n"
+        doc = Document()
+        doc.add_heading(f"EDA Report: {dataset_name}", 0)
+
+        # Plot 1: Class Distribution
+        if "class_distribution" in stats:
+            classes = list(stats["class_distribution"].keys())
+            counts = list(stats["class_distribution"].values())
+            plt.figure(figsize=(10, 6))
+            sns.barplot(x=counts, y=classes, palette="viridis")
+            plt.title("Class Distribution")
+            plt.xlabel("Instances")
+            plt.ylabel("Class")
+            plt.tight_layout()
+            dist_path = self.plots_dir / "class_distribution.png"
+            plt.savefig(dist_path)
+            plt.close()
+
+            md_content += "## Class Distribution\n\n![Class Distribution](plots/class_distribution.png)\n\n"
+            doc.add_heading("Class Distribution", level=1)
+            doc.add_picture(str(dist_path), width=Inches(6.0))
+            doc.add_paragraph("The above chart shows the number of instances for each class in the dataset.")
+
+        # Plot 2: Split Distribution
+        if "split_percentage_distribution" in stats:
+            splits = list(stats["split_percentage_distribution"].keys())
+            percentages = list(stats["split_percentage_distribution"].values())
+            if sum(percentages) > 0:
+                plt.figure(figsize=(8, 8))
+                plt.pie(percentages, labels=splits, autopct="%1.1f%%", startangle=140, colors=sns.color_palette("pastel"))
+                plt.title("Dataset Split")
+                split_path = self.plots_dir / "split_distribution.png"
+                plt.savefig(split_path)
+                plt.close()
+
+                md_content += "## Dataset Split\n\n![Dataset Split](plots/split_distribution.png)\n\n"
+                doc.add_heading("Dataset Split", level=1)
+                doc.add_picture(str(split_path), width=Inches(5.0))
+                doc.add_paragraph("Distribution of images across train, validation, and test splits.")
+
+        # Plot 3: Bounding Box Dimensions
+        if "bbox_areas" in stats and stats["bbox_areas"]:
+            plt.figure(figsize=(10, 6))
+            sns.histplot(stats["bbox_areas"], bins=50, kde=True, color="skyblue")
+            plt.title("Bounding Box Area Distribution (Normalized)")
+            plt.xlabel("Area (width * height)")
+            plt.ylabel("Frequency")
+            plt.tight_layout()
+            bbox_path = self.plots_dir / "bbox_areas.png"
+            plt.savefig(bbox_path)
+            plt.close()
+
+            md_content += "## Bounding Box Areas\n\n![Bounding Box Areas](plots/bbox_areas.png)\n\n"
+            doc.add_heading("Bounding Box Areas", level=1)
+            doc.add_picture(str(bbox_path), width=Inches(6.0))
+            doc.add_paragraph("Distribution of normalized bounding box areas.")
+
+        # Save MD
+        md_file = self.results_dir / "EDA_Report.md"
+        with open(md_file, "w") as f:
+            f.write(md_content)
+
+        # Save DOCX
+        docx_file = self.results_dir / "EDA_Report.docx"
+        doc.save(str(docx_file))
+
+        return str(self.results_dir)

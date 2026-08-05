@@ -57,6 +57,10 @@ Upon successful completion, artifacts are streamed to S3 under the following hie
 *   `validation_examples/` (Batch validation visual outputs).
 *   `training_artifacts/` (Copies of the config YAML files).
 
+> **💡 Important MLflow upload behavior:**
+> Any files or custom folders placed in the root directory `/wyolo/worker/train_service_results` (like a `/eda/` folder) will be automatically uploaded to MLflow as part of the run artifacts! 
+> This happens because the `artifacts_organice` function (in `wtrain/lib/src/wyolo/trainer/utils/mlflow_setup.py`) copies and categorizes all YOLO outputs directly into this root directory, and then the system uploads the entire root directory via `mlflow.log_artifacts(self.ARTIFACTS_PATH)` in `trainer_wrapper.py` (around line 142).
+
 ---
 
 ## 4. ⚙️ Configuration Templates

@@ -39,7 +39,10 @@ def check_dataset(input_data: UserInput):
         subprocess.run(COMMAND, shell=True, check=True)
 
     DATASET = input_data.user_config.train.data
-    DATASET = DATASET.replace("/datasets/", DATASET_FOLDER)
+    if "/datasets/" in DATASET:
+        # Extract the part after /datasets/
+        dataset_subpath = DATASET.split("/datasets/")[-1]
+        DATASET = os.path.join(DATASET_FOLDER, dataset_subpath)
 
     if not os.path.exists(DATASET):
         logger.error(f"Dataset path '{DATASET}' does not exist.")
