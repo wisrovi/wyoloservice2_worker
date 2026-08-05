@@ -32,9 +32,12 @@ class DatasetAnalyzer:
         dict[str, Any]
             Dataset analysis results.
         """
+        dataset_path = Path(dataset_path)
+        if dataset_path.is_file() and dataset_path.suffix in ['.yaml', '.yml']:
+            dataset_path = dataset_path.parent
                 
         print(f"Analyzing dataset: {dataset_path}")
-        print(f"Exists: {Path(dataset_path).exists()}")
+        print(f"Exists: {dataset_path.exists()}")
         
         dataset_type = self.detect_dataset_type(
             dataset_path
