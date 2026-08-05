@@ -4,8 +4,6 @@
 
 from pathlib import Path
 import subprocess
-import os
-import shutil
 import csv
 
 class TrainingReportAnalyzer:
@@ -108,18 +106,6 @@ class TrainingReportAnalyzer:
             text=True,
             timeout=180  # 3 minutes timeout
         )
-
-        print("PATH:", os.environ.get("PATH"))
-        print("WHICH OPENCODE:", shutil.which("opencode"))
-
-        print("STDOUT:")
-        print(result.stdout)
-
-        print("STDERR:")
-        print(result.stderr)
-
-        print("RETURN CODE:")
-        print(result.returncode)
 
         if result.returncode != 0:
             raise RuntimeError(
