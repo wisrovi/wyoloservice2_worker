@@ -33,7 +33,26 @@ class LlmAnalyzer:
             # Save DOCX
             try:
                 from docx import Document
+                from docx.shared import Inches
+                from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+                from pathlib import Path
+                
                 doc = Document()
+                media_dir = Path("/app/media")
+                wtrain_img = media_dir / "wtrain.jpg"
+                wpipe_img = media_dir / "wpipe.jpg"
+                logo_img = media_dir / "logo.jpg"
+
+                if wtrain_img.exists():
+                    doc.add_picture(str(wtrain_img), width=Inches(6.0))
+                    doc.add_paragraph("WTrain: Sistema completo de entrenamiento distribuido para modelos de Inteligencia Artificial.")
+                    doc.add_page_break()
+
+                if wpipe_img.exists():
+                    doc.add_picture(str(wpipe_img), width=Inches(6.0))
+                    doc.add_paragraph("El sistema hace uso de WPipe: un framework de pipelines profesional, rápido, eficiente y con características forenses avanzadas.")
+                    doc.add_page_break()
+
                 for line in report.split("\n"):
                     if line.startswith("# "):
                         doc.add_heading(line[2:], level=0)
@@ -43,6 +62,15 @@ class LlmAnalyzer:
                         doc.add_heading(line[4:], level=2)
                     elif line.strip():
                         doc.add_paragraph(line)
+
+                if logo_img.exists():
+                    doc.add_page_break()
+                    p = doc.add_paragraph()
+                    p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                    run = p.add_run()
+                    run.add_picture(str(logo_img), width=Inches(3.0))
+                    doc.add_paragraph("WTrain hace parte del paquete de la Wisrovi Suit, desarrollada por William Rodriguez (Wisrovi).").alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
                 doc.save(llm_docx_path)
             except Exception as e:
                 print(f"[LLMAnalyzer] Failed to generate DOCX: {e}")
