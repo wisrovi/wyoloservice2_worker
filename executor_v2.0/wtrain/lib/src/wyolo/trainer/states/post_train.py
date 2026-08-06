@@ -8,7 +8,7 @@ from wpipe import step, to_obj
 from ..dto.post_train_context import PostTrainContext
 
 
-@step(name="step_name", version="v1.0")
+@step(name="PostTrain", version="v1.0")
 class PostTrain:
 
     MAX_IMAGES_TO_PROCESS = 10  # Limit to processing up to 10 images for now

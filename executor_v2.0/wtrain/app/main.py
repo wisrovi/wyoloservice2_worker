@@ -32,7 +32,7 @@ setproctitle("wtrain-service")
 console = Console()
 
 # WORKER/EXECUTOR VERSION
-__VERSION__ = "2.2.14"
+__VERSION__ = "2.2.15"
 
 
 def display_banner():
@@ -110,7 +110,7 @@ def main(user_config_train):
     artifacts_path = "/wyolo/worker/train_service_results"
     if os.path.exists(artifacts_path):
         for item in os.listdir(artifacts_path):
-            if item == "extras":
+            if item == "extras" or item.startswith("logs_"):
                 continue
             item_path = os.path.join(artifacts_path, item)
             try:
