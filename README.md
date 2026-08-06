@@ -129,7 +129,11 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.13 (Current Release) - 2026-08-05
+### Version 2.2.14 (Current Release) - 2026-08-06
+*   **Preserve EDA artifacts:** Adjusted `wtrain/app/main.py` and `wtrain/lib/src/wyolo/trainer/trainer_wrapper.py` to skip the `eda/` directory when cleaning up the artifacts directory at the start of a training run. This prevents the output of the pre-training EDA container from being accidentally deleted.
+*   **Version Update to v2.2.14:** Bumped executor version to `v2.2.14`.
+
+### Version 2.2.13 - 2026-08-05
 *   **WPipe-compliant post-train layout:** Reorganized the post-training pipeline into the WPipe standard structure: `dto/post_train_context.py` (shared `PostTrainContext`), `states/post_train.py` (`PostTrain`) and `states/llm_analyzer.py` (`LlmAnalyzer`) exported via `states/__init__.py`, with `post_train.py` acting as the pipeline orchestrator. `trainer_wrapper` imports remain unchanged.
 *   **Version Update to v2.2.13:** Bumped executor version to `v2.2.13`.
 
