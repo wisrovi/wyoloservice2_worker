@@ -374,7 +374,7 @@ class EDAReportGenerator:
         self.plots_dir = self.results_dir / "plots"
         self.plots_dir.mkdir(exist_ok=True)
 
-    def add_index(self, doc, section_titles):
+    def add_index(self, doc, section_titles, insert_pos=8):
         index_doc = Document()
         index_doc.add_page_break()
         index_doc.add_paragraph("Índice", style="Heading 1")
@@ -386,8 +386,9 @@ class EDAReportGenerator:
         if index_doc.paragraphs:
             index_elements.append(index_doc.paragraphs[-1]._element.getparent())
 
-        insert_pos = 8
         body = doc._body._element
+        # Ensure we don't exceed body children count
+        insert_pos = min(insert_pos, len(body))
         for element in reversed(index_elements):
             body.insert(insert_pos, element)
 
@@ -395,15 +396,34 @@ class EDAReportGenerator:
         md_content = f"# EDA Report: {dataset_name}\n\n"
         doc = Document()
         section_titles = []
+        
+        media_dir = Path("/app/media")
+        wtrain_img = media_dir / "wtrain.jpg"
+        wpipe_img = media_dir / "wpipe.jpg"
+        logo_img = media_dir / "logo.jpg"
 
         # Portada
         doc.add_paragraph(f"Análisis Exploratorio de Datos (EDA)", style="Title").alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        
+        if wtrain_img.exists():
+            doc.add_picture(str(wtrain_img), width=Inches(6.0))
+            doc.add_paragraph("WTrain: Sistema completo de entrenamiento distribuido para modelos de Inteligencia Artificial.").alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            doc.add_page_break()
+            
         doc.add_paragraph("Informe de Análisis Exploratorio de Datos", style="Heading 1").alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
         doc.add_paragraph("\n", style="Normal")
         doc.add_paragraph(f"Proyecto/Dataset: {dataset_name}", style="Normal").alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
         doc.add_paragraph(f"Tipo de Dataset: {dataset_type.capitalize()}", style="Normal").alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
         doc.add_paragraph(f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", style="Normal").alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
         doc.add_paragraph("\n", style="Normal")
+        
+        insert_index_at = len(doc._body._element)
+
+        if wpipe_img.exists():
+            doc.add_page_break()
+            doc.add_picture(str(wpipe_img), width=Inches(6.0))
+            doc.add_paragraph("Este sistema hace uso de WPipe: un framework de pipelines profesional, rápido, eficiente y con características forenses avanzadas.").alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            doc.add_page_break()
 
         # 1. Calidad de Datos
         section_titles.append("Validación de Calidad de Imágenes")
@@ -655,9 +675,17 @@ class EDAReportGenerator:
             md_content += f"1. {line}\n"
 
         try:
-            self.add_index(doc, section_titles)
+            self.add_index(doc, section_titles, insert_pos=insert_index_at)
         except:
             pass
+
+        if logo_img.exists():
+            doc.add_page_break()
+            p = doc.add_paragraph()
+            p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            run = p.add_run()
+            run.add_picture(str(logo_img), width=Inches(3.0))
+            doc.add_paragraph("WTrain hace parte del paquete de la Wisrovi Suit, desarrollada por William Rodriguez (Wisrovi).", style="Heading 2").alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
         # Save MD
         md_file = self.results_dir / "EDA_Report.md"
