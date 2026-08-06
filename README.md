@@ -130,7 +130,8 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 ## 📜 Changelog & Version History
 
 ### Version 2.2.14 (Current Release) - 2026-08-06
-*   **Preserve EDA artifacts:** Adjusted `wtrain/app/main.py` and `wtrain/lib/src/wyolo/trainer/trainer_wrapper.py` to skip the `eda/` directory when cleaning up the artifacts directory at the start of a training run. This prevents the output of the pre-training EDA container from being accidentally deleted.
+*   **General Cleanup:** The executor cleans the entire `train_service_results` directory at the start of a new training session to avoid conflicts or overlaps with previous runs.
+*   **Preserve Extras Artifacts:** Adjusted `wtrain/app/main.py` and `wtrain/lib/src/wyolo/trainer/trainer_wrapper.py` to skip the `extras/` directory when cleaning up the artifacts directory at the start of a training run. Inside this `extras` folder, subfolders like `eda/` (for pre-training reports) and `llm/` (for post-training LLM analysis) are generated and safely preserved.
 *   **Version Update to v2.2.14:** Bumped executor version to `v2.2.14`.
 
 ### Version 2.2.13 - 2026-08-05
