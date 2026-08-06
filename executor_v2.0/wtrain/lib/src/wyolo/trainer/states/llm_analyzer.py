@@ -10,7 +10,7 @@ from ..utils.training_report_analyzer import TrainingReportAnalyzer
 class LlmAnalyzer:
 
     RESULTS_RELATIVE = "evaluation_metrics/results.csv"
-    LLM_MD_NAME = "llm.md"
+    LLM_MD_NAME = "extras/llm/llm.md"
 
     @to_obj(PostTrainContext)
     def __call__(self, ctx: PostTrainContext):
@@ -18,6 +18,7 @@ class LlmAnalyzer:
 
         results_file = os.path.join(project_path, self.RESULTS_RELATIVE)
         llm_md_path = os.path.join(project_path, self.LLM_MD_NAME)
+        os.makedirs(os.path.dirname(llm_md_path), exist_ok=True)
 
         try:
             report = TrainingReportAnalyzer().analyze(results_file)
