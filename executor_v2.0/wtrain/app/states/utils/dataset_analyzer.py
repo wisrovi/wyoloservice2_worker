@@ -24,6 +24,7 @@ BBOX_ASPECT_RATIO_VARIANCE = 2.0
 CENTER_POSITION_BIN_COUNT = 75
 BBOX_WH_CORRELATION_THRESHOLD = 0.3
 
+
 class DatasetAnalyzer:
     """
     Analyze a dataset and automatically determine its type.
@@ -31,11 +32,12 @@ class DatasetAnalyzer:
     classification, object detection, or segmentation tasks
     and delegates the analysis to the corresponding analyzer.
     """
+
     def analyze(self, dataset_path: str | Path) -> dict[str, Any]:
         dataset_path = Path(dataset_path)
-        if dataset_path.is_file() and dataset_path.suffix in ['.yaml', '.yml']:
+        if dataset_path.is_file() and dataset_path.suffix in [".yaml", ".yml"]:
             dataset_path = dataset_path.parent
-                
+
         dataset_type = self.detect_dataset_type(dataset_path)
 
         if dataset_type == "classification":
@@ -46,11 +48,12 @@ class DatasetAnalyzer:
             stats = SegmentationAnalyzer().analyze(dataset_path)
         else:
             return {"error": "Invalid dataset type"}
-            
+
         try:
             EDAReportGenerator().generate_report(stats, dataset_path.name, dataset_type)
         except Exception as e:
             import traceback
+
             error_msg = f"Failed to generate EDA report: {e}\n{traceback.format_exc()}"
             print(error_msg)
             stats["eda_report_error"] = error_msg
@@ -93,14 +96,14 @@ class DatasetAnalyzer:
     def load_class_names(self, dataset_path: str | Path) -> dict[str, str]:
         dataset_path = Path(dataset_path)
         yaml_files = list(dataset_path.glob("*.yaml"))
-        
+
         if not yaml_files:
-           yaml_path = dataset_path / "data.yaml"
-           if os.path.exists(yaml_path):
+            yaml_path = dataset_path / "data.yaml"
+            if os.path.exists(yaml_path):
                 with open(yaml_path, "r", encoding="utf-8") as f:
                     data = yaml.safe_load(f)
                     return data.get("names", {})
-           return {}
+            return {}
 
         with open(yaml_files[0], encoding="utf-8") as f:
             data = yaml.safe_load(f)
@@ -120,7 +123,8 @@ class DataQualityAnalyzer:
         return [
             (os.path.join(root, f), split_name)
             for root, _, files in os.walk(folder)
-            for f in files if f.lower().endswith(tuple(self.IMAGE_EXTENSIONS))
+            for f in files
+            if f.lower().endswith(tuple(self.IMAGE_EXTENSIONS))
         ]
 
     def detect_duplicates_and_overlaps(self, dataset_path: Path, dataset_type: str):
@@ -132,22 +136,30 @@ class DataQualityAnalyzer:
             for split_folder in ["train", "test", "val"]:
                 split_path = dataset_path / split_folder
                 if split_path.is_dir():
-                    image_paths.extend(self.get_all_images(str(split_path), split_folder))
+                    image_paths.extend(
+                        self.get_all_images(str(split_path), split_folder)
+                    )
         else:
             for split_folder in ["train", "test", "val"]:
                 split_path = dataset_path / split_folder / "images"
                 if split_path.is_dir():
-                    image_paths.extend(self.get_all_images(str(split_path), split_folder))
+                    image_paths.extend(
+                        self.get_all_images(str(split_path), split_folder)
+                    )
 
         for img_path, split in image_paths:
             img = cv2.imread(img_path)
             if img is not None:
                 img_hash = hashlib.sha1(img).hexdigest()
                 if img_hash in image_hashes:
-                    duplicates.append({
-                        "img1": os.path.basename(img_path), "split1": split,
-                        "img2": os.path.basename(image_hashes[img_hash][0]), "split2": image_hashes[img_hash][1]
-                    })
+                    duplicates.append(
+                        {
+                            "img1": os.path.basename(img_path),
+                            "split1": split,
+                            "img2": os.path.basename(image_hashes[img_hash][0]),
+                            "split2": image_hashes[img_hash][1],
+                        }
+                    )
                 else:
                     image_hashes[img_hash] = (img_path, split)
 
@@ -162,12 +174,22 @@ class DataQualityAnalyzer:
             for split_folder in ["train", "test", "val"]:
                 split_path = dataset_path / split_folder
                 if split_path.is_dir():
-                    image_paths.extend([p[0] for p in self.get_all_images(str(split_path), split_folder)])
+                    image_paths.extend(
+                        [
+                            p[0]
+                            for p in self.get_all_images(str(split_path), split_folder)
+                        ]
+                    )
         else:
             for split_folder in ["train", "test", "val"]:
                 split_path = dataset_path / split_folder / "images"
                 if split_path.is_dir():
-                    image_paths.extend([p[0] for p in self.get_all_images(str(split_path), split_folder)])
+                    image_paths.extend(
+                        [
+                            p[0]
+                            for p in self.get_all_images(str(split_path), split_folder)
+                        ]
+                    )
 
         for image_path in image_paths:
             img_name = os.path.basename(image_path)
@@ -196,7 +218,7 @@ class ClassificationAnalyzer:
         split_percentage_distribution = {}
         widths, heights = [], []
         aspect_ratios = []
-        
+
         splits = ["train", "val", "test", "inference"]
 
         for split in splits:
@@ -223,13 +245,17 @@ class ClassificationAnalyzer:
                             pass
 
                 split_distribution[split][class_dir.name] = image_count
-                class_distribution[class_dir.name] = class_distribution.get(class_dir.name, 0) + image_count
+                class_distribution[class_dir.name] = (
+                    class_distribution.get(class_dir.name, 0) + image_count
+                )
                 total_images += image_count
 
         for split, data in split_distribution.items():
             split_images = sum(data.values())
             if total_images > 0:
-                split_percentage_distribution[split] = round(split_images * 100 / total_images, 2)
+                split_percentage_distribution[split] = round(
+                    split_images * 100 / total_images, 2
+                )
 
         dq = DataQualityAnalyzer()
         duplicates = dq.detect_duplicates_and_overlaps(dataset_path, "classification")
@@ -247,9 +273,9 @@ class ClassificationAnalyzer:
             "data_quality": {
                 "duplicates": duplicates,
                 "corrupt": corrupt,
-                "small": small
+                "small": small,
             },
-            "dataset_path": str(dataset_path)
+            "dataset_path": str(dataset_path),
         }
 
 
@@ -261,11 +287,11 @@ class DetectionAnalyzer:
         total_images = 0
         total_annotations = 0
         class_names = DatasetAnalyzer().load_class_names(dataset_path)
-        
+
         class_distribution = {}
         split_distribution = {}
         split_percentage_distribution = {}
-        
+
         widths, heights = [], []
         aspect_ratios = []
         bbox_areas = []
@@ -304,10 +330,10 @@ class DetectionAnalyzer:
                         values = line.split()
                         if not values:
                             continue
-                        
+
                         total_annotations += 1
                         split_distribution[split]["annotations"] += 1
-                        
+
                         if len(values) >= 5:
                             try:
                                 _, x_c, y_c, b_w, b_h = map(float, values[:5])
@@ -323,12 +349,18 @@ class DetectionAnalyzer:
 
                         class_id = values[0]
                         class_name = class_names.get(class_id, class_id)
-                        split_distribution[split]["classes"][class_name] = split_distribution[split]["classes"].get(class_name, 0) + 1
-                        class_distribution[class_name] = class_distribution.get(class_name, 0) + 1
+                        split_distribution[split]["classes"][class_name] = (
+                            split_distribution[split]["classes"].get(class_name, 0) + 1
+                        )
+                        class_distribution[class_name] = (
+                            class_distribution.get(class_name, 0) + 1
+                        )
 
         for split, data in split_distribution.items():
             if total_images > 0:
-                split_percentage_distribution[split] = round(data["images"] * 100 / total_images, 2)
+                split_percentage_distribution[split] = round(
+                    data["images"] * 100 / total_images, 2
+                )
 
         dq = DataQualityAnalyzer()
         duplicates = dq.detect_duplicates_and_overlaps(dataset_path, "detection")
@@ -351,9 +383,9 @@ class DetectionAnalyzer:
             "data_quality": {
                 "duplicates": duplicates,
                 "corrupt": corrupt,
-                "small": small
+                "small": small,
             },
-            "dataset_path": str(dataset_path)
+            "dataset_path": str(dataset_path),
         }
 
 
@@ -396,34 +428,48 @@ class EDAReportGenerator:
         md_content = f"# EDA Report: {dataset_name}\n\n"
         doc = Document()
         section_titles = []
-        
+
         media_dir = Path("/app/media")
         wtrain_img = media_dir / "wtrain.jpg"
         wpipe_img = media_dir / "wpipe.jpg"
         logo_img = media_dir / "logo.jpg"
 
         # Portada
-        doc.add_paragraph(f"Análisis Exploratorio de Datos (EDA)", style="Title").alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-        
+        doc.add_paragraph(
+            f"Análisis Exploratorio de Datos (EDA)", style="Title"
+        ).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
         if wtrain_img.exists():
             doc.add_picture(str(wtrain_img), width=Inches(6.0))
-            doc.add_paragraph("WTrain: Sistema completo de entrenamiento distribuido para modelos de Inteligencia Artificial.").alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            doc.add_paragraph(
+                "WTrain: Sistema completo de entrenamiento distribuido para modelos de Inteligencia Artificial."
+            ).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
             doc.add_page_break()
-            
-        doc.add_paragraph("Informe de Análisis Exploratorio de Datos", style="Heading 1").alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-        doc.add_paragraph("\n", style="Normal")
-        doc.add_paragraph(f"Proyecto/Dataset: {dataset_name}", style="Normal").alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
-        doc.add_paragraph(f"Tipo de Dataset: {dataset_type.capitalize()}", style="Normal").alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
-        doc.add_paragraph(f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", style="Normal").alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
-        doc.add_paragraph("\n", style="Normal")
-        
-        insert_index_at = len(doc._body._element)
 
         if wpipe_img.exists():
             doc.add_page_break()
             doc.add_picture(str(wpipe_img), width=Inches(6.0))
-            doc.add_paragraph("Este sistema hace uso de WPipe: un framework de pipelines profesional, rápido, eficiente y con características forenses avanzadas.").alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            doc.add_paragraph(
+                "Este sistema hace uso de WPipe: un framework de pipelines profesional, rápido, eficiente y con características forenses avanzadas."
+            ).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
             doc.add_page_break()
+
+        doc.add_paragraph(
+            "Informe de Análisis Exploratorio de Datos", style="Heading 1"
+        ).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        doc.add_paragraph("\n", style="Normal")
+        doc.add_paragraph(
+            f"Proyecto/Dataset: {dataset_name}", style="Normal"
+        ).alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+        doc.add_paragraph(
+            f"Tipo de Dataset: {dataset_type.capitalize()}", style="Normal"
+        ).alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+        doc.add_paragraph(
+            f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", style="Normal"
+        ).alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+        doc.add_paragraph("\n", style="Normal")
+
+        insert_index_at = len(doc._body._element)
 
         # 1. Calidad de Datos
         section_titles.append("Validación de Calidad de Imágenes")
@@ -432,9 +478,9 @@ class EDAReportGenerator:
         corrupt = dq.get("corrupt", [])
         small = dq.get("small", [])
         dups = dq.get("duplicates", [])
-        
+
         md_content += "## Validación de Calidad de Imágenes\n\n"
-        
+
         if corrupt:
             doc.add_paragraph("Imágenes corruptas encontradas:", style="Heading 2")
             md_content += "### Imágenes corruptas\n"
@@ -449,7 +495,10 @@ class EDAReportGenerator:
             md_content += "No se encontraron imágenes corruptas.\n\n"
 
         if small:
-            doc.add_paragraph("Imágenes con dimensiones pequeñas encontradas (<64px):", style="Heading 2")
+            doc.add_paragraph(
+                "Imágenes con dimensiones pequeñas encontradas (<64px):",
+                style="Heading 2",
+            )
             md_content += "### Imágenes diminutas\n"
             for img in small[:20]:
                 doc.add_paragraph(f"- {img['name']} ({img['w']}x{img['h']})")
@@ -482,7 +531,7 @@ class EDAReportGenerator:
             classes = list(stats["class_distribution"].keys())
             counts = list(stats["class_distribution"].values())
             if classes:
-                plt.figure(figsize=(12, max(6, len(classes)*0.3)))
+                plt.figure(figsize=(12, max(6, len(classes) * 0.3)))
                 sns.barplot(x=counts, y=classes, palette="viridis")
                 plt.title("Distribución de Clases")
                 plt.xlabel("Instancias")
@@ -503,7 +552,13 @@ class EDAReportGenerator:
             percentages = list(stats["split_percentage_distribution"].values())
             if sum(percentages) > 0:
                 plt.figure(figsize=(8, 8))
-                plt.pie(percentages, labels=splits, autopct="%1.1f%%", startangle=140, colors=sns.color_palette("pastel"))
+                plt.pie(
+                    percentages,
+                    labels=splits,
+                    autopct="%1.1f%%",
+                    startangle=140,
+                    colors=sns.color_palette("pastel"),
+                )
                 plt.title("Distribución de Splits")
                 split_path = self.plots_dir / "split_distribution.png"
                 plt.savefig(split_path)
@@ -520,8 +575,12 @@ class EDAReportGenerator:
         dims = stats.get("image_dimensions", {})
         if dims.get("widths") and dims.get("heights"):
             plt.figure(figsize=(10, 6))
-            sns.histplot(dims["widths"], bins=30, color="blue", label="Width", alpha=0.6)
-            sns.histplot(dims["heights"], bins=30, color="red", label="Height", alpha=0.6)
+            sns.histplot(
+                dims["widths"], bins=30, color="blue", label="Width", alpha=0.6
+            )
+            sns.histplot(
+                dims["heights"], bins=30, color="red", label="Height", alpha=0.6
+            )
             plt.xlabel("Píxeles")
             plt.ylabel("Frecuencia")
             plt.title("Distribución de Tamaños de Imágenes")
@@ -529,7 +588,7 @@ class EDAReportGenerator:
             sz_path = self.plots_dir / "image_size_distribution.png"
             plt.savefig(sz_path)
             plt.close()
-            
+
             md_content += "## Tamaños de Imágenes\n\n![Image Sizes](plots/image_size_distribution.png)\n\n"
             doc.add_heading("Distribución de Tamaños de Imágenes", level=1)
             section_titles.append("Distribución de Tamaños de Imágenes")
@@ -568,7 +627,9 @@ class EDAReportGenerator:
                 plt.savefig(bbox_path)
                 plt.close()
 
-                md_content += "## Bounding Box Áreas\n\n![BBox Areas](plots/bbox_areas.png)\n\n"
+                md_content += (
+                    "## Bounding Box Áreas\n\n![BBox Areas](plots/bbox_areas.png)\n\n"
+                )
                 doc.add_heading("Distribución de Áreas de BBox", level=1)
                 section_titles.append("Distribución de Áreas de BBox")
                 doc.add_picture(str(bbox_path), width=Inches(6.0))
@@ -624,24 +685,30 @@ class EDAReportGenerator:
         doc.add_heading("Conclusiones del Análisis", level=1)
         section_titles.append("Conclusiones del Análisis")
         md_content += "## Conclusiones del Análisis\n\n"
-        
+
         conclusions = []
-        
+
         # Corruptas
         if corrupt:
-            conclusions.append("Se detectaron imágenes corruptas que deben ser eliminadas o reemplazadas.")
+            conclusions.append(
+                "Se detectaron imágenes corruptas que deben ser eliminadas o reemplazadas."
+            )
         else:
             conclusions.append("No se encontraron imágenes corruptas.")
-            
+
         # Pequeñas
         if small:
-            conclusions.append("Existen imágenes con dimensiones muy pequeñas que podrían afectar el rendimiento.")
+            conclusions.append(
+                "Existen imágenes con dimensiones muy pequeñas que podrían afectar el rendimiento."
+            )
         else:
             conclusions.append("Las dimensiones mínimas de las imágenes son adecuadas.")
 
         # Duplicados
         if dups:
-            conclusions.append("Se encontraron imágenes duplicadas o superposiciones entre splits, cuidado con el data leakage.")
+            conclusions.append(
+                "Se encontraron imágenes duplicadas o superposiciones entre splits, cuidado con el data leakage."
+            )
         else:
             conclusions.append("No se detectaron duplicados problemáticos.")
 
@@ -650,15 +717,22 @@ class EDAReportGenerator:
             counts = list(stats["class_distribution"].values())
             max_c, min_c = max(counts), min(counts)
             if (max_c / (min_c + 1e-5)) > CLASS_IMBALANCE_RATIO:
-                conclusions.append("La distribución de clases está fuertemente desbalanceada. Considere recolectar más datos para clases minoritarias o aplicar pesos.")
+                conclusions.append(
+                    "La distribución de clases está fuertemente desbalanceada. Considere recolectar más datos para clases minoritarias o aplicar pesos."
+                )
             else:
                 conclusions.append("La distribución de clases es equilibrada.")
-                
+
         # Dimensions
         if dims.get("widths"):
             w, h = dims["widths"], dims["heights"]
-            if max(w) - min(w) > IMAGE_SIZE_VARIATION_THRESHOLD or max(h) - min(h) > IMAGE_SIZE_VARIATION_THRESHOLD:
-                conclusions.append("Alta variabilidad en los tamaños de las imágenes. El modelo requerirá padding o resize agresivo.")
+            if (
+                max(w) - min(w) > IMAGE_SIZE_VARIATION_THRESHOLD
+                or max(h) - min(h) > IMAGE_SIZE_VARIATION_THRESHOLD
+            ):
+                conclusions.append(
+                    "Alta variabilidad en los tamaños de las imágenes. El modelo requerirá padding o resize agresivo."
+                )
             else:
                 conclusions.append("Los tamaños de las imágenes son uniformes.")
 
@@ -666,7 +740,9 @@ class EDAReportGenerator:
         if stats.get("bbox_areas"):
             areas = stats["bbox_areas"]
             if max(areas) / (min(areas) + 1e-5) > BBOX_AREA_VARIATION_RATIO:
-                conclusions.append("Mucha variabilidad en las áreas de BBox. El modelo detectará objetos de múltiples tamaños.")
+                conclusions.append(
+                    "Mucha variabilidad en las áreas de BBox. El modelo detectará objetos de múltiples tamaños."
+                )
             else:
                 conclusions.append("Las áreas de objetos son relativamente uniformes.")
 
@@ -685,7 +761,10 @@ class EDAReportGenerator:
             p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
             run = p.add_run()
             run.add_picture(str(logo_img), width=Inches(3.0))
-            doc.add_paragraph("WTrain hace parte del paquete de la Wisrovi Suit, desarrollada por William Rodriguez (Wisrovi).", style="Heading 2").alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            doc.add_paragraph(
+                "WTrain hace parte del paquete de la Wisrovi Suit, desarrollada por William Rodriguez (Wisrovi).",
+                style="Heading 2",
+            ).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
         # Save MD
         md_file = self.results_dir / "EDA_Report.md"
@@ -706,8 +785,10 @@ class DatasetEDAState:
             raise FileNotFoundError(f"Dataset not found: {dataset_path}")
         return DatasetAnalyzer().analyze(dataset_path)
 
+
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) != 2:
         raise ValueError("Usage: python dataset_analyzer.py <dataset_path>")
     dataset_path = Path(sys.argv[1])
