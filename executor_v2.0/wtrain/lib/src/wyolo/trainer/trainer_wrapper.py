@@ -365,7 +365,7 @@ def create_trainer(config_path: str, trial_number):
     results_dir = request_config.get("tempfile")
     if os.path.exists(results_dir):
         for item in os.listdir(results_dir):
-            if item == "eda":
+            if item == "extras":
                 continue
             item_path = os.path.join(results_dir, item)
             try:
