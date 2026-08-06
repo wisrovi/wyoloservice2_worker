@@ -364,7 +364,17 @@ def create_trainer(config_path: str, trial_number):
 
     results_dir = request_config.get("tempfile")
     if os.path.exists(results_dir):
-        shutil.rmtree(results_dir)
+        for item in os.listdir(results_dir):
+            if item == "eda":
+                continue
+            item_path = os.path.join(results_dir, item)
+            try:
+                if os.path.isfile(item_path) or os.path.islink(item_path):
+                    os.unlink(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+            except Exception:
+                pass
         os.makedirs(results_dir, exist_ok=True)
 
     trainer = TrainerWrapper(config=request_config)
