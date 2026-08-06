@@ -110,6 +110,8 @@ def main(user_config_train):
     artifacts_path = "/wyolo/worker/train_service_results"
     if os.path.exists(artifacts_path):
         for item in os.listdir(artifacts_path):
+            if item == "eda":
+                continue
             item_path = os.path.join(artifacts_path, item)
             try:
                 if os.path.isfile(item_path) or os.path.islink(item_path):
