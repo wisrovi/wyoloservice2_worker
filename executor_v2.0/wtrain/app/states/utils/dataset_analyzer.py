@@ -691,7 +691,7 @@ from docx import Document
 from docx.shared import Inches
 
 class EDAReportGenerator:
-    def __init__(self, results_dir="/wyolo/worker/train_service_results/eda"):
+    def __init__(self, results_dir="/wyolo/worker/train_service_results/extras/eda"):
         self.results_dir = Path(results_dir)
         if self.results_dir.exists():
             shutil.rmtree(self.results_dir)
