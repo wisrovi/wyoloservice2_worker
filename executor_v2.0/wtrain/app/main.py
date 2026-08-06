@@ -110,7 +110,7 @@ def main(user_config_train):
     artifacts_path = "/wyolo/worker/train_service_results"
     if os.path.exists(artifacts_path):
         for item in os.listdir(artifacts_path):
-            if item == "eda":
+            if item == "extras":
                 continue
             item_path = os.path.join(artifacts_path, item)
             try:
