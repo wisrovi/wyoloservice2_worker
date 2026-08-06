@@ -129,7 +129,11 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.16 (Current Release) - 2026-08-06
+### Version 2.2.17 (Current Release) - 2026-08-06
+*   **Corporate Branding in Reports:** Injected corporate assets (`wtrain.jpg`, `wpipe.jpg`, and `logo.jpg`) with contextual descriptions directly into the generated DOCX reports for both the Exploratory Data Analysis (EDA) and Post-training LLM Analysis. This highlights the Wisrovi Suit ecosystem and the underlying WPipe engine in professional documentation.
+*   **Version Update:** Bumped executor version to v2.2.17.
+
+### Version 2.2.16 - 2026-08-06
 *   **Advanced EDA Report:** Dramatically improved the EDA reporting logic within `dataset_analyzer.py`. The report now includes data quality checks (finding duplicates via hash, corrupt images, tiny images), generates comprehensive dataset metric graphs (including BBox correlations and aspects), creates a properly formatted DOCX with indexes, and applies automatic heuristic conclusions (interpreting imbalance thresholds and size variance).
 *   **EDA Artifact Cleanup:** The `EDAReportGenerator` now explicitly destroys the entire old EDA results directory before writing the new report, preventing out-of-date plots from contaminating the newest runs.
 *   **Version Update:** Bumped executor version to v2.2.16.
