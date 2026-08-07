@@ -1,13 +1,18 @@
-# Graph Report - wyoloservice2_worker  (2026-08-06)
+# Graph Report - wyoloservice2_worker  (2026-08-05)
 
 ## Corpus Check
-- 131 files · ~1,587,826 words
+- 130 files · ~1,579,850 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1454 nodes · 2230 edges · 102 communities (86 shown, 16 thin omitted)
+- 1438 nodes · 2201 edges · 102 communities (86 shown, 16 thin omitted)
 - Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 204 edges (avg confidence: 0.53)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `7aa5119c`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - app/states/__init__.py
@@ -37,7 +42,7 @@
 - dashboard/main.py
 - SystemMetricsCollector
 - ProgressManager
-- Path
+- DatasetAnalyzer
 - AlertManager
 - 📜 Changelog & Version History
 - What You Must Do When Invoked
@@ -83,7 +88,7 @@
 - 🔄 Diagram Walkthrough
 - 🛠️ Getting Started
 - Docker Image Naming Convention
-- EDA Report_b9dffd88.md
+- publish_request_redis
 - PatchedWSQLite
 - wyoloservice2_worker — codegraph + graphify
 - check_dataset.py
@@ -111,10 +116,10 @@
 3. `QueryManager` - 25 edges
 4. `AlertManager` - 24 edges
 5. `AnalysisManager` - 24 edges
-6. `📜 Changelog & Version History` - 24 edges
-7. `PipelineAsync` - 20 edges
-8. `🚀 Wyolo - Professional YOLO Training Library` - 20 edges
-9. `AlertFiredModel` - 19 edges
+6. `PipelineAsync` - 20 edges
+7. `🚀 Wyolo - Professional YOLO Training Library` - 20 edges
+8. `AlertFiredModel` - 19 edges
+9. `📜 Changelog & Version History` - 19 edges
 10. `PipelineModel` - 18 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -135,8 +140,8 @@
 ## Communities (102 total, 16 thin omitted)
 
 ### Community 0 - "app/states/__init__.py"
-Cohesion: 0.17
-Nodes (19): config_pipeline(), main(), check_minio_buckets(), Asegura que los buckets necesarios existan en MinIO., error_capture(), _get_study_id(), _make_key(), publish_request_redis() (+11 more)
+Cohesion: 0.18
+Nodes (14): config_pipeline(), main(), check_gpu_available(), check_minio_buckets(), Asegura que los buckets necesarios existan en MinIO., error_capture(), not_train(), PublicResultsInput (+6 more)
 
 ### Community 1 - "SQLite"
 Cohesion: 0.14
@@ -242,17 +247,17 @@ Nodes (9): get_system_metrics(), System metrics collection for WPipe pipelines. 
 Cohesion: 0.15
 Nodes (9): ProgressManager, Any, Progress management for WPipe pipelines. This module provides a singleton…, Singleton manager for Rich Progress bars. Ensures that a single progress…, Create or return the singleton instance. Returns: ProgressManager: The shared…, Initialize the instance (called after __new__)., Enter context manager for progress tracking. Returns: Progress: The Rich…, Exit context manager for progress tracking. Args: exc_type: Exception type if… (+1 more)
 
-### Community 27 - "Path"
-Cohesion: 0.20
-Nodes (10): ClassificationAnalyzer, DataQualityAnalyzer, DatasetAnalyzer, DatasetEDAState, DetectionAnalyzer, EDAReportGenerator, Any, Path (+2 more)
+### Community 27 - "DatasetAnalyzer"
+Cohesion: 0.13
+Nodes (19): ClassificationAnalyzer, DatasetAnalyzer, DatasetEDAState, DetectionAnalyzer, Any, Path, Determine whether a YOLO dataset is intended for object detection or…, Analyze a dataset and return its statistics. Parameters ---------- dataset_path… (+11 more)
 
 ### Community 28 - "AlertManager"
 Cohesion: 0.14
 Nodes (10): AlertManager, Any, Alert system for pipeline and step monitoring., Check and fire step-level alerts. Args: pipeline_id: Unique identifier for the…, Handles alert threshold configuration and firing logic., Check and fire pipeline-level alerts. Args: pipeline_id: Unique identifier for…, Initialize the AlertManager. Args: db_alerts_config: Database accessor for…, Add an alert threshold configuration. Args: metric: The metric to monitor.… (+2 more)
 
 ### Community 29 - "📜 Changelog & Version History"
-Cohesion: 0.06
-Nodes (32): 1. 🚶 Process Flowchart (Pipeline Stack), 2. 🛡️ Key Features of Version 2.0, 3. 🏗️ MinIO S3 Artifacts Tree Layout, 4. ⚙️ Configuration Templates, 🐳 Building and Deployment, 📜 Changelog & Version History, Input Configuration (`base_config.yaml`), Output Results (`results.json`) (+24 more)
+Cohesion: 0.07
+Nodes (27): 1. 🚶 Process Flowchart (Pipeline Stack), 2. 🛡️ Key Features of Version 2.0, 3. 🏗️ MinIO S3 Artifacts Tree Layout, 4. ⚙️ Configuration Templates, 🐳 Building and Deployment, 📜 Changelog & Version History, Input Configuration (`base_config.yaml`), Output Results (`results.json`) (+19 more)
 
 ### Community 30 - "What You Must Do When Invoked"
 Cohesion: 0.08
@@ -283,7 +288,7 @@ Cohesion: 0.50
 Nodes (3): Codes, Error codes and execution constants for WPipe., Standard task and process status codes.
 
 ### Community 56 - "_wpipe/__init__.py"
-Cohesion: 0.15
+Cohesion: 0.16
 Nodes (10): _patched_return(), WPipe - Pipeline Orchestration Library. A high-performance library for building…, Patched return_connection that releases semaphore but avoids rollback., PostTrainContext, Shared context for the post-training pipeline. Attributes: model: Trained YOLO…, LlmAnalyzer, PostTrain, Read absolute image dirs (train/val/test) from a detection dataset YAML.… (+2 more)
 
 ### Community 57 - "wpipe - Core Package"
@@ -331,7 +336,7 @@ Cohesion: 0.17
 Nodes (11): API, Exceptions, Features, GenericPipeline, PipelineContext, Quick Start, Type Hinting & Validation, TypeValidator (+3 more)
 
 ### Community 68 - "TrainingReportAnalyzer"
-Cohesion: 0.25
+Cohesion: 0.23
 Nodes (7): Path, Generate AI-assisted training analysis using OpenCode with fallback., Safely convert a CSV cell to float, returning default on failure., Generate a basic report from CSV data when OpenCode fails., Generate a professional training report. Args: results_file: Path to YOLO…, Attempt to generate report using OpenCode with timeout., TrainingReportAnalyzer
 
 ### Community 69 - "Task Timeouts"
@@ -382,9 +387,9 @@ Nodes (8): CLI Usage, Development Installation, Full Installation (with all depe
 Cohesion: 0.29
 Nodes (6): Build and Push Commands, Docker Compose References, Docker Image Naming Convention, Environment Variables, Image Registry, Pattern
 
-### Community 81 - "EDA Report_b9dffd88.md"
-Cohesion: 0.14
-Nodes (13): Conclusiones del Análisis EDA:, Distribución de Clases:, Distribución de Posiciones Centrales de Bounding Boxes:, Distribución de Relaciones de Aspecto:, Distribución de Relaciones de Aspecto de Bounding Boxes:, Distribución de Tamaños de Imágenes:, Distribución de Áreas de Bounding Boxes:, Gráfico de Dispersión de Ancho vs. Alto de Bounding Boxes: (+5 more)
+### Community 81 - "publish_request_redis"
+Cohesion: 0.62
+Nodes (6): _get_study_id(), _make_key(), publish_request_redis(), publish_results_redis(), _to_dict(), _to_dict_deep()
 
 ### Community 82 - "PatchedWSQLite"
 Cohesion: 0.29
@@ -395,8 +400,8 @@ Cohesion: 0.33
 Nodes (5): 🐳 Docker Deployment & Test Verification Workflow, Estado, graphify, Sync automático, wyoloservice2_worker — codegraph + graphify
 
 ### Community 84 - "check_dataset.py"
-Cohesion: 0.36
-Nodes (6): check_dataset(), Dataset, DatasetConfig, BaseModel, UserInput, check_gpu_available()
+Cohesion: 0.53
+Nodes (5): check_dataset(), Dataset, DatasetConfig, BaseModel, UserInput
 
 ### Community 85 - "✨ Key Features"
 Cohesion: 0.33
@@ -447,7 +452,7 @@ Cohesion: 0.67
 Nodes (3): Build Process, ⚙️ Container Lifecycle, Runtime Process
 
 ## Knowledge Gaps
-- **269 isolated node(s):** `$schema`, `.opencode/plugins/graphify.js`, `graphState`, `translations`, `pipelineTabs` (+264 more)
+- **251 isolated node(s):** `$schema`, `.opencode/plugins/graphify.js`, `graphState`, `translations`, `pipelineTabs` (+246 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -457,9 +462,9 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `PipelineTracker` connect `PipelineTracker` to `.__init__`, `Pipeline`, `tracker.py`, `PipelineAsync`, `Metric`, `AnalysisManager`, `QueryManager`, `SystemMetricsCollector`, `AlertManager`?**
   _High betweenness centrality (0.066) - this node is a cross-community bridge._
 - **Why does `Pipeline` connect `Pipeline` to `pipe.py`, `.__init__`, `.set_steps`, `.link_to_pipeline`, `.steps`, `APIClient`, `TaskError`?**
-  _High betweenness centrality (0.047) - this node is a cross-community bridge._
-- **Why does `to_obj()` connect `app/states/__init__.py` to `_wpipe/__init__.py`, `CheckpointManager`, `check_dataset.py`, `train_model`?**
-  _High betweenness centrality (0.039) - this node is a cross-community bridge._
+  _High betweenness centrality (0.048) - this node is a cross-community bridge._
+- **Why does `to_obj()` connect `app/states/__init__.py` to `publish_request_redis`, `CheckpointManager`, `check_dataset.py`, `_wpipe/__init__.py`, `train_model`?**
+  _High betweenness centrality (0.040) - this node is a cross-community bridge._
 - **Are the 16 inferred relationships involving `PipelineTracker` (e.g. with `.__init__()` and `.__init__()`) actually correct?**
   _`PipelineTracker` has 16 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 2 inferred relationships involving `Pipeline` (e.g. with `PipelineAsync` and `APIClient`) actually correct?**
