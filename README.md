@@ -149,7 +149,7 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 *   **Log Persistence:** Fixed main.py cleanup logic to preserve logs_*.txt files for easier debugging.
 *   **Version Update:** Bumped executor version to v2.2.15.
 
-### Version 2.2.14 (Current Release) - 2026-08-06
+### Version 2.2.14 - 2026-08-06
 *   **General Cleanup:** The executor cleans the entire `train_service_results` directory at the start of a new training session to avoid conflicts or overlaps with previous runs.
 *   **Preserve Extras Artifacts:** Adjusted `wtrain/app/main.py` and `wtrain/lib/src/wyolo/trainer/trainer_wrapper.py` to skip the `extras/` directory when cleaning up the artifacts directory at the start of a training run. Inside this `extras` folder, subfolders like `eda/` (for pre-training reports) and `llm/` (for post-training LLM analysis) are generated and safely preserved.
 *   **Version Update to v2.2.14:** Bumped executor version to `v2.2.14`.
@@ -169,7 +169,7 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 *   **OpenCode Installed in Executor Image:** Added `curl` and `RUN curl -fsSL https://opencode.ai/install | bash` to the executor Dockerfile so the LLM analysis runs natively inside the executor container.
 *   **Version Update to v2.2.11:** Bumped executor version to `v2.2.11`.
 
-### Version 2.2.10 (Current Release) - 2026-08-05
+### Version 2.2.10 - 2026-08-05
 *   **Version Update to v2.2.10:** Bumped executor version to `v2.2.10`.
 *   **Host env snapshot refresh:** Updated `config/user.env` with the current worker host date/time snapshot.
 
@@ -233,3 +233,16 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 ---
 
 **William R.** - AI Leader & Solutions Architect
+
+## Licensing and Usage
+
+This project uses a **Dual License** model:
+- **Community/Research**: Licensed under the AGPLv3. See [LICENSE](LICENSE).
+- **Commercial**: Requires a commercial license. See [COMMERCIAL.md](COMMERCIAL.md) for details.
+
+### Academic Research
+If you use this project in academic research, you are required to cite this repository using the provided `CITATION.cff` and notify the author with a link to your publication.
+
+
+## Changelog
+- Bumped version due to License update to AGPLv3 and Dual Licensing model.
