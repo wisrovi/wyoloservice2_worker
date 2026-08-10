@@ -22,10 +22,11 @@ flowchart TD
         Dec -->|Yes| T[train_model]
         Dec -->|No| NT[not_train]
         
-        T -->|7. Register in S3| PML[publish_results_mlflow]
+        T -->|7. Post-Train Analysis| PT[Eigen-CAM Heatmaps & LLM Report]
+        PT -->|8. Register in S3| PML[publish_results_mlflow]
         PML --> End((Exit))
         NT --> End
-        End -->|8. Close in Redis| RED[publish_results_redis]
+        End -->|9. Close in Redis| RED[publish_results_redis]
     end
 
     subgraph Host_and_Services [External Infrastructure]
@@ -37,10 +38,10 @@ flowchart TD
 
 ---
 
-## 2. 🛡️ Key Features of Version 2.0
-
+## 2. 🛡️ Key Features
 *   **YOLO26 Native Support:** Fully validated for classic architectures and the new `yolo26` architectures (e.g., `yolo26n.pt`, `yolo26n-cls.pt`, `yolo26n-seg.pt`).
 *   **Absolute Experiment Isolation:** The pipeline entrypoint cleans the host-mounted directories to prevent carryover artifacts from prior runs.
+*   **Eigen-CAM Visualizations (Post-Train):** Automatically evaluates the trained model against test datasets to generate class activation maps (heatmaps). This is included to provide explainable AI insights (XAI) to the user, highlighting exactly which regions of the image the model focused on to make its predictions.
 *   **Fuzzy Metrics Extraction:** Robust translation between generic metrics names and task-specific names (e.g. mapping `metrics/mAP50` to `metrics/mAP50(B)` for detection or `metrics/mAP50(M)` for segmentation).
 *   **Preventative Samba Check:** Runs write touch tests at startup on `/wyolo/control_server/...` to detect mount issues immediately.
 
