@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Standardized testing infrastructure (tests folder, run_tests.sh, coverage.sh via Docker).
 - GitHub issue and PR templates.
 - This CHANGELOG file to replace in-README changelogs.
+## [2.2.24] - 2026-08-10
+### Fixed
+- Wipe out `model_focus` directory in `PostTrain` to prevent mixing old artifacts with new data.
 ## [2.2.23] - 2026-08-10
 ### Fixed
 - Fixed `_find_images` in `post_train.py` failing to find image files in classification datasets by supporting `test/*/*` patterns.
