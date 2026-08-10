@@ -130,7 +130,7 @@ class TrainerWrapper(Elemental, Mlflow_setup):
                     "model_path": model_path,
                     "images_test_path": self.config.get("train", {}).get("data", None),
                     "project_path": self.ARTIFACTS_PATH,
-                    "output_dir": self.ARTIFACTS_PATH,
+                    "output_dir": os.path.join(self.ARTIFACTS_PATH, "extras", "model_focus"),
                 }
             )
 
