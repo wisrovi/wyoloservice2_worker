@@ -3,6 +3,7 @@ import shutil
 from glob import glob
 
 import yaml
+from ultralytics import YOLO
 from wpipe import step, to_obj
 
 from ..dto.post_train_context import PostTrainContext
@@ -19,7 +20,6 @@ class PostTrain:
         images_test_path = ctx.images_test_path
         project_path = ctx.project_path
 
-        from ultralytics import YOLO
         try:
             model = YOLO(model_path) if model_path else None
         except Exception as e:
@@ -37,8 +37,12 @@ class PostTrain:
             shutil.rmtree(post_train_results_path)
         os.makedirs(post_train_results_path, exist_ok=True)
 
-        counter = 0
-        for image in all_images:
+        images_used_for_prediction = []
+
+        images_to_process = all_images[:self.MAX_IMAGES_TO_PROCESS]
+        ctx.image_data = images_to_process
+
+        for image in images_to_process:
             try:
                 if not hasattr(model, "predict"):
                     raise AttributeError("The model does not have a 'predict' method.")
@@ -52,15 +56,15 @@ class PostTrain:
                     name="post_train_results",
                     verbose=False,
                 )
+
+                images_used_for_prediction.append(image)
             except Exception as e:
                 print(f"[PostTrain] Error processing image {image}: {e}")
 
-            counter += 1
-            if counter >= self.MAX_IMAGES_TO_PROCESS:
-                break
-
         print(f"[PostTrain] Done. Predictions saved to {post_train_results_path}.")
-        return {}
+        return {
+            "image_data": images_used_for_prediction,
+        }
 
     def _find_images(self, images_test_path: str) -> list[str]:
         """Locate images for prediction: test, then val/valid, then train as fallback.
