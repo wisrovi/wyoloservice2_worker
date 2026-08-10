@@ -79,6 +79,7 @@ class PostTrain:
             candidates = [
                 os.path.join(image_dirs["test"], "*"),
                 os.path.join(image_dirs["val"], "*"),
+                os.path.join(image_dirs["valid"], "*"),
                 os.path.join(image_dirs["train"], "*"),
             ]
         else:
@@ -89,8 +90,11 @@ class PostTrain:
             )
             candidates = [
                 os.path.join(folder_path, "test", "images", "*"),
+                os.path.join(folder_path, "test", "*", "*"),
                 os.path.join(folder_path, "val", "images", "*"),
+                os.path.join(folder_path, "val", "*", "*"),
                 os.path.join(folder_path, "valid", "images", "*"),
+                os.path.join(folder_path, "valid", "*", "*"),
             ]
 
         for pattern in candidates:
@@ -115,6 +119,9 @@ class PostTrain:
             for ext in ("*.jpg", "*.jpeg", "*.png", "*.bmp"):
                 train_images.extend(
                     glob(os.path.join(folder_path, "train", "images", ext))
+                )
+                train_images.extend(
+                    glob(os.path.join(folder_path, "train", "*", ext))
                 )
         if train_images:
             print("[PostTrain] No test/val images found, falling back to train images.")
