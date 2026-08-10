@@ -22,11 +22,14 @@ flowchart TD
         Dec -->|Yes| T[train_model]
         Dec -->|No| NT[not_train]
         
-        T -->|7. Post-Train Analysis| PT[Eigen-CAM Heatmaps & LLM Report]
-        PT -->|8. Register in S3| PML[publish_results_mlflow]
+        T -->|7. Predictions| PT1[PostTrain]
+        PT1 -->|8. Visual AI| PT2[ImageECamYOLO]
+        PT2 -->|9. Reporting| PT3[LlmAnalyzer]
+        
+        PT3 -->|10. Register in S3| PML[publish_results_mlflow]
         PML --> End((Exit))
         NT --> End
-        End -->|9. Close in Redis| RED[publish_results_redis]
+        End -->|11. Close in Redis| RED[publish_results_redis]
     end
 
     subgraph Host_and_Services [External Infrastructure]
