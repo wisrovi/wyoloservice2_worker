@@ -81,12 +81,10 @@ class PostTrain:
         image_dirs = self._resolve_image_dirs(images_test_path)
 
         if image_dirs:
-            candidates = [
-                os.path.join(image_dirs["test"], "*"),
-                os.path.join(image_dirs["val"], "*"),
-                os.path.join(image_dirs["valid"], "*"),
-                os.path.join(image_dirs["train"], "*"),
-            ]
+            candidates = []
+            for k in ("test", "val", "valid", "train"):
+                if k in image_dirs:
+                    candidates.append(os.path.join(image_dirs[k], "*"))
         else:
             folder_path = (
                 os.path.dirname(images_test_path)
@@ -152,14 +150,26 @@ class PostTrain:
                 data_yaml_config = yaml.safe_load(file) or {}
 
             dirs = {}
+            yaml_dir = os.path.dirname(images_test_path)
+            root_path = data_yaml_config.get("path", "")
+            if root_path:
+                if not os.path.isabs(root_path):
+                    root_path = os.path.normpath(os.path.join(yaml_dir, root_path))
+            else:
+                root_path = yaml_dir
+
             for split in ("train", "val", "test"):
                 split_path = data_yaml_config.get(split)
                 if not isinstance(split_path, str):
                     continue
-                if os.path.isdir(split_path):
-                    dirs[split] = split_path
-                elif os.path.isdir(os.path.join(split_path, "images")):
-                    dirs[split] = os.path.join(split_path, "images")
+                
+                # Check absolute
+                abs_split = split_path if os.path.isabs(split_path) else os.path.normpath(os.path.join(root_path, split_path))
+                
+                if os.path.isdir(abs_split):
+                    dirs[split] = abs_split
+                elif os.path.isdir(os.path.join(abs_split, "images")):
+                    dirs[split] = os.path.join(abs_split, "images")
             return dirs
         except Exception as e:
             print(f"[PostTrain] Could not read data yaml {images_test_path}: {e}")
