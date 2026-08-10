@@ -116,21 +116,21 @@ class TrainerWrapper(Elemental, Mlflow_setup):
 
             # Instantiate the high-level YOLO wrapper with best weights for predictions
             try:
-                from ultralytics import YOLO
                 best_weights_path = f"{trainer.save_dir}/weights/best.pt"
                 if os.path.exists(best_weights_path):
-                    new_model_trained = YOLO(best_weights_path)
+                    model_path = best_weights_path
                 else:
-                    new_model_trained = YOLO(trainer.best) if hasattr(trainer, "best") else trainer.model
+                    model_path = trainer.best if hasattr(trainer, "best") else ""
             except Exception as e:
-                print(f"Failed to load YOLO model wrapper for post_train: {e}")
-                new_model_trained = trainer.model
+                print(f"Failed to resolve model path for post_train: {e}")
+                model_path = ""
 
             pipeline_post_train.run(
                 {
-                    "model": new_model_trained,
+                    "model_path": model_path,
                     "images_test_path": self.config.get("train", {}).get("data", None),
                     "project_path": self.ARTIFACTS_PATH,
+                    "output_dir": self.ARTIFACTS_PATH,
                 }
             )
 
