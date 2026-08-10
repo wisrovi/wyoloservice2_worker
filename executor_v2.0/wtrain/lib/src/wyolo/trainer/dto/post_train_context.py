@@ -13,3 +13,5 @@ class PostTrainContext(PipelineContext):
     model_path: str
     project_path: str
     images_test_path: str
+    output_dir: str = ""
+    image_data: list = []
