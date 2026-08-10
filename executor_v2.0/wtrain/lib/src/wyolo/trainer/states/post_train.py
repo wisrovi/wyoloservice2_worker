@@ -32,7 +32,7 @@ class PostTrain:
             f"[PostTrain] Using {len(all_images)} images for post-training predictions."
         )
 
-        post_train_results_path = os.path.join(project_path, "post_train_results")
+        post_train_results_path = os.path.join(project_path, "extras", "post_train_results")
         if os.path.exists(post_train_results_path):
             shutil.rmtree(post_train_results_path)
         os.makedirs(post_train_results_path, exist_ok=True)
@@ -52,7 +52,7 @@ class PostTrain:
                     save=True,
                     conf=0.15,
                     exist_ok=True,
-                    project=project_path,
+                    project=os.path.join(project_path, "extras"),
                     name="post_train_results",
                     verbose=False,
                 )
