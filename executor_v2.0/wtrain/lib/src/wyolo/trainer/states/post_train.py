@@ -37,6 +37,11 @@ class PostTrain:
             shutil.rmtree(post_train_results_path)
         os.makedirs(post_train_results_path, exist_ok=True)
 
+        model_focus_path = os.path.join(project_path, "extras", "model_focus")
+        if os.path.exists(model_focus_path):
+            shutil.rmtree(model_focus_path)
+        os.makedirs(model_focus_path, exist_ok=True)
+
         images_used_for_prediction = []
 
         images_to_process = all_images[:self.MAX_IMAGES_TO_PROCESS]
