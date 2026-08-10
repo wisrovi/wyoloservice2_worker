@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Standardized testing infrastructure (tests folder, run_tests.sh, coverage.sh via Docker).
 - GitHub issue and PR templates.
 - This CHANGELOG file to replace in-README changelogs.
+## [2.2.22] - 2026-08-10
+### Changed
+- Modify `post_train_results` output directory in `post_train.py` to be saved inside `extras/post_train_results`.
 ## [2.2.21] - 2026-08-10
 ### Changed
 - Modify `model_focus` output directory in `trainer_wrapper.py` to be saved inside `extras/model_focus`.
