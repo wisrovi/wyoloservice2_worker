@@ -44,6 +44,7 @@ dependencies = [
     "redis>=4.0.0",
     "ultralytics>=8.0.0",
     "wredis>=0.1.0",
+    "wpipe-plugins>=0.1.1",
 ]
 
 [project.optional-dependencies]
