@@ -44,13 +44,25 @@ flowchart TD
 ## 2. 🛡️ Key Features
 *   **YOLO26 Native Support:** Fully validated for classic architectures and the new `yolo26` architectures (e.g., `yolo26n.pt`, `yolo26n-cls.pt`, `yolo26n-seg.pt`).
 *   **Absolute Experiment Isolation:** The pipeline entrypoint cleans the host-mounted directories to prevent carryover artifacts from prior runs.
-*   **Eigen-CAM Visualizations (Post-Train):** Automatically evaluates the trained model against test datasets to generate class activation maps (heatmaps). This is included to provide explainable AI insights (XAI) to the user, highlighting exactly which regions of the image the model focused on to make its predictions.
+*   **Eigen-CAM / Grad-CAM Visualizations (Post-Train):** Automatically evaluates the trained model against test datasets to generate class activation maps (heatmaps). This is included to provide explainable AI insights (XAI) to the user, highlighting exactly which regions of the image the model focused on to make its predictions. (Based on [Grad-CAM by xaviercanche](https://github.com/xaviercanche/Grad-CAM)).
 *   **Fuzzy Metrics Extraction:** Robust translation between generic metrics names and task-specific names (e.g. mapping `metrics/mAP50` to `metrics/mAP50(B)` for detection or `metrics/mAP50(M)` for segmentation).
 *   **Preventative Samba Check:** Runs write touch tests at startup on `/wyolo/control_server/...` to detect mount issues immediately.
 
 ---
 
-## 3. 🏗️ MinIO S3 Artifacts Tree Layout
+## 3. 🛠️ Technology Stack & Libraries
+
+This component heavily relies on the following key technologies to orchestrate the pipeline and provide Explainable AI (XAI):
+
+*   **WPipe:** Corporate library used to define and execute the sequential training and validation pipeline dynamically.
+*   **Ultralytics YOLO:** Core engine for object detection, classification, and segmentation.
+*   **Grad-CAM / Eigen-CAM:** Used in the `ImageECamYOLO` step for Explainable AI (XAI) heatmaps. The implementation is heavily inspired by and based on [xaviercanche/Grad-CAM](https://github.com/xaviercanche/Grad-CAM), allowing visual debugging of the convolutional layers' focus.
+*   **OpenCode (Local LLM):** Used for automated, private post-training analysis and report generation based on empirical CSV metrics and XAI outputs.
+*   **MLflow & MinIO:** For artifacts and metrics tracking.
+
+---
+
+## 4. 🏗️ MinIO S3 Artifacts Tree Layout
 
 Upon successful completion, artifacts are streamed to S3 under the following hierarchy:
 
@@ -67,7 +79,7 @@ Upon successful completion, artifacts are streamed to S3 under the following hie
 
 ---
 
-## 4. ⚙️ Configuration Templates
+## 5. ⚙️ Configuration Templates
 
 ### Input Configuration (`base_config.yaml`)
 
