@@ -15,9 +15,16 @@ class PostTrain:
 
     @to_obj(PostTrainContext)
     def __call__(self, ctx: PostTrainContext):
-        model = ctx.model
+        model_path = ctx.model_path
         images_test_path = ctx.images_test_path
         project_path = ctx.project_path
+
+        from ultralytics import YOLO
+        try:
+            model = YOLO(model_path) if model_path else None
+        except Exception as e:
+            print(f"[PostTrain] Error loading YOLO model: {e}")
+            model = None
 
         all_images = self._find_images(images_test_path)
 
