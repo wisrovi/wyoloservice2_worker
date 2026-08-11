@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Standardized testing infrastructure (tests folder, run_tests.sh, coverage.sh via Docker).
 - GitHub issue and PR templates.
 - This CHANGELOG file to replace in-README changelogs.
+## [v2.2.27] - 2026-08-11
+
+### Fixed
+- Resolved `ImportError` in `CleanFolderExtra` by correctly importing `PostTrainContext` instead of the non-existent `CleanFolderObj`.
+
 ## [v2.2.26] - 2026-08-10
 
 ### Fixed
