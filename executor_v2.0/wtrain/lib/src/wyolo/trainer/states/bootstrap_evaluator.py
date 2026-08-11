@@ -1,3 +1,4 @@
+import inspect
 """Evaluator that uses Bootstrapping to compute confidence intervals.
 
 This module provides the BootstrapEvaluator WPipe state, which calculates
@@ -79,25 +80,18 @@ class BootstrapEvaluator:
         output_dir = os.path.join(ctx.project_path, "extras", "bootstrap")
         os.makedirs(output_dir, exist_ok=True)
 
-        md_content = """# Analysis Report\n\nEvaluator that uses Bootstrapping to compute confidence intervals.
+        import inspect
+        import sys
+        md_content = inspect.cleandoc(sys.modules[__name__].__doc__ or "No description available.")
+        md_content = f"""# Analysis Report
 
-This module provides the BootstrapEvaluator WPipe state, which calculates
-the mean and a confidence interval (e.g., 95%) for model predictions
-using bootstrap resampling. This is critical for R&D to demonstrate
-statistical significance.
+{md_content}
 
-Inferencias Estadísticas e Intervalos de Confianza (BootstrapEvaluator)
-
-Paper: Statistical Comparison of Classifiers over Multiple Data Sets
-Autores: Janez Demšar (Journal of Machine Learning Research - JMLR 2006)
-Por qué es el referente: Es la "biblia" metodológica de la revisión por pares cuando se evalúan
-    algoritmos de Machine Learning. Explica rigurosamente cómo aplicar pruebas no paramétricas
-    (como la prueba de rangos con signo de Wilcoxon y el test de Friedman) e intervalos de confianza
-    mediante Bootstrapping para verificar si las diferencias en métricas son estadísticamente
-    significativas ($p < 0.05$) o si son fruto de la variabilidad muestral.
-Referencia / Cita: JMLR 7 (2006): 1-30.\n\n## Methodology\nThis directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
-        with open(os.path.join(output_dir, "ANALYSIS_REPORT.md"), "w", encoding="utf-8") as fmd:
-            fmd.write(md_content)
+## Methodology
+This directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
+        if md_content:
+            with open(os.path.join(output_dir, "DESCRIPTION.md"), "w", encoding="utf-8") as fmd:
+                fmd.write(md_content)
 
         with open(
             os.path.join(output_dir, "bootstrap_results.json"), "w", encoding="utf-8"
