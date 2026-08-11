@@ -45,6 +45,25 @@ class AdversarialAttackTester:
         output_dir = os.path.join(ctx.project_path, "extras", "adversarial")
         os.makedirs(output_dir, exist_ok=True)
 
+        md_content = """# Analysis Report\n\nEvaluates model vulnerability to adversarial attacks.
+
+This module provides the AdversarialAttackTester WPipe state, which measures
+the security and robustness of the model against imperceptible perturbations
+designed to deceive neural networks.
+
+What it does:
+Generates small perturbations on test set images using standard algorithms like
+FGSM (Fast Gradient Sign Method).
+
+Contribution:
+Demonstrates the model's resilience against malicious attacks or adversarial perturbations.
+
+Reference:
+- Explaining and Harnessing Adversarial Examples (Goodfellow, Shlens, Szegedy, ICLR 2015).\n\n## Methodology\nThis directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
+        with open(os.path.join(output_dir, "ANALYSIS_REPORT.md"), "w", encoding="utf-8") as fmd:
+            fmd.write(md_content)
+
+
         with open(
             os.path.join(output_dir, "adversarial_results.json"), "w", encoding="utf-8"
         ) as f:

@@ -52,6 +52,25 @@ class CrossDomainGeneralizer:
         output_dir = os.path.join(ctx.project_path, "extras", "cross_domain")
         os.makedirs(output_dir, exist_ok=True)
 
+        md_content = """# Analysis Report\n\nEvaluates transferability and domain shift.
+
+This module provides the CrossDomainGeneralizer WPipe state, which evaluates
+how the model behaves when deployed in a visually different environment (e.g.,
+trained on day photos, inferred on night photos).
+
+What it does:
+Executes cross-domain validation (Out-of-Domain / Covariate Shift) by measuring
+the Fréchet Inception Distance (FID) between train and test image distributions.
+
+Contribution:
+Validates the model's capacity for real-world generalization.
+
+Reference:
+- A Theory of Learning from Different Domains (Ben-David et al., Machine Learning Journal 2010).\n\n## Methodology\nThis directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
+        with open(os.path.join(output_dir, "ANALYSIS_REPORT.md"), "w", encoding="utf-8") as fmd:
+            fmd.write(md_content)
+
+
         with open(
             os.path.join(output_dir, "cross_domain_results.json"), "w", encoding="utf-8"
         ) as f:

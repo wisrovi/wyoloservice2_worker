@@ -48,6 +48,27 @@ class UncertaintyQuantifier:
         output_dir = os.path.join(ctx.project_path, "extras", "uncertainty")
         os.makedirs(output_dir, exist_ok=True)
 
+        md_content = """# Analysis Report\n\nQuantifies aleatoric and epistemic uncertainty.
+
+This module provides the UncertaintyQuantifier WPipe state, which applies
+techniques like Monte Carlo Dropout to decompose model uncertainty.
+
+What it does:
+Decomposes uncertainty into:
+- Epistemic: Model uncertainty (lack of training data).
+- Aleatoric: Inherent noise in the image/data.
+
+Contribution:
+Allows generating uncertainty heatmaps alongside Bounding Boxes, proving
+that the model "knows when it does not know." Essential for critical applications.
+
+Reference:
+- What Uncertainties Do We Need in Bayesian Deep Learning for Computer Vision?
+  (Kendall, Gal, NIPS 2017).\n\n## Methodology\nThis directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
+        with open(os.path.join(output_dir, "ANALYSIS_REPORT.md"), "w", encoding="utf-8") as fmd:
+            fmd.write(md_content)
+
+
         with open(
             os.path.join(output_dir, "uncertainty_results.json"), "w", encoding="utf-8"
         ) as f:

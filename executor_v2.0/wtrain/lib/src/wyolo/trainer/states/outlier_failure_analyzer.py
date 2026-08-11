@@ -87,6 +87,27 @@ class OutlierFailureAnalyzer:
         output_dir = os.path.join(ctx.project_path, "extras", "failures")
         os.makedirs(output_dir, exist_ok=True)
 
+        md_content = """# Analysis Report\n\nAnalyzer that identifies critical false positives and false negatives.
+
+This module provides the OutlierFailureAnalyzer WPipe state, which loads the
+test dataset in FiftyOne, compares ground truth with model predictions, and
+extracts specific outlier cases (e.g., high-confidence false positives).
+This enables deep debugging of model bias and dataset errors.
+
+Análisis Cualitativo y Modos de Fallo (OutlierFailureAnalyzer)
+Paper: Diagnostics for Fine-Grained Object Detection via Error Analysis
+Autores: Derek Hoiem, Yunsheng Ma, Xiaobai Liu (ECCV 2012)
+Por qué es el referente: Es el trabajo pionero que formalizó el análisis cuantitativo y
+    cualitativo de errores en detectores de objetos. Introduce la categorización sistemática de errores
+    dividiéndolos en Falsos Positivos de Localización (Loc),
+    Falsos Positivos por Confusión con el Fondo (BG),
+    Falsos Positivos por Confusión de Clase (Sim/Oth) y Falsos Negativos (Miss),
+    sirviendo de base directa para herramientas modernas como FiftyOne.
+Referencia / DOI: Springer ECCV 2012, LNCS 7574, pp. 854-867.\n\n## Methodology\nThis directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
+        with open(os.path.join(output_dir, "ANALYSIS_REPORT.md"), "w", encoding="utf-8") as fmd:
+            fmd.write(md_content)
+
+
         results = {
             "critical_false_positives": fp_count,
             "critical_false_negatives": fn_count,

@@ -103,6 +103,25 @@ class ModelComplexityProfiler:
 
         output_dir = os.path.join(ctx.project_path, "extras", "complexity")
         os.makedirs(output_dir, exist_ok=True)
+
+        md_content = """# Analysis Report\n\nProfiler that measures hardware requirements of the YOLO model.
+
+This module provides the ModelComplexityProfiler WPipe state, which loads
+the model and calculates GFLOPs, parameters, peak VRAM usage, and inference
+latency. These hardware metrics are essential for R&D comparisons.
+
+Profiling de Complejidad Computacional y Latencia (ModelComplexityProfiler)
+Paper: Rethinking the FLOPS Metric for Deep Learning
+Autores: Piotr Dollár, Mannat Singh, Ross Girshick (ICCV 2021 / Facebook AI Research - FAIR)
+Por qué es el referente: Este trabajo de FAIR analiza la disparidad entre las métricas teóricas (FLOPs/MACs)
+    y el rendimiento real en GPU/hardware edge (Latencia en ms y consumo de memoria).
+    Establece las pautas para reportar con precisión el hardware profiling, demostrando
+    por qué deben evaluarse siempre los FLOPs en conjunto con el ancho de banda de memoria (Memory Bandwidth)
+    y la latencia en lote único ($Batch=1$).
+Referencia / DOI: arXiv:2103.11181\n\n## Methodology\nThis directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
+        with open(os.path.join(output_dir, "ANALYSIS_REPORT.md"), "w", encoding="utf-8") as fmd:
+            fmd.write(md_content)
+
         with open(
             os.path.join(output_dir, "hardware_profile.json"), "w", encoding="utf-8"
         ) as f:

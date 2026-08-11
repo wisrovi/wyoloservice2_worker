@@ -42,6 +42,7 @@ class CleanFolderExtra:
         for folder in self.FOLDER_CLEAN:
             folder_path = os.path.join(project_path, "extras", folder)
             if os.path.exists(folder_path):
+                # clean the folder by removing all its contents
                 shutil.rmtree(folder_path, ignore_errors=True)
 
             # Recreate empty folder
