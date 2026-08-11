@@ -1,3 +1,4 @@
+import inspect
 """Evaluator that tests model robustness against synthetic image noise.
 
 This module provides the RobustnessNoiseEvaluator WPipe state, which injects
@@ -82,28 +83,18 @@ class RobustnessNoiseEvaluator:
         output_dir = os.path.join(ctx.project_path, "extras", "robustness")
         os.makedirs(output_dir, exist_ok=True)
 
-        md_content = """# Analysis Report\n\nEvaluator that tests model robustness against synthetic image noise.
+        import inspect
+        import sys
+        md_content = inspect.cleandoc(sys.modules[__name__].__doc__ or "No description available.")
+        md_content = f"""# Analysis Report
 
-This module provides the RobustnessNoiseEvaluator WPipe state, which injects
-various levels of Gaussian blur, noise, and JPEG compression into test images.
-It helps determine how gracefully the model's accuracy degrades under
-imperfect, real-world conditions.
+{md_content}
 
-Reference:
-- Benchmarking Neural Network Robustness to Common Corruptions and Perturbations
-  (Hendrycks & Dietterich, ICLR 2019)
-
-Robustez ante Ruido y Perturbaciones (RobustnessNoiseEvaluator)
-
-    Paper: Benchmarking Neural Network Robustness to Common Corruptions and Perturbations
-    Autores: Dan Hendrycks, Thomas Dietterich (ICLR 2019)
-    Por qué es el referente: Es el paper seminal que introdujo los datasets de benchmark CIFAR-10-C
-    e ImageNet-C. Establece la metodología estándar de probar redes neuronales aplicando
-    15 tipos de perturbaciones sintéticas (ruido gaussiano, desenfoque, compresión JPEG, niebla, etc.) en 5 niveles de severidad progresiva para medir la curva de degradación de la precisión.
-
-    Referencia / DOI: arXiv:1903.12261\n\n## Methodology\nThis directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
-        with open(os.path.join(output_dir, "ANALYSIS_REPORT.md"), "w", encoding="utf-8") as fmd:
-            fmd.write(md_content)
+## Methodology
+This directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
+        if md_content:
+            with open(os.path.join(output_dir, "DESCRIPTION.md"), "w", encoding="utf-8") as fmd:
+                fmd.write(md_content)
 
 
         with open(
