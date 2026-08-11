@@ -25,12 +25,22 @@ flowchart TD
         T -->|7. Clean Extras| PT0[CleanFolderExtra]
         PT0 -->|8. Predictions| PT1[PostTrain]
         PT1 -->|9. Visual AI| PT2[ImageECamYOLO]
-        PT2 -->|10. Reporting| PT3[LlmAnalyzer]
+        PT2 -->|10. XAI Val| PT2A[QuantitativeXAIValidator]
+        PT2A -->|11. Reporting| PT3[LlmAnalyzer]
+        PT3 -->|12. Eval| PT4[BootstrapEvaluator]
+        PT4 -->|13. Profile| PT5[ModelComplexityProfiler]
+        PT5 -->|14. Failures| PT6[OutlierFailureAnalyzer]
+        PT6 -->|15. Noise| PT7[RobustnessNoiseEvaluator]
+        PT7 -->|16. Attack| PT8[AdversarialAttackTester]
+        PT8 -->|17. Domain| PT9[CrossDomainGeneralizer]
+        PT9 -->|18. Latent| PT10[FeatureRepresentationAnalyzer]
+        PT10 -->|19. Uncertain| PT11[UncertaintyQuantifier]
+        PT11 -->|20. LaTeX| PT12[LatexExporter]
         
-        PT3 -->|11. Register in S3| PML[publish_results_mlflow]
+        PT12 -->|21. Register in S3| PML[publish_results_mlflow]
         PML --> End((Exit))
         NT --> End
-        End -->|12. Close in Redis| RED[publish_results_redis]
+        End -->|22. Close in Redis| RED[publish_results_redis]
     end
 
     subgraph Host_and_Services [External Infrastructure]

@@ -7,12 +7,17 @@ flowchart TD
     direction TD
     start_ng4j1(( )):::startN
       start_ng4j1 --> nLng4j10_L21[" 🚀 CleanFolderExtra "]:::step
-      click nLng4j10_L21 call handleNodeClick("21")
       nLng4j10_L21 --> nLng4j11_L22[" 🚀 PostTrain "]:::step
-      click nLng4j11_L22 call handleNodeClick("22")
       nLng4j11_L22 --> nLng4j12_L23[" 🚀 ImageECamYOLO "]:::step
-      click nLng4j12_L23 call handleNodeClick("23")
-      nLng4j12_L23 --> nLng4j13_L28[" 🚀 LlmAnalyzer "]:::step
-      click nLng4j13_L28 call handleNodeClick("28")
-
+      nLng4j12_L23 --> nLng4j13_L24[" 🚀 QuantitativeXAIValidator "]:::step
+      nLng4j13_L24 --> nLng4j14_L28[" 🚀 LlmAnalyzer "]:::step
+      nLng4j14_L28 --> nLng4j15_L29[" 🚀 BootstrapEvaluator "]:::step
+      nLng4j15_L29 --> nLng4j16_L30[" 🚀 ModelComplexityProfiler "]:::step
+      nLng4j16_L30 --> nLng4j17_L31[" 🚀 OutlierFailureAnalyzer "]:::step
+      nLng4j17_L31 --> nLng4j18_L32[" 🚀 RobustnessNoiseEvaluator "]:::step
+      nLng4j18_L32 --> nLng4j19_L33[" 🚀 AdversarialAttackTester "]:::step
+      nLng4j19_L33 --> nLng4j20_L34[" 🚀 CrossDomainGeneralizer "]:::step
+      nLng4j20_L34 --> nLng4j21_L35[" 🚀 FeatureRepresentationAnalyzer "]:::step
+      nLng4j21_L35 --> nLng4j22_L36[" 🚀 UncertaintyQuantifier "]:::step
+      nLng4j22_L36 --> nLng4j23_L37[" 🚀 LatexExporter "]:::step
   end
