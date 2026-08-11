@@ -1,3 +1,4 @@
+import inspect
 """Quantitative validation of Activation Maps (Grad-CAM).
 
 This module provides the QuantitativeXAIValidator WPipe state, which quantitatively
@@ -48,25 +49,18 @@ class QuantitativeXAIValidator:
         output_dir = os.path.join(ctx.project_path, "extras", "quantitative_xai")
         os.makedirs(output_dir, exist_ok=True)
 
-        md_content = """# Analysis Report\n\nQuantitative validation of Activation Maps (Grad-CAM).
+        import inspect
+        import sys
+        md_content = inspect.cleandoc(sys.modules[__name__].__doc__ or "No description available.")
+        md_content = f"""# Analysis Report
 
-This module provides the QuantitativeXAIValidator WPipe state, which quantitatively
-measures whether the explanation (heatmap) is faithful to the model.
+{md_content}
 
-What it does:
-Applies explanation fidelity metrics like Drop% and Increase in Confidence through
-occlusion techniques (Insertion/Deletion AUC metrics). Progressively deletes zones
-that Grad-CAM marks as "important" and measures how fast confidence drops.
-
-Contribution:
-Moves beyond "the heatmap looks good" to quantitatively proving: "our activation map
-retains 92% confidence after removing 80% of the image background."
-
-Reference:
-- RISE: Randomized Input Sampling for Explanation of Black-box Models (Petsiuk et al., BMVC 2018).
-- Grad-CAM++: Generalized Gradient-Based Visual Explanations (Chattopadhay et al., WACV 2018).\n\n## Methodology\nThis directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
-        with open(os.path.join(output_dir, "ANALYSIS_REPORT.md"), "w", encoding="utf-8") as fmd:
-            fmd.write(md_content)
+## Methodology
+This directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
+        if md_content:
+            with open(os.path.join(output_dir, "DESCRIPTION.md"), "w", encoding="utf-8") as fmd:
+                fmd.write(md_content)
 
 
         with open(
