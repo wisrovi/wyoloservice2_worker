@@ -72,6 +72,8 @@ RUN echo '#!/bin/sh\nexec python "$@"' > /usr/local/bin/train_service && chmod +
 # CMD ["sh", "-c", "/usr/local/bin/mount-cifs.sh && train_service worker.py"]
 CMD ["sh", "-c", "/usr/local/bin/mount-cifs.sh && tail -f /dev/null"]
 
+ENV ULTRALYTICS_AUTOINSTALL=False
+
 # Override the inherited healthcheck (base image checks for 'opencode', which is
 # not present in this executor, leaving the container permanently unhealthy).
 HEALTHCHECK NONE
