@@ -4,6 +4,10 @@ This module provides the RobustnessNoiseEvaluator WPipe state, which injects
 various levels of Gaussian blur, noise, and JPEG compression into test images.
 It helps determine how gracefully the model's accuracy degrades under
 imperfect, real-world conditions.
+
+Reference:
+- Benchmarking Neural Network Robustness to Common Corruptions and Perturbations
+  (Hendrycks & Dietterich, ICLR 2019)
 """
 
 import json

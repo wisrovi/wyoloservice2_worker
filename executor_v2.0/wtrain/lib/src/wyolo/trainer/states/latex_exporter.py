@@ -1,8 +1,9 @@
 """Exporter that generates LaTeX tables from model metrics.
 
-This module provides the LatexExporter WPipe state, which takes the hardware
-and performance metrics computed during the pipeline and exports them into
-a fully formatted LaTeX table (.tex) suitable for R&D publications.
+This module provides the LatexExporter WPipe state, which takes
+hardware and performance metrics computed during the pipeline
+and exports them into a fully formatted LaTeX table (.tex)
+suitable for R&D publications.
 """
 
 import os
@@ -14,14 +15,14 @@ from ..dto.post_train_context import PostTrainContext
 
 @step(name="LatexExporter", version="v1.0")
 class LatexExporter:
-    """WPipe step for exporting metrics to LaTeX."""
+    """WPipe step for exporting metrics to LaTeX format."""
 
     @to_obj(PostTrainContext)
     def __call__(self, ctx: PostTrainContext) -> PostTrainContext:
         """Executes the LaTeX export.
 
         Args:
-            ctx (PostTrainContext): The pipeline context containing metrics.
+            ctx (PostTrainContext): Pipeline context containing metrics.
 
         Returns:
             PostTrainContext: The unmodified pipeline context.
@@ -73,4 +74,5 @@ class LatexExporter:
             table.append(tabular)
 
         doc.generate_tex()
+        print(f"LaTeX table successfully exported to: {output_tex_path}.tex")
         return ctx

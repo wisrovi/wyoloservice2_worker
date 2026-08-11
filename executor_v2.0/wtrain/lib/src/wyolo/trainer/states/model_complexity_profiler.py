@@ -3,6 +3,10 @@
 This module provides the ModelComplexityProfiler WPipe state, which loads
 the model and calculates GFLOPs, parameters, peak VRAM usage, and inference
 latency. These hardware metrics are essential for R&D comparisons.
+
+Reference:
+- Rethinking the FLOPS Metric for Deep Learning (Dollár et al., ICCV 2021)
+  DOI: arXiv:2103.11181
 """
 
 import json

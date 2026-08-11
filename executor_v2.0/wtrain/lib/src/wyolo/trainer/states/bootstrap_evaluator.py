@@ -46,6 +46,7 @@ class BootstrapEvaluator:
             indices = resample(np.arange(len(preds_arr)))
             sub_preds = preds_arr[indices]
             sub_targets = targets_arr[indices]
+
             score = np.mean((sub_preds > 0.5) == (sub_targets > 0.5))
             bootstrapped_scores.append(float(score))
 
@@ -64,7 +65,6 @@ class BootstrapEvaluator:
             "ci_upper": ci_upper,
         }
 
-        # Save to extras/bootstrap
         output_dir = os.path.join(ctx.project_path, "extras", "bootstrap")
         os.makedirs(output_dir, exist_ok=True)
         with open(

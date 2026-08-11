@@ -4,6 +4,10 @@ This module provides the OutlierFailureAnalyzer WPipe state, which loads the
 test dataset in FiftyOne, compares ground truth with model predictions, and
 extracts specific outlier cases (e.g., high-confidence false positives).
 This enables deep debugging of model bias and dataset errors.
+
+Reference:
+- Diagnostics for Fine-Grained Object Detection via Error Analysis
+  (Hoiem et al., ECCV 2012)
 """
 
 import os
@@ -67,8 +71,8 @@ class OutlierFailureAnalyzer:
 
             fp_count = len(high_conf_fp)
             fn_count = len(high_conf_fn)
-            print(f"Total Falsos Positivos Críticos: {fp_count}")
-            print(f"Total Falsos Negativos Críticos: {fn_count}")
+            print(f"Total Critical False Positives: {fp_count}")
+            print(f"Total Critical False Negatives: {fn_count}")
 
         except Exception as e:
             print(f"Error evaluating dataset: {e}")
