@@ -11,6 +11,7 @@ from .cross_domain_generalizer import CrossDomainGeneralizer
 from .feature_representation_analyzer import FeatureRepresentationAnalyzer
 from .quantitative_xai_validator import QuantitativeXAIValidator
 from .uncertainty_quantifier import UncertaintyQuantifier
+from .model_focus_describer import ModelFocusDescriber
 
 __all__ = [
     "LlmAnalyzer",
@@ -25,5 +26,6 @@ __all__ = [
     "CrossDomainGeneralizer",
     "FeatureRepresentationAnalyzer",
     "QuantitativeXAIValidator",
-    "UncertaintyQuantifier"
+    "UncertaintyQuantifier",
+    "ModelFocusDescriber"
 ]
