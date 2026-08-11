@@ -1,3 +1,4 @@
+import inspect
 """Exporter that generates LaTeX tables from model metrics.
 
 This module provides the LatexExporter WPipe state, which takes
@@ -43,23 +44,18 @@ class LatexExporter:
         output_dir = os.path.join(ctx.project_path, "extras", "paper_table_results")
         os.makedirs(output_dir, exist_ok=True)
 
-        md_content = """# Analysis Report\n\nExporter that generates LaTeX tables from model metrics.
+        import inspect
+        import sys
+        md_content = inspect.cleandoc(sys.modules[__name__].__doc__ or "No description available.")
+        md_content = f"""# Analysis Report
 
-This module provides the LatexExporter WPipe state, which takes
-hardware and performance metrics computed during the pipeline
-and exports them into a fully formatted LaTeX table (.tex)
-suitable for R&D publications.
+{md_content}
 
-Presentación de Métricas en Tablas Científicas (LatexExporter)
-Paper: Guidelines for Presenting Quantitative Results in Machine Learning Research
-Autores: Rafael S. Calsaverini et al.
-Por qué es el referente: Recopila las buenas prácticas editoriales exigidas por
-    editoriales científicas de alto impacto (IEEE, ACM, Elsevier) para la estructuración de tablas.
-    Exige la inclusión de la desviación estándar ($\mu \pm \sigma$), el marcado en negrita de los
-    resultados estadísticamente superiores, y la separación clara entre métricas de precisión ($mAP$)
-    y de rendimiento de hardware (GFLOPs, parámetros y tiempo de inferencia).\n\n## Methodology\nThis directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
-        with open(os.path.join(output_dir, "ANALYSIS_REPORT.md"), "w", encoding="utf-8") as fmd:
-            fmd.write(md_content)
+## Methodology
+This directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
+        if md_content:
+            with open(os.path.join(output_dir, "DESCRIPTION.md"), "w", encoding="utf-8") as fmd:
+                fmd.write(md_content)
 
         output_tex_path = os.path.join(output_dir, "comparative_metrics")
 
