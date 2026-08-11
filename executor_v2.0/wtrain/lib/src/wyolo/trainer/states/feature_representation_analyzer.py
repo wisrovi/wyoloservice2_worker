@@ -1,3 +1,4 @@
+import inspect
 """Analyzes latent feature space using t-SNE or UMAP.
 
 This module provides the FeatureRepresentationAnalyzer WPipe state, which
@@ -47,24 +48,18 @@ class FeatureRepresentationAnalyzer:
         output_dir = os.path.join(ctx.project_path, "extras", "feature_space")
         os.makedirs(output_dir, exist_ok=True)
 
-        md_content = """# Analysis Report\n\nAnalyzes latent feature space using t-SNE or UMAP.
+        import inspect
+        import sys
+        md_content = inspect.cleandoc(sys.modules[__name__].__doc__ or "No description available.")
+        md_content = f"""# Analysis Report
 
-This module provides the FeatureRepresentationAnalyzer WPipe state, which
-demonstrates that the YOLO convolutional layers learn high-level semantic
-representations rather than just memorizing data.
+{md_content}
 
-What it does:
-Extracts embeddings from the penultimate layer of the model (before the head)
-and reduces dimensionality using t-SNE or UMAP.
-
-Contribution:
-Provides a 2D/3D scatter plot showing cluster separation by class, demonstrating
-empirical feature extraction quality.
-
-Reference:
-- Visualizing Data using t-SNE (van der Maaten, Hinton, JMLR 2008).\n\n## Methodology\nThis directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
-        with open(os.path.join(output_dir, "ANALYSIS_REPORT.md"), "w", encoding="utf-8") as fmd:
-            fmd.write(md_content)
+## Methodology
+This directory contains the outputs and results of this specific analysis. The metrics and plots generated here reflect the model's behavior according to the described methodology."""
+        if md_content:
+            with open(os.path.join(output_dir, "DESCRIPTION.md"), "w", encoding="utf-8") as fmd:
+                fmd.write(md_content)
 
 
         import random
