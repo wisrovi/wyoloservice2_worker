@@ -1,12 +1,11 @@
 from wpipe import Pipeline
 from wpipe.exception.api_error import ProcessError
 
-
-from .states import LlmAnalyzer, PostTrain
-
 # ImageECamYOLO hace uso de Grad-CAM (https://github.com/xaviercanche/Grad-CAM) para explicar el modelo, en que se fija y por qué toma decisiones, generando mapas de calor sobre las imágenes de entrada. Esto ayuda a entender el comportamiento del modelo y a identificar posibles sesgos o errores en la predicción.
 # Basado en: https://arxiv.org/pdf/1610.02391.pdf, https://arxiv.org/pdf/1610.02391v1.pdf
 from wpipe_plugins.vision.ecam_yolo import ECAMConfig, ImageECamYOLO
+
+from .states import CleanFolderExtra, LlmAnalyzer, PostTrain
 
 db_path = "output/tracking.db"  # Path to tracking database for to save metrics, events, alerts and execution history (with error capture)
 config_dir = "configs"
@@ -20,6 +19,7 @@ pipeline_post_train = Pipeline(
 
 pipeline_post_train.set_steps(
     [
+        CleanFolderExtra(),
         PostTrain(),
         ImageECamYOLO(
             ECAMConfig(

@@ -13,7 +13,6 @@ from pathlib import Path
 
 @step(name="llm_analyzer", version="v1.0")
 class LlmAnalyzer:
-
     RESULTS_RELATIVE = "evaluation_metrics/results.csv"
     LLM_MD_NAME = "extras/llm/LLM_Report.md"
     LLM_DOCX_NAME = "extras/llm/LLM_Report.docx"
@@ -37,7 +36,6 @@ class LlmAnalyzer:
 
             # Save DOCX
             try:
-
                 doc = Document()
                 media_dir = Path("/app/media")
                 wtrain_img = media_dir / "wtrain.jpg"

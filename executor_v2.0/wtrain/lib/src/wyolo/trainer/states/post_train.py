@@ -1,5 +1,4 @@
 import os
-import shutil
 from glob import glob
 
 import yaml
@@ -11,7 +10,6 @@ from ..dto.post_train_context import PostTrainContext
 
 @step(name="PostTrain", version="v1.0")
 class PostTrain:
-
     MAX_IMAGES_TO_PROCESS = 10  # Limit to processing up to 10 images for now
 
     @to_obj(PostTrainContext)
@@ -32,19 +30,9 @@ class PostTrain:
             f"[PostTrain] Using {len(all_images)} images for post-training predictions."
         )
 
-        post_train_results_path = os.path.join(project_path, "extras", "post_train_results")
-        if os.path.exists(post_train_results_path):
-            shutil.rmtree(post_train_results_path)
-        os.makedirs(post_train_results_path, exist_ok=True)
-
-        model_focus_path = os.path.join(project_path, "extras", "model_focus")
-        if os.path.exists(model_focus_path):
-            shutil.rmtree(model_focus_path)
-        os.makedirs(model_focus_path, exist_ok=True)
-
         images_used_for_prediction = []
 
-        images_to_process = all_images[:self.MAX_IMAGES_TO_PROCESS]
+        images_to_process = all_images[: self.MAX_IMAGES_TO_PROCESS]
         ctx.image_data = images_to_process
 
         for image in images_to_process:
@@ -66,7 +54,7 @@ class PostTrain:
             except Exception as e:
                 print(f"[PostTrain] Error processing image {image}: {e}")
 
-        print(f"[PostTrain] Done. Predictions saved to {post_train_results_path}.")
+        print(f"[PostTrain] Done. Predictions saved to {ctx.output_dir}.")
         return {
             "image_data": images_used_for_prediction,
         }
@@ -123,9 +111,7 @@ class PostTrain:
                 train_images.extend(
                     glob(os.path.join(folder_path, "train", "images", ext))
                 )
-                train_images.extend(
-                    glob(os.path.join(folder_path, "train", "*", ext))
-                )
+                train_images.extend(glob(os.path.join(folder_path, "train", "*", ext)))
         if train_images:
             print("[PostTrain] No test/val images found, falling back to train images.")
             return [
@@ -162,10 +148,14 @@ class PostTrain:
                 split_path = data_yaml_config.get(split)
                 if not isinstance(split_path, str):
                     continue
-                
+
                 # Check absolute
-                abs_split = split_path if os.path.isabs(split_path) else os.path.normpath(os.path.join(root_path, split_path))
-                
+                abs_split = (
+                    split_path
+                    if os.path.isabs(split_path)
+                    else os.path.normpath(os.path.join(root_path, split_path))
+                )
+
                 if os.path.isdir(abs_split):
                     dirs[split] = abs_split
                 elif os.path.isdir(os.path.join(abs_split, "images")):

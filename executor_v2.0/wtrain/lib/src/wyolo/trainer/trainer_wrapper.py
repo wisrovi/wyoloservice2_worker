@@ -1,7 +1,5 @@
-from calendar import EPOCH
 import os
 import shutil
-import sys
 import time
 import uuid
 from datetime import datetime
@@ -19,7 +17,7 @@ from ultralytics.utils.autobatch import autobatch
 
 from .cte.elemental import Elemental
 from .gpu_utils import gpu_compatibility_check, obtener_info_gpu_json
-from .post_train import pipeline_post_train
+from .post_train_pipeline import pipeline_post_train
 from .utils.mlflow_setup import Mlflow_setup
 
 console = Console()
@@ -130,7 +128,9 @@ class TrainerWrapper(Elemental, Mlflow_setup):
                     "model_path": model_path,
                     "images_test_path": self.config.get("train", {}).get("data", None),
                     "project_path": self.ARTIFACTS_PATH,
-                    "output_dir": os.path.join(self.ARTIFACTS_PATH, "extras", "model_focus"),
+                    "output_dir": os.path.join(
+                        self.ARTIFACTS_PATH, "extras", "model_focus"
+                    ),
                 }
             )
 
