@@ -1,4 +1,7 @@
 import os
+import glob
+import subprocess
+from pathlib import Path
 
 from wpipe import step, to_obj
 
@@ -8,14 +11,13 @@ from ..utils.training_report_analyzer import TrainingReportAnalyzer
 from docx import Document
 from docx.shared import Inches
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-from pathlib import Path
-
 
 @step(name="llm_analyzer", version="v1.0")
 class LlmAnalyzer:
     RESULTS_RELATIVE = "evaluation_metrics/results.csv"
     LLM_MD_NAME = "extras/llm/LLM_Report.md"
     LLM_DOCX_NAME = "extras/llm/LLM_Report.docx"
+    OPENCODE_BIN = "/root/.opencode/bin/opencode"
 
     @to_obj(PostTrainContext)
     def __call__(self, ctx: PostTrainContext):
@@ -27,6 +29,10 @@ class LlmAnalyzer:
 
         os.makedirs(os.path.dirname(llm_md_path), exist_ok=True)
 
+        # 1. Generate explanation for each research state JSON
+        self._explain_research_states(project_path)
+
+        # 2. Main report
         try:
             report = TrainingReportAnalyzer().analyze(results_file)
 
@@ -102,3 +108,49 @@ class LlmAnalyzer:
         except Exception as exc:
             print(f"[LLMAnalyzer] Failed: {exc}")
             return {"llm_report": "", "llm_md_path": "", "error": str(exc)}
+
+    def _explain_research_states(self, project_path: str):
+        """Finds JSON files in extras/ and uses OpenCode to explain their contents."""
+        extras_dir = os.path.join(project_path, "extras")
+        if not os.path.exists(extras_dir):
+            return
+            
+        json_files = glob.glob(os.path.join(extras_dir, "*", "*.json"))
+        
+        for json_file in json_files:
+            folder = os.path.dirname(json_file)
+            analysis_md_path = os.path.join(folder, "LLM_RESULTS_EXPLANATION.md")
+            
+            prompt = """
+            Eres un experto investigador en inteligencia artificial. Te proporciono un archivo JSON 
+            con los resultados de un análisis forense o de validación de un modelo YOLO.
+            Explica detalladamente qué significan estos resultados numéricos, qué aportan al entendimiento del modelo 
+            y para qué sirven en un entorno de investigación. Sé directo, profesional, 
+            y redacta en Markdown usando títulos, listas y negritas. No superes los 3 párrafos.
+            """
+            
+            print(f"[LLMAnalyzer] Generating explanation for {json_file}")
+            try:
+                result = subprocess.run(
+                    [
+                        self.OPENCODE_BIN,
+                        "run",
+                        "--model",
+                        "opencode/deepseek-v4-flash-free",
+                        prompt,
+                        "-f",
+                        json_file
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=60
+                )
+                
+                if result.returncode == 0 and len(result.stdout.strip()) > 50:
+                    with open(analysis_md_path, "w", encoding="utf-8") as fmd:
+                        fmd.write(f"# LLM Analysis Explanation\n\n{result.stdout.strip()}")
+                else:
+                    print(f"Failed to generate for {json_file}: {result.stderr}")
+            except Exception as e:
+                print(f"[LLMAnalyzer] Error generating for {json_file}: {e}")
+
