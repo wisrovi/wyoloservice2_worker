@@ -45,6 +45,15 @@ dependencies = [
     "ultralytics>=8.0.0",
     "wredis>=0.1.0",
     "wpipe-plugins>=0.1.1",
+    "pylatex>=1.4.0",
+    "scikit-learn>=1.0.0",
+    "ptflops>=0.7.0",
+    "pynvml>=11.0.0",
+    "fiftyone>=0.20.0",
+    "scipy>=1.7.0",
+    "opencv-python-headless>=4.5.0",
+    "torchvision>=0.13.0",
+    "matplotlib>=3.5.0",
 ]
 
 [project.optional-dependencies]
