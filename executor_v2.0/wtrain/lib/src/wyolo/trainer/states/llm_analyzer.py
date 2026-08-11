@@ -110,47 +110,47 @@ class LlmAnalyzer:
             return {"llm_report": "", "llm_md_path": "", "error": str(exc)}
 
     def _explain_research_states(self, project_path: str):
-        """Finds JSON files in extras/ and uses OpenCode to explain their contents."""
+        """Finds JSON files in extras/ and uses OpenCode to explain their contents collectively."""
         extras_dir = os.path.join(project_path, "extras")
         if not os.path.exists(extras_dir):
             return
             
         json_files = glob.glob(os.path.join(extras_dir, "*", "*.json"))
+        if not json_files:
+            return
+            
+        analysis_md_path = os.path.join(extras_dir, "GLOBAL_RESEARCH_EXPLANATION.md")
         
-        for json_file in json_files:
-            folder = os.path.dirname(json_file)
-            analysis_md_path = os.path.join(folder, "LLM_RESULTS_EXPLANATION.md")
+        prompt = """
+        Eres un experto investigador en inteligencia artificial. Te proporciono múltiples archivos JSON 
+        con los resultados de diferentes análisis forenses y validaciones (XAI, ruido, ataques adversarios, complejidad, etc.) 
+        de un modelo YOLO en la carpeta 'extras/'.
+        Analiza todos estos datos en conjunto y escribe un informe ejecutivo detallado (GLOBAL RESEARCH EXPLANATION) 
+        que cruce la información de los diferentes módulos. Explica qué significan estos resultados numéricos, 
+        qué aportan al entendimiento general del modelo y para qué sirven en un entorno de investigación. 
+        Sé directo, profesional y redacta en Markdown usando títulos, listas y negritas. No superes los 5 párrafos.
+        """
+        
+        cmd = [self.OPENCODE_BIN, "run", "--model", "opencode/deepseek-v4-flash-free", prompt]
+        for jf in json_files:
+            cmd.extend(["-f", jf])
             
-            prompt = """
-            Eres un experto investigador en inteligencia artificial. Te proporciono un archivo JSON 
-            con los resultados de un análisis forense o de validación de un modelo YOLO.
-            Explica detalladamente qué significan estos resultados numéricos, qué aportan al entendimiento del modelo 
-            y para qué sirven en un entorno de investigación. Sé directo, profesional, 
-            y redacta en Markdown usando títulos, listas y negritas. No superes los 3 párrafos.
-            """
+        print(f"[LLMAnalyzer] Generating global research explanation for {len(json_files)} JSON files")
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=300,
+                encoding="utf-8"
+            )
             
-            print(f"[LLMAnalyzer] Generating explanation for {json_file}")
-            try:
-                result = subprocess.run(
-                    [
-                        self.OPENCODE_BIN,
-                        "run",
-                        "--model",
-                        "opencode/deepseek-v4-flash-free",
-                        prompt,
-                        "-f",
-                        json_file
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=60
-                )
-                
-                if result.returncode == 0 and len(result.stdout.strip()) > 50:
-                    with open(analysis_md_path, "w", encoding="utf-8") as fmd:
-                        fmd.write(f"# LLM Analysis Explanation\n\n{result.stdout.strip()}")
-                else:
-                    print(f"Failed to generate for {json_file}: {result.stderr}")
-            except Exception as e:
-                print(f"[LLMAnalyzer] Error generating for {json_file}: {e}")
+            if result.returncode == 0 and len(result.stdout.strip()) > 50:
+                with open(analysis_md_path, "w", encoding="utf-8") as fmd:
+                    fmd.write(f"# Global Research Analysis Report\n\n{result.stdout.strip()}")
+                print(f"[LLMAnalyzer] Global report saved to {analysis_md_path}")
+            else:
+                print(f"Failed to generate global explanation: {result.stderr}")
+        except Exception as e:
+            print(f"[LLMAnalyzer] Error generating global explanation: {e}")
 
