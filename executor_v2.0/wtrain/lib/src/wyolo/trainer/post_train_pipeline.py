@@ -18,7 +18,8 @@ from .states import (
     CrossDomainGeneralizer,
     FeatureRepresentationAnalyzer,
     QuantitativeXAIValidator,
-    UncertaintyQuantifier
+    UncertaintyQuantifier,
+    ModelFocusDescriber
 )
 
 db_path = "output/tracking.db"  # Path to tracking database for to save metrics, events, alerts and execution history (with error capture)
@@ -52,8 +53,8 @@ pipeline_post_train.set_steps(
                 confidence_threshold=0.10,
             )
         ),
+        safe_step(ModelFocusDescriber()),
         safe_step(QuantitativeXAIValidator()),
-        LlmAnalyzer(),
         safe_step(BootstrapEvaluator()),
         safe_step(ModelComplexityProfiler()),
         safe_step(OutlierFailureAnalyzer()),
@@ -63,6 +64,7 @@ pipeline_post_train.set_steps(
         safe_step(FeatureRepresentationAnalyzer()),
         safe_step(UncertaintyQuantifier()),
         safe_step(LatexExporter()),
+        LlmAnalyzer(),
     ]
 )
 
