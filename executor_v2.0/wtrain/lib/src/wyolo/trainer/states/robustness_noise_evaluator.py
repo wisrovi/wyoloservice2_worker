@@ -8,6 +8,16 @@ imperfect, real-world conditions.
 Reference:
 - Benchmarking Neural Network Robustness to Common Corruptions and Perturbations
   (Hendrycks & Dietterich, ICLR 2019)
+
+Robustez ante Ruido y Perturbaciones (RobustnessNoiseEvaluator)
+
+    Paper: Benchmarking Neural Network Robustness to Common Corruptions and Perturbations
+    Autores: Dan Hendrycks, Thomas Dietterich (ICLR 2019)
+    Por qué es el referente: Es el paper seminal que introdujo los datasets de benchmark CIFAR-10-C
+    e ImageNet-C. Establece la metodología estándar de probar redes neuronales aplicando
+    15 tipos de perturbaciones sintéticas (ruido gaussiano, desenfoque, compresión JPEG, niebla, etc.) en 5 niveles de severidad progresiva para medir la curva de degradación de la precisión.
+
+    Referencia / DOI: arXiv:1903.12261
 """
 
 import json

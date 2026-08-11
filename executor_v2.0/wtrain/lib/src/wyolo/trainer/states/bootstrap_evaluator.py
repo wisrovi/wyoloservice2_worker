@@ -4,6 +4,17 @@ This module provides the BootstrapEvaluator WPipe state, which calculates
 the mean and a confidence interval (e.g., 95%) for model predictions
 using bootstrap resampling. This is critical for R&D to demonstrate
 statistical significance.
+
+Inferencias Estadísticas e Intervalos de Confianza (BootstrapEvaluator)
+
+Paper: Statistical Comparison of Classifiers over Multiple Data Sets
+Autores: Janez Demšar (Journal of Machine Learning Research - JMLR 2006)
+Por qué es el referente: Es la "biblia" metodológica de la revisión por pares cuando se evalúan
+    algoritmos de Machine Learning. Explica rigurosamente cómo aplicar pruebas no paramétricas
+    (como la prueba de rangos con signo de Wilcoxon y el test de Friedman) e intervalos de confianza
+    mediante Bootstrapping para verificar si las diferencias en métricas son estadísticamente
+    significativas ($p < 0.05$) o si son fruto de la variabilidad muestral.
+Referencia / Cita: JMLR 7 (2006): 1-30.
 """
 
 import json

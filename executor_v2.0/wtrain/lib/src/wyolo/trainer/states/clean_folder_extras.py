@@ -19,6 +19,11 @@ class CleanFolderExtra:
         "failures",
         "robustness",
         "paper_table_results",
+        "adversarial",
+        "cross_domain",
+        "feature_space",
+        "quantitative_xai",
+        "uncertainty",
     ]
 
     @to_obj(PostTrainContext)

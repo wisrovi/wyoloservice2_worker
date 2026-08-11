@@ -5,9 +5,16 @@ test dataset in FiftyOne, compares ground truth with model predictions, and
 extracts specific outlier cases (e.g., high-confidence false positives).
 This enables deep debugging of model bias and dataset errors.
 
-Reference:
-- Diagnostics for Fine-Grained Object Detection via Error Analysis
-  (Hoiem et al., ECCV 2012)
+Análisis Cualitativo y Modos de Fallo (OutlierFailureAnalyzer)
+Paper: Diagnostics for Fine-Grained Object Detection via Error Analysis
+Autores: Derek Hoiem, Yunsheng Ma, Xiaobai Liu (ECCV 2012)
+Por qué es el referente: Es el trabajo pionero que formalizó el análisis cuantitativo y
+    cualitativo de errores en detectores de objetos. Introduce la categorización sistemática de errores
+    dividiéndolos en Falsos Positivos de Localización (Loc),
+    Falsos Positivos por Confusión con el Fondo (BG),
+    Falsos Positivos por Confusión de Clase (Sim/Oth) y Falsos Negativos (Miss),
+    sirviendo de base directa para herramientas modernas como FiftyOne.
+Referencia / DOI: Springer ECCV 2012, LNCS 7574, pp. 854-867.
 """
 
 import os
