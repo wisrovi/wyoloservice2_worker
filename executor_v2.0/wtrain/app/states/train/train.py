@@ -43,9 +43,9 @@ def train_model(data_input: UserInput):
 
         if "train" in request_config:
             DATASET = request_config.get("train").get("data")
-            DATASET = DATASET.replace("/datasets/", DATASET_FOLDER)
-
-            request_config["train"]["data"] = DATASET
+            if DATASET.startswith("/datasets/"):
+                DATASET = DATASET.replace("/datasets/", DATASET_FOLDER)
+                request_config["train"]["data"] = DATASET
 
             if config_dict.get("sweeper", {}).get("fitness") is None:
                 raise ValueError(
