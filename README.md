@@ -275,4 +275,8 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+### Version 2.2.28 - 2026-08-12
+*   **Fix double replacement of dataset path:** Fixed a bug in `train.py` that caused dataset paths containing `/datasets/` to be replaced twice, resolving `os error 2` during training.
+*   **Version Update to v2.2.28:** Bumped executor version to `v2.2.28`.
+
 - Bumped version due to License update to PolyForm Noncommercial and Dual Licensing model.
