@@ -630,20 +630,35 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
 
             try:
                 results_dict = request_config["train"]["results"]
+                task_type = str(request_config.get("experiment_type", "")).lower()
+
+                # Auto-detect fitness key by task type
+                task_defaults = {
+                    "classify": ["metrics/accuracy", "metrics/precision", "metrics/recall"],
+                    "detect": ["metrics/mAP50(B)", "metrics/mAP50-95(B)"],
+                    "segment": ["metrics/mAP50(B)", "metrics/mAP50(M)", "metrics/mAP50-95(B)"],
+                }
+
                 if fitness in results_dict:
                     final_result = results_dict[fitness]
                 else:
-                    # Look for key matching or with suffix (B) or (M)
-                    matching_keys = [
-                        k for k in results_dict.keys() if fitness in k or k in fitness
-                    ]
-                    if matching_keys:
-                        final_result = results_dict[matching_keys[0]]
-                        print(
-                            f"--- [TRAINER] Metric '{fitness}' not found directly. Using matching key '{matching_keys[0]}': {final_result} ---"
-                        )
-                    else:
-                        final_result = 0.0
+                    found = False
+                    for key in task_defaults.get(task_type, []):
+                        if key in results_dict:
+                            final_result = results_dict[key]
+                            print(f"--- [TRAINER] Auto-detected key '{key}' for task '{task_type}': {final_result} ---")
+                            found = True
+                            break
+
+                    if not found:
+                        matching_keys = [
+                            k for k in results_dict.keys() if fitness in k or k in fitness
+                        ]
+                        if matching_keys:
+                            final_result = results_dict[matching_keys[0]]
+                            print(f"--- [TRAINER] Metric '{fitness}' not found. Using fuzzy key '{matching_keys[0]}': {final_result} ---")
+                        else:
+                            final_result = 0.0
             except:
                 final_result = 0.0
         else:
