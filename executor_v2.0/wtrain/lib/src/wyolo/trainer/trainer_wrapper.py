@@ -155,7 +155,7 @@ class TrainerWrapper(Elemental, Mlflow_setup):
         if "minio" in self.config and "mlflow" in self.config:
             # remove batch of self.config
             config_copy = self.config.copy()
-            config_copy["train"].pop("batch")
+            config_copy["train"].pop("batch", None)
 
             tags_list = [
                 (key, value)
@@ -396,12 +396,9 @@ def create_trainer(config_path: str, trial_number):
     timestamp = get_datetime()
     request_config["timestamp"] = timestamp
 
-    # if request_config["train"]["batch"] > 0:
-    #     better_batch = trainer.get_better_batch(
-    #         batch_to_use=request_config["train"]["batch"]
-    #     )
-    #     if request_config["train"]["batch"] > better_batch:
-    #         request_config["train"]["batch"] = better_batch
+    # Default batch from MAX_GPU env var (e.g. MAX_GPU=50 → batch=0.5 = auto-batch 50% VRAM)
+    max_gpu = int(os.getenv("MAX_GPU", "100"))
+    request_config["train"]["batch"] = max_gpu / 100
 
     request_config["train"]["project"] = f"{RESULT_PATH}/{trial_number}/"
     request_config["train"]["name"] = f"train_{request_config.get('task_id')}"
