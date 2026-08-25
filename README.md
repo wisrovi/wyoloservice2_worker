@@ -163,7 +163,12 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.30 (Current Release) - 2026-08-25
+### Version 2.2.31 (Current Release) - 2026-08-25
+*   **Batch Default Fix:** `on_train_start` callback no longer crashes with `KeyError` when `batch` is not in user config.
+*   **Batch Auto-Derivation:** `create_trainer` defaults `batch` to `MAX_GPU / 100` (e.g. `MAX_GPU=50` → `batch=0.5` = auto-batch at 50% VRAM) when not explicitly set by user.
+*   **Version Update:** Bumped executor version to v2.2.31.
+
+### Version 2.2.30 - 2026-08-25
 *   **LLM Model Fix:** Replaced dead `opencode/deepseek-v4-flash-free` with `opencode/nemotron-3.5-lightning-free` in training report analyzer and LLM analyzer. Model configurable via `LLM_MODEL` env var.
 *   **Research Fallback:** Added minimal fallback report generation when LLM service is unavailable.
 *   **Version Update:** Bumped executor version to v2.2.30.
