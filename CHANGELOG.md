@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.32] - 2026-08-25
+### Fixed
+- **Fitness key auto-detection:** `train()` function now auto-detects the correct metric key based on task type (`classify` → `metrics/accuracy`, `detect` → `metrics/mAP50(B)`, `segment` → `metrics/mAP50(B)`). Prevents returning 0.0 when user-specified fitness key doesn't exist in results_dict.
+
+### Changed
+- Bumped executor version to `2.2.32`.
+
 ## [2.2.31] - 2026-08-25
 ### Fixed
 - **Batch default:** `on_train_start` callback no longer crashes with `KeyError` when `batch` is not in user config (`.pop("batch")` → `.pop("batch", None)`).
