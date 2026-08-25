@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.29] - 2026-08-24
+### Fixed
+- Invalid YOLO argument sanitization in `trainer_wrapper`: user-supplied hyperparameters not supported by Ultralytics (e.g. `seg`) are now dropped with a warning before `model.train()`, instead of aborting the trial with `SyntaxError: '<key>' is not a valid YOLO argument`.
+
+### Changed
+- Bumped executor version to `2.2.29`.
+
 ## [Unreleased]
 ### Added
 - Standardized testing infrastructure (tests folder, run_tests.sh, coverage.sh via Docker).
