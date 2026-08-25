@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.31] - 2026-08-25
+### Fixed
+- **Batch default:** `on_train_start` callback no longer crashes with `KeyError` when `batch` is not in user config (`.pop("batch")` → `.pop("batch", None)`).
+- **Batch auto-derivation:** `create_trainer` now defaults `batch` to `MAX_GPU / 100` (e.g. `MAX_GPU=50` → `batch=0.5` = auto-batch at 50% VRAM) when not explicitly set by user.
+
+### Changed
+- Bumped executor version to `2.2.31`.
+
 ## [2.2.30] - 2026-08-25
 ### Fixed
 - **LLM analyzer model:** replaced dead `opencode/deepseek-v4-flash-free` with `opencode/nemotron-3.5-lightning-free` in both `training_report_analyzer.py` and `llm_analyzer.py`. Model is now configurable via `LLM_MODEL` env var.
