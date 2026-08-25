@@ -156,7 +156,11 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.27 (Current Release) - 2026-08-11
+### Version 2.2.29 (Current Release) - 2026-08-24
+*   **Invalid YOLO argument sanitization:** `trainer_wrapper` now drops hyperparameters that are not valid Ultralytics arguments (validated against `ultralytics.cfg.DEFAULT_CFG_DICT`) before calling `model.train()`, logging a warning for each dropped key. This fixes trainings whose user config contains custom keys such as `seg: 12.0`, which previously aborted every trial with `SyntaxError: 'seg' is not a valid YOLO argument` and silently reported a 0.0 metric.
+*   **Version Update:** Bumped executor version to v2.2.29.
+
+### Version 2.2.27 - 2026-08-11
 *   **Fix:** Resolved `ImportError` in `CleanFolderExtra` by importing `PostTrainContext` properly.
 
 ### Version 2.2.26 - 2026-08-10
