@@ -2,7 +2,7 @@
 
 from .trainer.trainer_wrapper import create_trainer, train
 
-__version__ = "1.0.0"
+__version__ = "2.2.15"
 __author__ = "William Steve Rodriguez Villamizar"
 __email__ = "wisrovi.rodriguez@gmail.com"
 
