@@ -272,6 +272,32 @@ def create_trainer(config_path: str, trial_number):
     return trainer, request_config
 
 
+def _resolve_fitness_key(results_dict: dict, fitness: str, task_type: str) -> float:
+    """Resolve fitness metric from results_dict with task-aware auto-detection."""
+    # 1. Direct match
+    if fitness in results_dict:
+        return results_dict[fitness]
+
+    # 2. Auto-detect by task type
+    task_defaults = {
+        "classify": ["metrics/accuracy", "metrics/precision", "metrics/recall"],
+        "detect": ["metrics/mAP50(B)", "metrics/mAP50-95(B)"],
+        "segment": ["metrics/mAP50(B)", "metrics/mAP50(M)", "metrics/mAP50-95(B)"],
+    }
+    for key in task_defaults.get(task_type, []):
+        if key in results_dict:
+            print(f"--- [TRAINER] Using auto-detected key '{key}' for task '{task_type}': {results_dict[key]} ---")
+            return results_dict[key]
+
+    # 3. Fuzzy match (substring)
+    for k in results_dict:
+        if fitness in k or k in fitness:
+            print(f"--- [TRAINER] Using fuzzy-matched key '{k}': {results_dict[k]} ---")
+            return results_dict[k]
+
+    return 0.0
+
+
 def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
     if "train" in request_config:
         results = trainer.train(config_train=request_config["train"])
@@ -279,11 +305,14 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
         final_result = 0.0
 
         if results and hasattr(results, 'results_dict'):
-            request_config["experiment_type"] = str(results.task)
+            task_type = str(getattr(results, "task", "")).lower()
+            request_config["experiment_type"] = task_type
             request_config["train"]["results"] = results.results_dict
 
             try:
-                final_result = request_config["train"]["results"].get(fitness, 0.0)
+                final_result = _resolve_fitness_key(
+                    request_config["train"]["results"], fitness, task_type
+                )
             except:
                 final_result = 0.0
 
