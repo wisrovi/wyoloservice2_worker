@@ -163,7 +163,11 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.31 (Current Release) - 2026-08-25
+### Version 2.2.32 (Current Release) - 2026-08-25
+*   **Fitness Key Auto-Detection:** `train()` function now auto-detects the correct metric key based on task type (`classify` → `metrics/accuracy`, `detect` → `metrics/mAP50(B)`, `segment` → `metrics/mAP50(B)`). Prevents returning 0.0 when user-specified fitness key doesn't exist in results_dict.
+*   **Version Update:** Bumped executor version to v2.2.32.
+
+### Version 2.2.31 - 2026-08-25
 *   **Batch Default Fix:** `on_train_start` callback no longer crashes with `KeyError` when `batch` is not in user config.
 *   **Batch Auto-Derivation:** `create_trainer` defaults `batch` to `MAX_GPU / 100` (e.g. `MAX_GPU=50` → `batch=0.5` = auto-batch at 50% VRAM) when not explicitly set by user.
 *   **Version Update:** Bumped executor version to v2.2.31.
