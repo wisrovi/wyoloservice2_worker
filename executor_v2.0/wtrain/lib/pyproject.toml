@@ -2,6 +2,9 @@
 requires = ["hatchling", "wheel"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/wyolo"]
+
 [project]
 name = "wyolo"
 version = "2.2.15"
