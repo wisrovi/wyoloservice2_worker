@@ -592,6 +592,23 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
             batch = batch / 100 if batch > 0 else 0.1
             train_params["batch"] = batch
 
+        # Drop hyperparameters that are not valid Ultralytics arguments (e.g.
+        # custom keys such as 'seg') to avoid SyntaxError in model.train().
+        try:
+            from ultralytics.cfg import DEFAULT_CFG_DICT
+
+            for key in [k for k in train_params if k not in DEFAULT_CFG_DICT]:
+                print(
+                    f"--- [TRAINER] WARNING: Dropping invalid YOLO argument "
+                    f"'{key}={train_params[key]}' (not supported by Ultralytics). ---"
+                )
+                train_params.pop(key)
+        except ImportError:
+            print(
+                "--- [TRAINER] WARNING: Could not import ultralytics.cfg to "
+                "validate YOLO arguments; passing config as-is. ---"
+            )
+
         print(f"--- [TRAINER] Starting YOLO train with config: {train_params} ---")
 
         results = trainer.train(config_train=train_params)
