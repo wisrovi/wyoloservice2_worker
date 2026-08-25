@@ -2,6 +2,7 @@
 # pylint: disable=all
 # ruff: noqa
 
+import os
 from pathlib import Path
 import subprocess
 import csv
@@ -10,6 +11,13 @@ class TrainingReportAnalyzer:
     """
     Generate AI-assisted training analysis using OpenCode with fallback.
     """
+
+    OPENCODE_BIN = "/root/.opencode/bin/opencode"
+    DEFAULT_MODEL = "opencode/nemotron-3.5-lightning-free"
+
+    @classmethod
+    def _get_model(cls) -> str:
+        return os.getenv("LLM_MODEL", cls.DEFAULT_MODEL)
 
     def analyze(
         self,
@@ -90,21 +98,21 @@ class TrainingReportAnalyzer:
         Do not invent data.
         """
 
-        OPENCODE_BIN = "/root/.opencode/bin/opencode"
+        model = self._get_model()
 
         result = subprocess.run(
             [
-                OPENCODE_BIN,
+                self.OPENCODE_BIN,
                 "run",
                 "--model",
-                "opencode/deepseek-v4-flash-free",
+                model,
                 prompt,
                 "-f",
                 str(results_file)
             ],
             capture_output=True,
             text=True,
-            timeout=180  # 3 minutes timeout
+            timeout=180
         )
 
         if result.returncode != 0:
