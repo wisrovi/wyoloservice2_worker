@@ -163,7 +163,12 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.29 (Current Release) - 2026-08-24
+### Version 2.2.30 (Current Release) - 2026-08-25
+*   **LLM Model Fix:** Replaced dead `opencode/deepseek-v4-flash-free` with `opencode/nemotron-3.5-lightning-free` in training report analyzer and LLM analyzer. Model configurable via `LLM_MODEL` env var.
+*   **Research Fallback:** Added minimal fallback report generation when LLM service is unavailable.
+*   **Version Update:** Bumped executor version to v2.2.30.
+
+### Version 2.2.29 - 2026-08-24
 *   **Invalid YOLO argument sanitization:** `trainer_wrapper` now drops hyperparameters that are not valid Ultralytics arguments (validated against `ultralytics.cfg.DEFAULT_CFG_DICT`) before calling `model.train()`, logging a warning for each dropped key. This fixes trainings whose user config contains custom keys such as `seg: 12.0`, which previously aborted every trial with `SyntaxError: 'seg' is not a valid YOLO argument` and silently reported a 0.0 metric.
 *   **Version Update:** Bumped executor version to v2.2.29.
 

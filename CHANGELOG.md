@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.30] - 2026-08-25
+### Fixed
+- **LLM analyzer model:** replaced dead `opencode/deepseek-v4-flash-free` with `opencode/nemotron-3.5-lightning-free` in both `training_report_analyzer.py` and `llm_analyzer.py`. Model is now configurable via `LLM_MODEL` env var.
+- **Research states fallback:** `_explain_research_states` now writes a minimal `GLOBAL_RESEARCH_EXPLANATION.md` when OpenCode is unavailable, instead of silently failing.
+
+### Changed
+- Bumped executor version to `2.2.30`.
+
 ## [2.2.29] - 2026-08-24
 ### Fixed
 - Invalid YOLO argument sanitization in `trainer_wrapper`: user-supplied hyperparameters not supported by Ultralytics (e.g. `seg`) are now dropped with a warning before `model.train()`, instead of aborting the trial with `SyntaxError: '<key>' is not a valid YOLO argument`.
