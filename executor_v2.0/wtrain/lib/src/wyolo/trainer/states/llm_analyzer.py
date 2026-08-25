@@ -18,6 +18,11 @@ class LlmAnalyzer:
     LLM_MD_NAME = "extras/llm/LLM_Report.md"
     LLM_DOCX_NAME = "extras/llm/LLM_Report.docx"
     OPENCODE_BIN = "/root/.opencode/bin/opencode"
+    DEFAULT_MODEL = "opencode/nemotron-3.5-lightning-free"
+
+    @classmethod
+    def _get_model(cls) -> str:
+        return os.getenv("LLM_MODEL", cls.DEFAULT_MODEL)
 
     @to_obj(PostTrainContext)
     def __call__(self, ctx: PostTrainContext):
@@ -131,7 +136,8 @@ class LlmAnalyzer:
         Sé directo, profesional y redacta en Markdown usando títulos, listas y negritas. No superes los 5 párrafos.
         """
         
-        cmd = [self.OPENCODE_BIN, "run", "--model", "opencode/deepseek-v4-flash-free", prompt]
+        model = self._get_model()
+        cmd = [self.OPENCODE_BIN, "run", "--model", model, prompt]
         for jf in json_files:
             cmd.extend(["-f", jf])
             
@@ -150,7 +156,23 @@ class LlmAnalyzer:
                     fmd.write(f"# Global Research Analysis Report\n\n{result.stdout.strip()}")
                 print(f"[LLMAnalyzer] Global report saved to {analysis_md_path}")
             else:
-                print(f"Failed to generate global explanation: {result.stderr}")
+                self._write_fallback_research(extras_dir, json_files)
         except Exception as e:
             print(f"[LLMAnalyzer] Error generating global explanation: {e}")
+            self._write_fallback_research(extras_dir, json_files)
+
+    def _write_fallback_research(self, extras_dir: str, json_files: list):
+        """Write a minimal fallback research explanation when LLM is unavailable."""
+        analysis_md_path = os.path.join(extras_dir, "GLOBAL_RESEARCH_EXPLANATION.md")
+        names = [Path(jf).stem for jf in json_files]
+        fallback = (
+            "# Global Research Analysis Report\n\n"
+            "The LLM service was unavailable to generate a detailed cross-module analysis.\n\n"
+            "## Modules Analyzed\n\n"
+            + "\n".join(f"- **{n}**" for n in names)
+            + "\n\nRefer to the individual JSON files in the extras/ subdirectories for raw metrics.\n"
+        )
+        with open(analysis_md_path, "w", encoding="utf-8") as fmd:
+            fmd.write(fallback)
+        print(f"[LLMAnalyzer] Fallback research explanation saved to {analysis_md_path}")
 
