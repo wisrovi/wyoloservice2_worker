@@ -228,9 +228,9 @@ class Mlflow_setup:
                                         break
                 
                 results_file_path = os.path.join(self.ARTIFACTS_PATH, "results.json")
-                if accuracy > 0.0 or not os.path.exists(results_file_path):
-                    with open(results_file_path, "w") as f:
-                        json.dump({"accuracy": round(float(accuracy), 4)}, f)
+                if accuracy > 0.0:
+                    with open(results_file_path, "w", encoding="utf-8") as f:
+                        json.dump({"accuracy": round(float(accuracy), 4), "status": "provisional"}, f, indent=4)
             except Exception as e:
                 print(f"Failed to write results.json during artifacts organization: {e}")
 
