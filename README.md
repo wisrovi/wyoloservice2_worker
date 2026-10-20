@@ -300,6 +300,9 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+### Version 2.2.29 - 2026-10-20
+*   **Defensive MAX_GPU float parsing:** Cast `MAX_GPU` environment variable through `float` before `int` in `trainer_wrapper.py` (both root and lib implementations) to prevent `ValueError: invalid literal for int() with base 10` when formatted as float strings (e.g. `'50.0'`).
+
 ### Version 2.2.28 - 2026-08-12
 *   **Fix double replacement of dataset path:** Fixed a bug in `train.py` that caused dataset paths containing `/datasets/` to be replaced twice, resolving `os error 2` during training.
 *   **Version Update to v2.2.28:** Bumped executor version to `v2.2.28`.
