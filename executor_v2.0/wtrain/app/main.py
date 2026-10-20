@@ -32,7 +32,7 @@ setproctitle("wtrain-service")
 console = Console()
 
 # WORKER/EXECUTOR VERSION
-__VERSION__ = "2.2.32"
+__VERSION__ = "2.2.33"
 
 
 def display_banner():
