@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.33] - 2026-10-20
+### Fixed
+- **Provisional results prevention:** `mlflow_setup.py` no longer writes a preliminary `results.json` with `accuracy: 0.0` during directory organization, avoiding false metric consumption.
+- **Results completion contract:** `public_results.py` emits `results.json` with explicit `status: completed` and epoch timestamp for strict verification by the invoker.
+
+### Changed
+- Bumped executor version to `2.2.33`.
+
 ## [2.2.32] - 2026-08-25
 ### Fixed
 - **Fitness key auto-detection:** `train()` function now auto-detects the correct metric key based on task type (`classify` → `metrics/accuracy`, `detect` → `metrics/mAP50(B)`, `segment` → `metrics/mAP50(B)`). Prevents returning 0.0 when user-specified fitness key doesn't exist in results_dict.
