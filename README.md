@@ -163,7 +163,12 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.32 (Current Release) - 2026-08-25
+### Version 2.2.33 (Current Release) - 2026-10-20
+*   **Provisional Results Prevention:** `mlflow_setup.py` no longer writes a preliminary `results.json` with `accuracy: 0.0` during directory organization, eliminating premature zero-accuracy pollution in downstream orchestrators.
+*   **Results Completion Contract:** `public_results.py` emits `results.json` with explicit `status: completed` and epoch timestamp for strict verification by the invoker.
+*   **Version Update:** Bumped executor version to v2.2.33.
+
+### Version 2.2.32 - 2026-08-25
 *   **Fitness Key Auto-Detection:** `train()` function now auto-detects the correct metric key based on task type (`classify` → `metrics/accuracy`, `detect` → `metrics/mAP50(B)`, `segment` → `metrics/mAP50(B)`). Prevents returning 0.0 when user-specified fitness key doesn't exist in results_dict.
 *   **Version Update:** Bumped executor version to v2.2.32.
 
