@@ -258,7 +258,7 @@ def create_trainer(config_path: str, trial_number):
     request_config["timestamp"] = timestamp
 
     # Default batch from MAX_GPU env var (e.g. MAX_GPU=50 → batch=0.5 = auto-batch 50% VRAM)
-    max_gpu = int(os.getenv("MAX_GPU", "100"))
+    max_gpu = int(float(os.getenv("MAX_GPU", "100")))
     request_config["train"]["batch"] = max_gpu / 100
 
     request_config["train"]["project"] = f"{RESULT_PATH}/{trial_number}/"
