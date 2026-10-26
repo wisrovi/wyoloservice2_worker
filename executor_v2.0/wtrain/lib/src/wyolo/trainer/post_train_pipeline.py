@@ -48,9 +48,11 @@ pipeline_post_train.set_steps(
     [
         CleanFolderExtra(),
         PostTrain(),
-        ImageECamYOLO(
-            ECAMConfig(
-                confidence_threshold=0.10,
+        safe_step(
+            ImageECamYOLO(
+                ECAMConfig(
+                    confidence_threshold=0.10,
+                )
             )
         ),
         safe_step(ModelFocusDescriber()),
@@ -64,7 +66,7 @@ pipeline_post_train.set_steps(
         safe_step(FeatureRepresentationAnalyzer()),
         safe_step(UncertaintyQuantifier()),
         safe_step(LatexExporter()),
-        LlmAnalyzer(),
+        safe_step(LlmAnalyzer()),
     ]
 )
 
