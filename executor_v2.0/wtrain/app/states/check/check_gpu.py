@@ -9,7 +9,7 @@ os.environ["LD_LIBRARY_PATH"] = "/usr/local/cuda/lib64:" + os.environ.get(
 )
 
 
-@step(name="check_gpu_available", version="v1.0", tags=["check_gpu_available"])
+@step(name="check_gpu_available", version="v1.1", tags=["check_gpu_available"])
 @to_obj
 def check_gpu_available(data_input):
     test_command = [
@@ -19,16 +19,22 @@ def check_gpu_available(data_input):
     ]
     print("-" * 50)
     print(f"DEBUG: CUDA Runtime Version: {torch.version.cuda}")
-    print(
-        f"DEBUG: Driver Version: {subprocess.check_output(test_command).decode().strip()}"
-    )
+    driver_version = "Unknown"
+    try:
+        driver_version = subprocess.check_output(test_command).decode().strip()
+    except Exception:
+        if torch.cuda.is_available():
+            driver_version = (
+                f"CUDA {torch.version.cuda} ({torch.cuda.get_device_name(0)})"
+            )
+    print(f"DEBUG: Driver Version: {driver_version}")
 
     # Hito: Intento de despertar el driver a nivel sistema
     try:
         subprocess.run(
             ["nvidia-smi"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
-    except:
+    except Exception:
         pass
 
     if not torch.cuda.is_available():
