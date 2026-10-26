@@ -77,6 +77,21 @@ This component heavily relies on the following key technologies to orchestrate t
 *   **Grad-CAM / Eigen-CAM:** Used in the `ImageECamYOLO` step for Explainable AI (XAI) heatmaps. The implementation is heavily inspired by and based on [xaviercanche/Grad-CAM](https://github.com/xaviercanche/Grad-CAM), allowing visual debugging of the convolutional layers' focus.
 *   **OpenCode (Local LLM):** Used for automated, private post-training analysis and report generation based on empirical CSV metrics and XAI outputs.
 *   **MLflow & MinIO:** For artifacts and metrics tracking.
+*   **Pytest & Docker:** Used for isolated unit testing and code coverage verification.
+
+---
+
+## 🧪 Running Unit Tests & Coverage (Docker)
+
+All unit tests are executed inside an isolated Docker container using `pytest`:
+
+```bash
+# Run unit tests inside Docker
+bash run_tests.sh
+
+# Calculate code coverage inside Docker
+bash coverage.sh
+```
 
 ---
 
@@ -108,6 +123,7 @@ train:
   batch: -1
   data: "/examples/Deteksi komponen elektronik.v1i.yolov8/data.yaml"
   epochs: 2
+  # time: 30  # Optional max training time in hours (if omitted, trains by epochs; if > 0, overrides epochs and stops cleanly at time limit)
   imgsz: 640
   plots: true
 sweeper:
@@ -163,7 +179,11 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.33 (Current Release) - 2026-10-20
+### Version 2.2.34 (Current Release) - 2026-10-26
+*   **Defensive GPU Check in Kubernetes:** `check_gpu_available` now safely wraps `nvidia-smi` calls with fallback to PyTorch `torch.cuda.get_device_name(0)` when running in Kubernetes containerd environments where the host `nvidia-smi` CLI is not injected into the container filesystem.
+*   **Version Update:** Bumped executor version to v2.2.34.
+
+### Version 2.2.33 - 2026-10-20
 *   **Provisional Results Prevention:** `mlflow_setup.py` no longer writes a preliminary `results.json` with `accuracy: 0.0` during directory organization, eliminating premature zero-accuracy pollution in downstream orchestrators.
 *   **Results Completion Contract:** `public_results.py` emits `results.json` with explicit `status: completed` and epoch timestamp for strict verification by the invoker.
 *   **Version Update:** Bumped executor version to v2.2.33.
