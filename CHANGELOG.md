@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.35] - 2026-10-26
+### Fixed
+- **Post-train resilience & safe steps:** Wrapped `ImageECamYOLO` and `LlmAnalyzer` steps in `safe_step(...)` within `post_train_pipeline.py` to prevent visualization or LLM exceptions from crashing the training pipeline.
+- **Fail-safe MLflow artifact logging:** Wrapped `pipeline_post_train.run(...)` execution inside a `try...except` block in `trainer_wrapper.py` (`on_train_end` callback), guaranteeing that trained weights (`best.pt`, `last.pt`), metrics (`results.csv`), and plots are always logged to MLflow/MinIO even if a post-training analysis step fails.
+- **Dependency upgrade:** Updated `wyolo` dependency to `wpipe-plugins>=0.1.3` incorporating the `targets=None` fix for `grad-cam 1.5.7+` and PyTorch hook cleanup.
+
+### Changed
+- Bumped worker/executor version to `2.2.35`.
+- Bumped `wyolo` library version to `2.2.16`.
+
 ## [2.2.33] - 2026-10-20
 ### Fixed
 - **Provisional results prevention:** `mlflow_setup.py` no longer writes a preliminary `results.json` with `accuracy: 0.0` during directory organization, avoiding false metric consumption.
