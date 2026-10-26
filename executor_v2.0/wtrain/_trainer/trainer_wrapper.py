@@ -300,7 +300,21 @@ def _resolve_fitness_key(results_dict: dict, fitness: str, task_type: str) -> fl
 
 def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
     if "train" in request_config:
-        results = trainer.train(config_train=request_config["train"])
+        train_params = request_config["train"]
+        raw_time = train_params.get("time")
+        if raw_time is not None and not isinstance(raw_time, bool):
+            try:
+                parsed_time = float(raw_time)
+                if parsed_time > 0.0:
+                    train_params["time"] = parsed_time
+                else:
+                    train_params.pop("time", None)
+            except (ValueError, TypeError):
+                train_params.pop("time", None)
+        else:
+            train_params.pop("time", None)
+
+        results = trainer.train(config_train=train_params)
 
         final_result = 0.0
 
