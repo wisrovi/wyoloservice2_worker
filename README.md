@@ -325,6 +325,11 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+### Version 2.2.35 - 2026-10-26
+*   **Post-train resilience & safe steps:** Wrapped `ImageECamYOLO` and `LlmAnalyzer` in `safe_step(...)` in `post_train_pipeline.py`.
+*   **Fail-safe MLflow artifact logging:** Wrapped `pipeline_post_train.run(...)` inside `try...except` in `trainer_wrapper.py` (`on_train_end` callback) ensuring weights (`best.pt`, `last.pt`) and metrics (`results.csv`) are always logged to MLflow/MinIO.
+*   **Dependency upgrade:** Updated `wyolo` dependency to `wpipe-plugins>=0.1.3` (fixing `grad-cam 1.5.7+` signature mismatch with `targets=None` and hook memory leaks).
+
 ### Version 2.2.29 - 2026-10-20
 *   **Defensive MAX_GPU float parsing:** Cast `MAX_GPU` environment variable through `float` before `int` in `trainer_wrapper.py` (both root and lib implementations) to prevent `ValueError: invalid literal for int() with base 10` when formatted as float strings (e.g. `'50.0'`).
 
