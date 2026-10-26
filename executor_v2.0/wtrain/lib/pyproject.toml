@@ -7,7 +7,7 @@ packages = ["src/wyolo"]
 
 [project]
 name = "wyolo"
-version = "2.2.15"
+version = "2.2.16"
 description = "Professional YOLO training library with MLOps integration"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -47,7 +47,7 @@ dependencies = [
     "redis>=4.0.0",
     "ultralytics>=8.0.0",
     "wredis>=0.1.0",
-    "wpipe-plugins>=0.1.1",
+    "wpipe-plugins>=0.1.3",
     "pylatex>=1.4.0",
     "scikit-learn>=1.0.0",
     "ptflops>=0.7.0",
