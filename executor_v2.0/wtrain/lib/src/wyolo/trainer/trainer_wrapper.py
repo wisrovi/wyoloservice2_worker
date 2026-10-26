@@ -123,16 +123,25 @@ class TrainerWrapper(Elemental, Mlflow_setup):
                 print(f"Failed to resolve model path for post_train: {e}")
                 model_path = ""
 
-            pipeline_post_train.run(
-                {
-                    "model_path": model_path,
-                    "images_test_path": self.config.get("train", {}).get("data", None),
-                    "project_path": self.ARTIFACTS_PATH,
-                    "output_dir": os.path.join(
-                        self.ARTIFACTS_PATH, "extras", "model_focus"
-                    ),
-                }
-            )
+            try:
+                pipeline_post_train.run(
+                    {
+                        "model_path": model_path,
+                        "images_test_path": self.config.get("train", {}).get("data", None),
+                        "project_path": self.ARTIFACTS_PATH,
+                        "output_dir": os.path.join(
+                            self.ARTIFACTS_PATH, "extras", "model_focus"
+                        ),
+                    }
+                )
+            except Exception as e:
+                console.print(
+                    Panel(
+                        f"[bold red]PostTrain pipeline execution encountered an error:[/bold red] {e}",
+                        title="[bold yellow]PostTrain Pipeline Warning[/bold yellow]",
+                        border_style="yellow",
+                    )
+                )
 
             # TODO: 4. force up train document
             # TODO: 5. force up valid examples
