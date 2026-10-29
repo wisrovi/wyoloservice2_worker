@@ -201,6 +201,13 @@ class TrainerWrapper(Elemental, Mlflow_setup):
                 MAX_GPU = float(os.environ.get("MAX_GPU", -5000.1))
 
                 config_train["batch"] = max(MAX_GPU / 100, -1)
+                if "workers" not in config_train:
+                    config_train["workers"] = 2
+                else:
+                    try:
+                        config_train["workers"] = min(2, max(0, int(config_train["workers"])))
+                    except (ValueError, TypeError):
+                        config_train["workers"] = 2
 
                 return self.model.train(**config_train)
 
@@ -237,6 +244,16 @@ def load_config(config_path: str):
 def create_trainer(config_path: str, trial_number):
     request_config = load_config(config_path=config_path)
     request_config["config_path"] = config_path
+
+    try:
+        max_gpu_env = float(os.environ.get("MAX_GPU", -1))
+        if 0 < max_gpu_env < 100:
+            fraction = min(1.0, max(0.05, max_gpu_env / 100.0))
+            if torch.cuda.is_available():
+                for dev_idx in range(torch.cuda.device_count()):
+                    torch.cuda.set_per_process_memory_fraction(fraction, dev_idx)
+    except Exception:
+        pass
 
     trainer = TrainerWrapper(config=request_config)
     trainer.create_model(
