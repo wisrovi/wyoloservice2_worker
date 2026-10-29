@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.37] - 2026-10-29
+### Fixed
+- **PyLaTeX Table Rule Construction in LatexExporter:** Fixed PyLaTeX `TableError` ("Number of cells added to table (8) did not match table width (5)") caused by using `tabular.add_row(NoEscape(r"\toprule"))`, which iterated string characters into individual table cells. Replaced with `tabular.append(...)` and wrapped table generation in defensive error handling.
+- **Robust SafeStep Wrapper in PostTrain Pipeline:** Replaced duck-typed monkey-patching of instance `__call__` (which Python ignores during type-level dunder resolution) with a proper callable `SafeStep` proxy wrapper class. Prevents any unhandled exception in secondary post-training evaluation steps from aborting the pipeline before heatmaps, LaTeX exports, and LLM analysis are completed.
+- **Image Data Context Propagation in PostTrain:** Updated `PostTrain` state return dictionary to pass `image_data`, `model_path`, `images_test_path`, `project_path`, and `output_dir` so downstream steps (`ImageECamYOLO`, `ModelFocusDescriber`, etc.) reliably receive the required dataset paths and weights.
+
+### Changed
+- Bumped worker/executor version to `2.2.37`.
+
 ## [2.2.36] - 2026-10-29
 ### Added
 - **PyTorch Per-Process VRAM Fraction Ceiling:** Invokes `torch.cuda.set_per_process_memory_fraction(MAX_GPU / 100.0)` across available CUDA devices during trainer initialization, enforcing a strict driver-level ceiling. This stops PyTorch and Ultralytics AutoBatch from probing or allocating 100% of GPU VRAM, preventing PCIe bus starvation and desktop display freezes on single-GPU developer machines.
