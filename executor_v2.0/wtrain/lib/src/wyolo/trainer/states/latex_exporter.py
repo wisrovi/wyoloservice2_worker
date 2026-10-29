@@ -69,8 +69,9 @@ This directory contains the outputs and results of this specific analysis. The m
             )
             table.append(NoEscape(r"\label{tab:model_performance}"))
 
+        try:
             tabular = Tabular("l c c c c")
-            tabular.add_row(NoEscape(r"\toprule"))
+            tabular.append(NoEscape(r"\toprule"))
             tabular.add_row(
                 [
                     NoEscape(r"\textbf{Model}"),
@@ -80,23 +81,27 @@ This directory contains the outputs and results of this specific analysis. The m
                     NoEscape(r"\textbf{Latency (ms)}"),
                 ]
             )
-            tabular.add_row(NoEscape(r"\midrule"))
+            tabular.append(NoEscape(r"\midrule"))
 
-            for model_name, metrics in metrics_dict.items():
-                map_str = f"{metrics.get('map50', 0):.1f} $\\pm$ {metrics.get('map50_std', 0):.1f}"
+            items = vars(metrics_dict).items() if hasattr(metrics_dict, "__dict__") and not isinstance(metrics_dict, dict) else (metrics_dict.items() if isinstance(metrics_dict, dict) else [])
+            for model_name, metrics in items:
+                m_dict = vars(metrics) if hasattr(metrics, "__dict__") and not isinstance(metrics, dict) else (metrics if isinstance(metrics, dict) else {})
+                map_str = f"{m_dict.get('map50', 0):.1f} $\\pm$ {m_dict.get('map50_std', 0):.1f}"
                 tabular.add_row(
                     [
-                        model_name,
+                        str(model_name),
                         NoEscape(map_str),
-                        f"{metrics.get('gflops', 0):.2f}",
-                        f"{metrics.get('params', 0):.2f}",
-                        f"{metrics.get('latency', 0):.2f}",
+                        f"{m_dict.get('gflops', 0):.2f}",
+                        f"{m_dict.get('params', 0):.2f}",
+                        f"{m_dict.get('latency', 0):.2f}",
                     ]
                 )
 
-            tabular.add_row(NoEscape(r"\bottomrule"))
+            tabular.append(NoEscape(r"\bottomrule"))
             table.append(tabular)
 
-        doc.generate_tex()
-        print(f"LaTeX table successfully exported to: {output_tex_path}.tex")
+            doc.generate_tex()
+            print(f"LaTeX table successfully exported to: {output_tex_path}.tex")
+        except Exception as e:
+            print(f"[LatexExporter] Warning: Failed to export LaTeX table: {e}")
         return ctx
