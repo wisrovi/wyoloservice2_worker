@@ -68,11 +68,12 @@ flowchart TD
 
 ---
 
-## 3. 🛠️ Technology Stack & Libraries
+## 3. 🛠️ Key Technologies and Libraries
 
 This component heavily relies on the following key technologies to orchestrate the pipeline and provide Explainable AI (XAI):
 
 *   **WPipe:** Corporate library used to define and execute the sequential training and validation pipeline dynamically.
+*   **PyTorch & CUDA Runtime:** Core deep learning framework with driver-level memory fraction management (`set_per_process_memory_fraction`) ensuring non-disruptive execution alongside developer desktops.
 *   **Ultralytics YOLO:** Core engine for object detection, classification, and segmentation.
 *   **Grad-CAM / Eigen-CAM:** Used in the `ImageECamYOLO` step for Explainable AI (XAI) heatmaps. The implementation is heavily inspired by and based on [xaviercanche/Grad-CAM](https://github.com/xaviercanche/Grad-CAM), allowing visual debugging of the convolutional layers' focus.
 *   **OpenCode (Local LLM):** Used for automated, private post-training analysis and report generation based on empirical CSV metrics and XAI outputs.
@@ -179,7 +180,12 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.34 (Current Release) - 2026-10-26
+### Version 2.2.36 (Current Release) - 2026-10-29
+*   **PyTorch Per-Process VRAM Fraction Ceiling:** Enforces `torch.cuda.set_per_process_memory_fraction(MAX_GPU / 100.0)` in `create_trainer` across all CUDA devices, preventing PyTorch and Ultralytics AutoBatch from probing or allocating 100% of GPU VRAM and eliminating PCIe bus saturation and desktop freezes.
+*   **Defensive DataLoader Workers Cap:** Caps `train_params['workers']` to at most 2, preventing multi-process CPU lockup and swap thrashing on workstation machines.
+*   **Version Update:** Bumped executor version to v2.2.36.
+
+### Version 2.2.35 - 2026-10-26
 *   **Defensive GPU Check in Kubernetes:** `check_gpu_available` now safely wraps `nvidia-smi` calls with fallback to PyTorch `torch.cuda.get_device_name(0)` when running in Kubernetes containerd environments where the host `nvidia-smi` CLI is not injected into the container filesystem.
 *   **Version Update:** Bumped executor version to v2.2.34.
 
@@ -325,6 +331,11 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+### Version 2.2.36 - 2026-10-29
+*   **PyTorch Per-Process VRAM Fraction Ceiling:** Enforces `torch.cuda.set_per_process_memory_fraction(MAX_GPU / 100.0)` in `create_trainer` across all CUDA devices, preventing PyTorch and Ultralytics AutoBatch from probing or allocating 100% of GPU VRAM.
+*   **Defensive DataLoader Workers Cap:** Caps `train_params['workers']` to at most 2, preventing multi-process CPU lockup and swap thrashing.
+*   **Version Update:** Bumped executor version to v2.2.36.
+
 ### Version 2.2.35 - 2026-10-26
 *   **Post-train resilience & safe steps:** Wrapped `ImageECamYOLO` and `LlmAnalyzer` in `safe_step(...)` in `post_train_pipeline.py`.
 *   **Fail-safe MLflow artifact logging:** Wrapped `pipeline_post_train.run(...)` inside `try...except` in `trainer_wrapper.py` (`on_train_end` callback) ensuring weights (`best.pt`, `last.pt`) and metrics (`results.csv`) are always logged to MLflow/MinIO.
