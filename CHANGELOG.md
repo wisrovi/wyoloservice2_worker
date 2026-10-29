@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.36] - 2026-10-29
+### Added
+- **PyTorch Per-Process VRAM Fraction Ceiling:** Invokes `torch.cuda.set_per_process_memory_fraction(MAX_GPU / 100.0)` across available CUDA devices during trainer initialization, enforcing a strict driver-level ceiling. This stops PyTorch and Ultralytics AutoBatch from probing or allocating 100% of GPU VRAM, preventing PCIe bus starvation and desktop display freezes on single-GPU developer machines.
+- **Defensive DataLoader Workers Cap:** Enforces `workers = min(2, train_params['workers'])` to prevent Ultralytics from launching up to 16 concurrent DataLoader worker processes, eliminating host CPU lockup and swap thrashing.
+
+### Changed
+- Bumped worker/executor version to `2.2.36`.
+
 ## [2.2.35] - 2026-10-26
 ### Fixed
 - **Post-train resilience & safe steps:** Wrapped `ImageECamYOLO` and `LlmAnalyzer` steps in `safe_step(...)` within `post_train_pipeline.py` to prevent visualization or LLM exceptions from crashing the training pipeline.
