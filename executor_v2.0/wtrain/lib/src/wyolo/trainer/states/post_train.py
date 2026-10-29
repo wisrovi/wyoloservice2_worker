@@ -56,7 +56,11 @@ class PostTrain:
 
         print(f"[PostTrain] Done. Predictions saved to {ctx.output_dir}.")
         return {
-            "image_data": images_used_for_prediction,
+            "image_data": images_used_for_prediction or all_images[: self.MAX_IMAGES_TO_PROCESS],
+            "model_path": model_path,
+            "images_test_path": images_test_path,
+            "project_path": project_path,
+            "output_dir": ctx.output_dir,
         }
 
     def _find_images(self, images_test_path: str) -> list[str]:
