@@ -32,22 +32,23 @@ flowchart TD
         T -->|7. Clean Extras| PT0[CleanFolderExtra]
         PT0 -->|8. Predictions| PT1[PostTrain]
         PT1 -->|9. Visual AI| PT2[ImageECamYOLO]
-        PT2 -->|10. XAI Val| PT2A[QuantitativeXAIValidator]
-        PT2A -->|11. Eval| PT4[BootstrapEvaluator]
-        PT4 -->|12. Profile| PT5[ModelComplexityProfiler]
-        PT5 -->|13. Failures| PT6[OutlierFailureAnalyzer]
-        PT6 -->|14. Noise| PT7[RobustnessNoiseEvaluator]
-        PT7 -->|15. Attack| PT8[AdversarialAttackTester]
-        PT8 -->|16. Domain| PT9[CrossDomainGeneralizer]
-        PT9 -->|17. Latent| PT10[FeatureRepresentationAnalyzer]
-        PT10 -->|18. Uncertain| PT11[UncertaintyQuantifier]
-        PT11 -->|19. LaTeX| PT12[LatexExporter]
-        PT12 -->|20. Global Analysis| PT3[LlmAnalyzer]
+        PT2 -->|10. Focus Describer| PT20[ModelFocusDescriber]
+        PT20 -->|11. XAI Val| PT2A[QuantitativeXAIValidator]
+        PT2A -->|12. Eval| PT4[BootstrapEvaluator]
+        PT4 -->|13. Profile| PT5[ModelComplexityProfiler]
+        PT5 -->|14. Failures| PT6[OutlierFailureAnalyzer]
+        PT6 -->|15. Noise| PT7[RobustnessNoiseEvaluator]
+        PT7 -->|16. Attack| PT8[AdversarialAttackTester]
+        PT8 -->|17. Domain| PT9[CrossDomainGeneralizer]
+        PT9 -->|18. Latent| PT10[FeatureRepresentationAnalyzer]
+        PT10 -->|19. Uncertain| PT11[UncertaintyQuantifier]
+        PT11 -->|20. LaTeX| PT12[LatexExporter]
+        PT12 -->|21. Global Analysis| PT3[LlmAnalyzer]
         
-        PT3 -->|21. Register in S3| PML[publish_results_mlflow]
+        PT3 -->|22. Register in S3| PML[publish_results_mlflow]
         PML --> End((Exit))
         NT --> End
-        End -->|22. Close in Redis| RED[publish_results_redis]
+        End -->|23. Close in Redis| RED[publish_results_redis]
     end
 
     subgraph Host_and_Services [External Infrastructure]
@@ -180,7 +181,13 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.36 (Current Release) - 2026-10-29
+### Version 2.2.37 (Current Release) - 2026-10-29
+*   **PyLaTeX Table Rule Construction Fix:** Fixed PyLaTeX `TableError` ("Number of cells added to table (8) did not match table width (5)") in `latex_exporter.py` by appending rule commands rather than row-adding them, preventing post-training pipeline termination.
+*   **Defensive Post-Train Step Execution:** Replaced instance-level monkey-patching in `safe_step` with a callable wrapper class `SafeStep` in `post_train_pipeline.py`, guaranteeing that step exceptions do not prevent subsequent XAI, LaTeX, or LLM reporting.
+*   **Context Propagation:** Extended `PostTrain` state return contract to pass `image_data`, `model_path`, `images_test_path`, and paths required by `ImageECamYOLO` and downstream research modules.
+*   **Version Update:** Bumped executor version to v2.2.37.
+
+### Version 2.2.36 - 2026-10-29
 *   **PyTorch Per-Process VRAM Fraction Ceiling:** Enforces `torch.cuda.set_per_process_memory_fraction(MAX_GPU / 100.0)` in `create_trainer` across all CUDA devices, preventing PyTorch and Ultralytics AutoBatch from probing or allocating 100% of GPU VRAM and eliminating PCIe bus saturation and desktop freezes.
 *   **Defensive DataLoader Workers Cap:** Caps `train_params['workers']` to at most 2, preventing multi-process CPU lockup and swap thrashing on workstation machines.
 *   **Version Update:** Bumped executor version to v2.2.36.
@@ -331,6 +338,12 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+### Version 2.2.37 - 2026-10-29
+*   **PyLaTeX Table Rule Construction Fix:** Fixed PyLaTeX `TableError` in `latex_exporter.py` by appending rule commands rather than row-adding them.
+*   **Defensive Post-Train Step Execution:** Replaced instance-level monkey-patching in `safe_step` with a callable wrapper class `SafeStep` in `post_train_pipeline.py`.
+*   **Context Propagation:** Extended `PostTrain` state return contract to pass `image_data`, `model_path`, `images_test_path`, and paths required by `ImageECamYOLO`.
+*   **Version Update:** Bumped executor version to v2.2.37.
+
 ### Version 2.2.36 - 2026-10-29
 *   **PyTorch Per-Process VRAM Fraction Ceiling:** Enforces `torch.cuda.set_per_process_memory_fraction(MAX_GPU / 100.0)` in `create_trainer` across all CUDA devices, preventing PyTorch and Ultralytics AutoBatch from probing or allocating 100% of GPU VRAM.
 *   **Defensive DataLoader Workers Cap:** Caps `train_params['workers']` to at most 2, preventing multi-process CPU lockup and swap thrashing.
