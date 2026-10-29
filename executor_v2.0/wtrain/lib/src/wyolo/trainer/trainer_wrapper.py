@@ -371,6 +371,21 @@ def create_trainer(config_path: str, trial_number):
     request_config = load_config(config_path=config_path)
     request_config["config_path"] = config_path
 
+    # Restrict PyTorch per-process VRAM memory fraction ceiling before model allocation or AutoBatch
+    try:
+        max_gpu_env = float(os.environ.get("MAX_GPU", -1))
+        if 0 < max_gpu_env < 100:
+            fraction = min(1.0, max(0.05, max_gpu_env / 100.0))
+            if torch.cuda.is_available():
+                for dev_idx in range(torch.cuda.device_count()):
+                    torch.cuda.set_per_process_memory_fraction(fraction, dev_idx)
+                print(
+                    f"--- [TRAINER] Restricted PyTorch per-process VRAM fraction to {fraction*100:.1f}% on {torch.cuda.device_count()} GPU device(s) ---",
+                    flush=True,
+                )
+    except Exception as e:
+        print(f"--- [TRAINER] Warning: Could not set PyTorch memory fraction: {e} ---", flush=True)
+
     results_dir = request_config.get("tempfile")
     if os.path.exists(results_dir):
         for item in os.listdir(results_dir):
@@ -613,6 +628,17 @@ def train(trainer: TrainerWrapper, request_config: dict, fitness: str):
             batch = int(float(os.environ.get("MAX_GPU", -1)))
             batch = batch / 100 if batch > 0 else 0.1
             train_params["batch"] = batch
+
+        # Defensive DataLoader workers cap to prevent multi-process CPU lockup and thrashing
+        workers_cfg = train_params.get("workers")
+        if workers_cfg is None:
+            train_params["workers"] = 2
+        else:
+            try:
+                train_params["workers"] = min(2, max(0, int(workers_cfg)))
+            except (ValueError, TypeError):
+                train_params["workers"] = 2
+        print(f"--- [TRAINER] Set DataLoader workers capped to {train_params['workers']} ---", flush=True)
 
         # Drop hyperparameters that are not valid Ultralytics arguments (e.g.
         # custom keys such as 'seg') to avoid SyntaxError in model.train().
