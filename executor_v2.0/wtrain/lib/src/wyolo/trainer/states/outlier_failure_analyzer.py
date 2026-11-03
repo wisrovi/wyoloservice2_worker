@@ -40,18 +40,39 @@ class OutlierFailureAnalyzer:
         Returns:
             PostTrainContext: The unmodified pipeline context.
         """
-        dataset_name = f"dataset_{os.path.basename(ctx.images_test_path)}"
-        dataset_dir = os.path.dirname(ctx.images_test_path)
+        images_test_path = ctx.images_test_path or ""
+        yaml_path = None
+        if os.path.isfile(images_test_path):
+            yaml_path = images_test_path
+            dataset_dir = os.path.dirname(images_test_path)
+        elif os.path.isdir(images_test_path):
+            dataset_dir = images_test_path
+            candidates = ["data.yaml", "dataset.yaml", "data.yml", "dataset.yml"]
+            yaml_path = next(
+                (
+                    os.path.join(dataset_dir, c)
+                    for c in candidates
+                    if os.path.isfile(os.path.join(dataset_dir, c))
+                ),
+                None,
+            )
+        else:
+            dataset_dir = os.path.dirname(images_test_path) if images_test_path else ""
+
+        dataset_name = f"dataset_{os.path.basename(yaml_path or dataset_dir or 'unknown')}"
 
         if fo.dataset_exists(dataset_name):
             dataset = fo.load_dataset(dataset_name)
         else:
             try:
-                dataset = fo.Dataset.from_dir(
-                    dataset_dir=dataset_dir,
-                    dataset_type=fo.types.YOLOv5Dataset,
-                    name=dataset_name,
-                )
+                load_kwargs = {
+                    "dataset_dir": dataset_dir if dataset_dir and os.path.isdir(dataset_dir) else None,
+                    "dataset_type": fo.types.YOLOv5Dataset,
+                    "name": dataset_name,
+                }
+                if yaml_path and os.path.isfile(yaml_path):
+                    load_kwargs["yaml_path"] = yaml_path
+                dataset = fo.Dataset.from_dir(**load_kwargs)
             except Exception as e:
                 print(f"Failed to load fiftyone dataset: {e}")
                 return ctx
