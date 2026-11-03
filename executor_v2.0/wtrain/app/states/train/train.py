@@ -47,12 +47,27 @@ def train_model(data_input: UserInput):
                 DATASET = DATASET.replace("/datasets/", DATASET_FOLDER)
                 request_config["train"]["data"] = DATASET
 
-            if config_dict.get("sweeper", {}).get("fitness") is None:
-                raise ValueError(
-                    "La clave 'fitness' no se encuentra en la configuración del sweeper."
+            fitness = config_dict.get("sweeper", {}).get("fitness")
+            if not fitness:
+                # Auto-resolve fitness metric from style, task, or model name pattern
+                style = (
+                    config_dict.get("style")
+                    or config_dict.get("task")
+                    or ("segment" if "-seg" in str(config_dict.get("model", "")).lower()
+                        else "classify" if "-cls" in str(config_dict.get("model", "")).lower()
+                        else "pose" if "-pose" in str(config_dict.get("model", "")).lower()
+                        else "obb" if "-obb" in str(config_dict.get("model", "")).lower()
+                        else "detect")
                 )
+                fitness_map = {
+                    "detect": "metrics/mAP50-95(B)",
+                    "segment": "metrics/mAP50-95(M)",
+                    "classify": "metrics/accuracy_top1",
+                    "pose": "metrics/mAP50-95(P)",
+                    "obb": "metrics/mAP50-95(B)",
+                }
+                fitness = fitness_map.get(str(style).lower(), "metrics/mAP50-95(B)")
 
-            fitness = config_dict.get("sweeper", {}).get("fitness", "fitness")
             results = train(trainer, request_config, fitness)
 
     return {"results_trained_model": results}
