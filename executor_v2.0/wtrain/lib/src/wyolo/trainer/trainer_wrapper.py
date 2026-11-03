@@ -420,9 +420,13 @@ def create_trainer(config_path: str, trial_number):
     timestamp = get_datetime()
     request_config["timestamp"] = timestamp
 
-    # Default batch from MAX_GPU env var (e.g. MAX_GPU=50 → batch=0.5 = auto-batch 50% VRAM)
-    max_gpu = int(float(os.getenv("MAX_GPU", "100")))
-    request_config["train"]["batch"] = max_gpu / 100
+    # Use user-specified batch if positive int; otherwise AutoBatch fraction from MAX_GPU
+    user_batch = request_config.get("train", {}).get("batch")
+    if user_batch is not None and isinstance(user_batch, int) and user_batch > 0:
+        pass  # Respect user explicit positive integer batch
+    else:
+        max_gpu = int(float(os.getenv("MAX_GPU", "100")))
+        request_config["train"]["batch"] = max_gpu / 100
 
     request_config["train"]["project"] = f"{RESULT_PATH}/{trial_number}/"
     request_config["train"]["name"] = f"train_{request_config.get('task_id')}"
