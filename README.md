@@ -181,7 +181,12 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.37 (Current Release) - 2026-10-29
+### Version 2.2.38 (Current Release) - 2026-11-03
+*   **Smart Fitness Fallback Resolution:** In `train.py`, replaced the hard `ValueError` on missing `sweeper.fitness` with automatic task/style/model inferrer, ensuring standalone minimal YAML runs seamlessly map to the appropriate metric (`detect` → `mAP50-95(B)`, `segment` → `mAP50-95(M)`, `classify` → `accuracy_top1`).
+*   **Defensive Batch Resolution:** In `trainer_wrapper.py`, preserved explicit positive integer user batch settings while defaulting omitted, `<=0`, or `-1` batch values to AutoBatch fraction based on `MAX_GPU / 100`.
+*   **Version Update:** Bumped executor version to v2.2.38.
+
+### Version 2.2.37 - 2026-10-29
 *   **PyLaTeX Table Rule Construction Fix:** Fixed PyLaTeX `TableError` ("Number of cells added to table (8) did not match table width (5)") in `latex_exporter.py` by appending rule commands rather than row-adding them, preventing post-training pipeline termination.
 *   **Defensive Post-Train Step Execution:** Replaced instance-level monkey-patching in `safe_step` with a callable wrapper class `SafeStep` in `post_train_pipeline.py`, guaranteeing that step exceptions do not prevent subsequent XAI, LaTeX, or LLM reporting.
 *   **Context Propagation:** Extended `PostTrain` state return contract to pass `image_data`, `model_path`, `images_test_path`, and paths required by `ImageECamYOLO` and downstream research modules.
@@ -338,6 +343,11 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+### Version 2.2.38 - 2026-11-03
+*   **Smart Fitness Fallback Resolution:** Implemented auto-resolution of Optuna objective fitness metrics based on task/style/model name pattern.
+*   **Defensive Batch Resolution:** Preserved explicit user positive integer batch parameters while defaulting omitted or negative batch to AutoBatch fraction based on `MAX_GPU`.
+*   **Version Update:** Bumped executor version to v2.2.38.
+
 ### Version 2.2.37 - 2026-10-29
 *   **PyLaTeX Table Rule Construction Fix:** Fixed PyLaTeX `TableError` in `latex_exporter.py` by appending rule commands rather than row-adding them.
 *   **Defensive Post-Train Step Execution:** Replaced instance-level monkey-patching in `safe_step` with a callable wrapper class `SafeStep` in `post_train_pipeline.py`.
