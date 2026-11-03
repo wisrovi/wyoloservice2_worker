@@ -17,7 +17,8 @@ RUN apt-get update && apt-get upgrade -y && \
 
 # Crear directorios de montaje
 RUN mkdir -p /wyolo/control_server//config_versions \
-    && mkdir -p /wyolo/control_server/datasets
+    && mkdir -p /wyolo/control_server/datasets \
+    && ln -sf /wyolo/control_server/datasets /datasets
 
 RUN chmod 755 /wyolo/control_server/config_versions \
     && chmod 755 /wyolo/control_server/datasets    
