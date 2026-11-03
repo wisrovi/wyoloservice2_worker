@@ -50,6 +50,7 @@ MOUNT_OPTS="username=$CIFS_USER,password=$CIFS_PASS,port=23449,file_mode=0777,di
 # Montar cada share con manejo de errores
 echo "Montando datasets en $FOLDER_MOUNT_DATASETS..."
 mount -t cifs //$CONTROL_HOST/datasets $FOLDER_MOUNT_DATASETS -o $MOUNT_OPTS || echo "Error montando datasets"
+ln -sf $FOLDER_MOUNT_DATASETS /datasets 2>/dev/null || true
 
 echo "Montando config_versions en $FOLDER_MOUNT_CONFIG..."
 mount -t cifs //$CONTROL_HOST/config_versions $FOLDER_MOUNT_CONFIG -o $MOUNT_OPTS || echo "Error montando config_versions"
