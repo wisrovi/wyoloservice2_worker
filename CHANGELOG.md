@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.39] - 2026-11-03
+### Fixed
+- **FiftyOne Dataset Path & YAML Resolution:** In `OutlierFailureAnalyzer`, dynamically resolved dataset directory and dataset YAML path (`yaml_path`), detecting whether `images_test_path` is a direct YAML file (`data.yaml` / `dataset.yaml`) or a directory containing them. Resolves `FileNotFoundError: dataset.yaml` when loading YOLOv5/YOLOv8 datasets into FiftyOne.
+
 ## [2.2.38] - 2026-11-03
 ### Added
 - **Smart Fitness Fallback Resolution:** In `train.py`, replaced the hard `ValueError` on missing `sweeper.fitness` with an automatic task/style/model inferrer, ensuring standalone minimal YAML runs seamlessly map to the appropriate metric (`detect` → `mAP50-95(B)`, `segment` → `mAP50-95(M)`, `classify` → `accuracy_top1`).
