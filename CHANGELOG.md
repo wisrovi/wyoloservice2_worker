@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.38] - 2026-11-03
+### Added
+- **Smart Fitness Fallback Resolution:** In `train.py`, replaced the hard `ValueError` on missing `sweeper.fitness` with an automatic task/style/model inferrer, ensuring standalone minimal YAML runs seamlessly map to the appropriate metric (`detect` → `mAP50-95(B)`, `segment` → `mAP50-95(M)`, `classify` → `accuracy_top1`).
+- **Defensive Batch Resolution:** In `trainer_wrapper.py`, preserved explicit positive integer user batch settings while defaulting omitted, `<=0`, or `-1` batch values to AutoBatch fraction based on `MAX_GPU / 100`.
+
+### Changed
+- Bumped worker/executor version to `2.2.38`.
+
 ## [2.2.37] - 2026-10-29
 ### Fixed
 - **PyLaTeX Table Rule Construction in LatexExporter:** Fixed PyLaTeX `TableError` ("Number of cells added to table (8) did not match table width (5)") caused by using `tabular.add_row(NoEscape(r"\toprule"))`, which iterated string characters into individual table cells. Replaced with `tabular.append(...)` and wrapped table generation in defensive error handling.
