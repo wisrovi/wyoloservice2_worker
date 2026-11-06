@@ -52,25 +52,25 @@ def train_model(data_input: UserInput) -> Dict[str, Any]:
                 dataset_path = dataset_path.replace("/datasets/", DATASET_FOLDER)
                 request_config["train"]["data"] = dataset_path
 
+            model_str = str(config_dict.get("model", "")).lower()
+            style = (
+                config_dict.get("style")
+                or config_dict.get("task")
+                or ("segment" if "-seg" in model_str
+                    else "classify" if "-cls" in model_str
+                    else "pose" if "-pose" in model_str
+                    else "obb" if "-obb" in model_str
+                    else "detect")
+            )
+            fitness_map = {
+                "detect": "metrics/mAP50-95(B)",
+                "segment": "metrics/mAP50-95(M)",
+                "classify": "metrics/accuracy_top1",
+                "pose": "metrics/mAP50-95(P)",
+                "obb": "metrics/mAP50-95(B)",
+            }
             fitness = config_dict.get("sweeper", {}).get("fitness")
-            if not fitness:
-                model_str = str(config_dict.get("model", "")).lower()
-                style = (
-                    config_dict.get("style")
-                    or config_dict.get("task")
-                    or ("segment" if "-seg" in model_str
-                        else "classify" if "-cls" in model_str
-                        else "pose" if "-pose" in model_str
-                        else "obb" if "-obb" in model_str
-                        else "detect")
-                )
-                fitness_map = {
-                    "detect": "metrics/mAP50-95(B)",
-                    "segment": "metrics/mAP50-95(M)",
-                    "classify": "metrics/accuracy_top1",
-                    "pose": "metrics/mAP50-95(P)",
-                    "obb": "metrics/mAP50-95(B)",
-                }
+            if not fitness or (fitness == "metrics/accuracy_top1" and str(style).lower() != "classify"):
                 fitness = fitness_map.get(str(style).lower(), "metrics/mAP50-95(B)")
 
             results = train(trainer, request_config, fitness)
