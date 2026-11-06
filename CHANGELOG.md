@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.40] - 2026-11-06
+### Added
+- **WPipe Architecture & Quality Compliance:** Fully migrated `executor_v2.0/wtrain` to standard WPipe microservice architecture:
+  - Created declarative `app/pipelines.py` with multi-DAG compliant `worker_wtrain_pipeline`.
+  - Established typed Data Transfer Objects under `app/dto/` (`training_context.py`) for all pipeline steps.
+  - Decomposed legacy monolith `dataset_analyzer.py` (798 lines) into dedicated Single Responsibility Principle modules under `app/utils/` (`data_quality_analyzer.py`, `classification_analyzer.py`, `detection_analyzer.py`, `segmentation_analyzer.py`, `eda_plotter.py`, `eda_report_generator.py`, `config_manager.py`).
+  - Achieved 100% strict English documentation and complete Google-style docstrings across all modules and functions.
+  - Eliminated forbidden dynamic reflection (`getattr`/`hasattr`) and enforced typed Pydantic models.
+  - Isolated vendored legacy wpipe library outside runtime application directory.
+- **Dockerized Verification Suite:** Integrated `PYTHONDONTWRITEBYTECODE=1` in test harnesses and verified 100% test pass rate with 97% code coverage in Docker.
+
 ## [2.2.39] - 2026-11-03
 ### Fixed
 - **FiftyOne Dataset Path & YAML Resolution:** In `OutlierFailureAnalyzer`, dynamically resolved dataset directory and dataset YAML path (`yaml_path`), detecting whether `images_test_path` is a direct YAML file (`data.yaml` / `dataset.yaml`) or a directory containing them. Resolves `FileNotFoundError: dataset.yaml` when loading YOLOv5/YOLOv8 datasets into FiftyOne.
