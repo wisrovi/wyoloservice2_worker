@@ -8,6 +8,7 @@ This module validates:
 import importlib.util
 import json
 import os
+import sys
 from typing import Any
 
 import pytest
@@ -20,8 +21,14 @@ def load_public_results_module() -> Any:
         Any: The loaded public_results module object.
     """
     current_dir = os.path.dirname(os.path.abspath(__file__))
+    app_dir = os.path.abspath(
+        os.path.join(current_dir, "..", "executor_v2.0", "wtrain", "app")
+    )
+    if app_dir not in sys.path:
+        sys.path.insert(0, app_dir)
+
     module_path = os.path.join(
-        current_dir, "..", "executor_v2.0", "wtrain", "app", "states", "train", "public_results.py"
+        app_dir, "states", "train", "public_results.py"
     )
     module_path = os.path.abspath(module_path)
     spec = importlib.util.spec_from_file_location("public_results_module", module_path)
