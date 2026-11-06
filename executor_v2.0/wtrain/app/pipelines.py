@@ -4,9 +4,11 @@ from wpipe import Condition, Pipeline
 
 from states.check import check_dataset, check_gpu_available, check_minio_buckets
 from states.error_process import error_capture
-from states.load_yaml import load_yaml
-from states.publish_results import publish_request_redis, publish_results_redis
-from states.train import not_train, publish_results_mlflow, train_model
+from states.load_yaml.load_yaml import load_yaml
+from states.publish_results.publish_results import publish_request_redis, publish_results_redis
+from states.train.not_train import not_train
+from states.train.public_results import publish_results_mlflow
+from states.train.train import train_model
 
 
 def build_wtrain_pipeline(
