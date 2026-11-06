@@ -1,24 +1,33 @@
-from states.utils.util import get_complete_config, get_user_config
+"""WPipe step for validating and loading user training configuration YAML."""
+
+import os
+from typing import Any, Dict
 from loguru import logger
 from wpipe import step, to_obj
-import os
-from pydantic import BaseModel
 
-
-class UserInput(BaseModel):
-    user_config_train: str
+from dto.training_context import UserInput
+from utils.config_manager import get_user_config
 
 
 @step(name="load_yaml", version="v1.0", tags=["load_yaml"])
 @to_obj(UserInput)
-def load_yaml(data_input: UserInput):
+def load_yaml(data_input: UserInput) -> Dict[str, Any]:
+    """Validate existence of configuration file and extract training payload.
+
+    Args:
+        data_input (UserInput): Container holding the configuration file path.
+
+    Returns:
+        Dict[str, Any]: Execution state dictionary containing parsed user_config.
+
+    Raises:
+        FileNotFoundError: If configuration file does not exist on disk.
+    """
     if not os.path.exists(data_input.user_config_train):
         raise FileNotFoundError(
-            f"El archivo de configuración no existe: {data_input.user_config_train}"
+            f"Training configuration file not found: {data_input.user_config_train}"
         )
 
-    _, USER_CONFIG = get_user_config(user_config_file=data_input.user_config_train)
-    print(f"[DEBUG] load_yaml USER_CONFIG: {USER_CONFIG}")
-    result = {"user_config": USER_CONFIG}
-    print(f"[DEBUG] load_yaml returning: {result}")
-    return result
+    _, user_config = get_user_config(user_config_file=data_input.user_config_train)
+    logger.debug(f"Loaded user_config successfully: {user_config}")
+    return {"user_config": user_config}
