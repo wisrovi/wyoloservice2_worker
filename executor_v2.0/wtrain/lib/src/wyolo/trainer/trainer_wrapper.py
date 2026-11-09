@@ -339,7 +339,23 @@ class TrainerWrapper(Elemental, Mlflow_setup):
 
     def create_model(self, model_name, model_type):
         if model_type == "yolo":
-            model = YOLO(model_name)
+            try:
+                model = YOLO(model_name)
+            except Exception as e:
+                # If weights download fails (e.g. yolo26 models without remote .pt releases),
+                # fallback gracefully to the built-in YAML architecture
+                if isinstance(model_name, str) and model_name.endswith(".pt"):
+                    yaml_fallback = model_name[:-3] + ".yaml"
+                    try:
+                        print(
+                            f"--- [TRAINER] Model weights '{model_name}' download failed, falling back to architecture '{yaml_fallback}' ---",
+                            flush=True,
+                        )
+                        model = YOLO(yaml_fallback)
+                    except Exception:
+                        raise e
+                else:
+                    raise e
         elif model_type == "rtdetr":
             model = RTDETR(model_name)
         else:
