@@ -181,7 +181,11 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.41 (Current Release) - 2026-11-09
+### Version 2.2.42 (Current Release) - 2026-11-09
+*   **YOLO Architecture Fallback for Unreleased Weights:** In `trainer_wrapper.py`, added graceful fallback to `.yaml` model architecture definition when downloading non-existent remote `.pt` weight files (such as `yolo26*.pt`) fails.
+*   **Version Update:** Bumped executor version to v2.2.42.
+
+### Version 2.2.41 - 2026-11-09
 *   **CUDA Initialization Active Retry:** In `check_gpu.py`, implemented active retry loop (3 attempts with 2s delay) during container start to allow the NVIDIA driver and CUDA runtime to fully initialize if previous pod GPU teardown was in progress.
 *   **Version Update:** Bumped executor version to v2.2.41.
 
