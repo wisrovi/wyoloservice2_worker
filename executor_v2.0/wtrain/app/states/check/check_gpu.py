@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import time
 from typing import Any, Dict
 import torch
 from loguru import logger
@@ -49,8 +50,18 @@ def check_gpu_available(data_input: Any) -> Dict[str, Any]:
     except Exception:
         pass
 
-    if not torch.cuda.is_available():
-        logger.warning("GPU not detected. Retrying...")
+    gpu_ready = False
+    for attempt in range(1, 4):
+        if torch.cuda.is_available():
+            gpu_ready = True
+            break
+        logger.warning(
+            f"GPU not detected on attempt {attempt}/3. Waiting for CUDA context..."
+        )
+        time.sleep(2)
+
+    if not gpu_ready:
+        logger.warning("GPU not detected after retries.")
         raise RuntimeError("GPU did not respond in time.")
 
     return {"gpu_status": 1}
