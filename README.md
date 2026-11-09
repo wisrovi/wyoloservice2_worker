@@ -181,9 +181,9 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.39 (Current Release) - 2026-11-03
-*   **FiftyOne Dataset Path & YAML Resolution:** In `OutlierFailureAnalyzer`, dynamically resolved dataset directory and dataset YAML path (`yaml_path`), detecting whether `images_test_path` is a direct YAML file (`data.yaml` / `dataset.yaml`) or a directory containing them. Resolves `FileNotFoundError: dataset.yaml` when loading YOLOv5/YOLOv8 datasets into FiftyOne.
-*   **Version Update:** Bumped executor version to v2.2.39.
+### Version 2.2.41 (Current Release) - 2026-11-09
+*   **CUDA Initialization Active Retry:** In `check_gpu.py`, implemented active retry loop (3 attempts with 2s delay) during container start to allow the NVIDIA driver and CUDA runtime to fully initialize if previous pod GPU teardown was in progress.
+*   **Version Update:** Bumped executor version to v2.2.41.
 
 ### Version 2.2.40 - 2026-11-06
 *   **WPipe Architecture Compliance:** Upgraded `executor_v2.0/wtrain` to standard WPipe microservice architecture with declarative `pipelines.py`, typed `dto/` packages, and modularized SRP utilities in `utils/`.
