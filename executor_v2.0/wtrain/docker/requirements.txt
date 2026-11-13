@@ -38,3 +38,5 @@ ray[air]
 # dvclive  # not yet available
 
 ultralytics==8.4.113
+wyolo==2.2.16
+
