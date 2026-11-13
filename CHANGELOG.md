@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.44] - 2026-11-13
+### Changed
+- **Official wyolo Library Migration:** Decoupled worker executor completely from vendored code by removing internal `lib/` and `_trainer/` directories.
+- **Dependency Standardization:** Worker executor now officially depends on and installs `wyolo==2.2.16` from PyPI.
+- **Architecture Governance:** Added persistent agent governance rule (`.agents/rules/use_wyolo_library.md`) strictly enforcing usage of the official corporate `wyolo` library without local code duplication.
+- Bumped worker/executor version to `2.2.44`.
+
 ## [2.2.43] - 2026-11-09
 ### Added
 - **XAI Metadata Manifest Generation (`xai_manifest.json`):** In `ModelFocusDescriber`, automatically inspects all generated Eigen-CAM heatmaps in `extras/model_focus/`, correlates them with clean test images in `extras/post_train_results/`, extracts class mappings from the dataset configuration, and generates a structured `xai_manifest.json`. This provides frontends and analytical consumers with a standardized, dataset-agnostic contract for visual explainability.
