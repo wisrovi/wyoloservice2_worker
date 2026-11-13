@@ -27,3 +27,8 @@ Every time you modify the source code of this worker (e.g., inside `executor_v2.
 1. **Build and push the updated image:** You MUST compile the Docker image and push it to Docker Hub under the tag `wisrovi/train_service:worker_executor_v1.0.0` (or the corresponding tag).
 2. **Explain the Diagnosis:** Before proposing any pull or test, you MUST explicitly explain to the user what failed, what was fixed, and the technical rationale behind the changes.
 3. **Request Explicit Authorization:** Do NOT perform docker pulls, pushes, broadcasts, or test runs automatically. You must ask the user for explicit authorization to execute these commands (e.g. asking "Would you like me to trigger the broadcast update on all nodes?"). Only execute them upon receiving direct confirmation.
+
+## 📦 Mandatory Use of Official wyolo Library
+- **Strict Library Dependency:** The worker executor must strictly use the official `wyolo` library (`from wyolo import ...`, `from wyolo.trainer import ...`).
+- **No Local Code Vendoring:** Never vendor or keep local copies of `wyolo` (such as `lib/` or `_trainer/`) inside this repository.
+- **Upstream Development:** Any enhancements or modifications to YOLO training or post-training analytics must be developed, tested, and published from `/home/william.rodriguez/Documents/w_libraries/w_libraries/wyolo`.
