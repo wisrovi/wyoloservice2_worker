@@ -34,7 +34,7 @@ WORKDIR /requirements
 
 COPY docker/requirements.txt .
 RUN pip install --no-cache-dir --timeout 300 --retries 3 -r requirements.txt
-# RUN pip install wyolo
+RUN pip install --no-cache-dir wyolo==2.2.16
 
 # Instalar OpenCode para el análisis LLM post-entrenamiento
 RUN curl -fsSL https://opencode.ai/install | bash
@@ -46,10 +46,6 @@ COPY examples .
 
 
 FROM base
-
-WORKDIR /lib/wyoloservice
-COPY lib .
-RUN pip install -e .
 
 WORKDIR /usr/local/bin/
 COPY docker/mount-cifs.sh .
