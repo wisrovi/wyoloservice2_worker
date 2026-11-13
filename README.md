@@ -74,6 +74,7 @@ flowchart TD
 This component heavily relies on the following key technologies to orchestrate the pipeline and provide Explainable AI (XAI):
 
 *   **WPipe:** Corporate library used to define and execute the sequential training and validation pipeline dynamically.
+*   **WYolo:** Official corporate library (`wyolo>=2.2.16`) providing core training wrappers, dataset configurations, and post-training R&D analytical pipeline states.
 *   **PyTorch & CUDA Runtime:** Core deep learning framework with driver-level memory fraction management (`set_per_process_memory_fraction`) ensuring non-disruptive execution alongside developer desktops.
 *   **Ultralytics YOLO:** Core engine for object detection, classification, and segmentation.
 *   **Grad-CAM / Eigen-CAM:** Used in the `ImageECamYOLO` step for Explainable AI (XAI) heatmaps. The implementation is heavily inspired by and based on [xaviercanche/Grad-CAM](https://github.com/xaviercanche/Grad-CAM), allowing visual debugging of the convolutional layers' focus.
@@ -361,6 +362,16 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+### Version 2.2.44 - 2026-11-13
+*   **Official wyolo Library Migration:** Completely decoupled worker executor from vendored local code by removing internal `lib/` and `_trainer/` directories.
+*   **Dependency Standardization:** Worker executor now officially depends on and installs `wyolo==2.2.16` from PyPI.
+*   **Architecture Governance:** Added persistent agent governance rule (`.agents/rules/use_wyolo_library.md`) strictly enforcing usage of the official corporate `wyolo` library without local code duplication.
+*   **Version Update:** Bumped worker/executor version to v2.2.44.
+
+### Version 2.2.43 - 2026-11-09
+*   **XAI Metadata Manifest Generation (`xai_manifest.json`):** In `ModelFocusDescriber`, automatically inspects all generated Eigen-CAM heatmaps in `extras/model_focus/`, correlates them with clean test images in `extras/post_train_results/`, extracts class mappings from the dataset configuration, and generates a structured `xai_manifest.json`.
+*   **Version Update:** Bumped worker/executor version to v2.2.43.
+
 ### Version 2.2.40 - 2026-11-06
 *   **WPipe Architecture Compliance:** Upgraded `executor_v2.0/wtrain` to standard WPipe microservice architecture with declarative `pipelines.py`, typed `dto/` packages, and modularized SRP utilities in `utils/`.
 *   **Zero Reflection and Type Safety:** Removed dynamic `getattr`/`hasattr` usage and enforced Google-style docstrings, strict 100% English, and 200-line file modularity limit.
