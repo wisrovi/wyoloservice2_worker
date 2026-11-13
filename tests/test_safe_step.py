@@ -6,38 +6,10 @@ This test file verifies:
 3. That SafeStep passes through normal step output when execution succeeds.
 """
 
-import importlib.util
-import os
 from typing import Any
 
 import pytest
-
-
-def load_safe_step_class() -> Any:
-    """Dynamically loads SafeStep class across directories avoiding dot in path name.
-
-    Returns:
-        Any: SafeStep class object.
-    """
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    module_path = os.path.join(
-        current_dir,
-        "..",
-        "executor_v2.0",
-        "wtrain",
-        "lib",
-        "src",
-        "wyolo",
-        "trainer",
-        "safe_step.py",
-    )
-    module_path = os.path.abspath(module_path)
-    spec = importlib.util.spec_from_file_location("safe_step_mod", module_path)
-    if not spec or not spec.loader:
-        raise ImportError(f"Could not load module from {module_path}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.SafeStep
+from wyolo.trainer.safe_step import SafeStep
 
 
 class DummyFailingStep:
@@ -75,8 +47,7 @@ def test_safe_step_handles_exceptions() -> None:
       pipeline before crucial artifacts (like Grad-CAM visualizations or LLM reports)
       are generated.
     """
-    SafeStep = load_safe_step_class()
-
+    # SafeStep wraps these step instances
     failing_step = DummyFailingStep()
     wrapped_step = SafeStep(failing_step)
 
@@ -99,8 +70,7 @@ def test_safe_step_successful_execution() -> None:
     - When a step executes without errors, SafeStep must return the step's
       actual return value and preserve all metadata (NAME, VERSION).
     """
-    SafeStep = load_safe_step_class()
-
+    # SafeStep wraps successful step
     success_step = DummySuccessfulStep()
     wrapped_step = SafeStep(success_step)
 
