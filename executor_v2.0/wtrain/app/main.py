@@ -18,7 +18,7 @@ setproctitle("wtrain-service")
 console = Console()
 
 # WORKER/EXECUTOR VERSION
-__VERSION__ = "2.2.45"
+__VERSION__ = "2.2.46"
 
 
 def display_banner() -> None:
@@ -56,16 +56,20 @@ def main(user_config_train: Dict[str, Any]) -> Dict[str, Any]:
     artifacts_path = "/wyolo/worker/train_service_results"
     if os.path.exists(artifacts_path):
         for item in os.listdir(artifacts_path):
-            if item == "extras" or item.startswith("logs_"):
+            if item.startswith("logs_"):
                 continue
             item_path = os.path.join(artifacts_path, item)
             try:
                 if os.path.isfile(item_path) or os.path.islink(item_path):
                     os.unlink(item_path)
                 elif os.path.isdir(item_path):
-                    shutil.rmtree(item_path)
+                    shutil.rmtree(item_path, ignore_errors=True)
             except Exception as clean_error:
                 print(f"Failed to clean {item_path}: {clean_error}")
+
+        extras_dir = os.path.join(artifacts_path, "extras")
+        if os.path.exists(extras_dir):
+            shutil.rmtree(extras_dir, ignore_errors=True)
 
     with ResourceMonitor("wtrain_ResourceMonitor") as monitor:
         with TaskTimer("wtrain_TaskTimer", timeout_seconds=900) as timer:
