@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.45] - 2026-11-16
+### Changed
+- **Flexible Floating Dependency for wyolo:** Updated `wyolo` dependency from fixed pinning (`==2.2.16`) to floating requirement (`wyolo>=2.2.18`) in `Dockerfile` and `requirements.txt`.
+- **Always Latest Library Usage:** Ensures the worker executor automatically installs and utilizes the newest release of `wyolo` upon build without pinning barriers.
+- Bumped worker/executor version to `2.2.45`.
+
 ## [2.2.44] - 2026-11-13
 ### Changed
 - **Official wyolo Library Migration:** Decoupled worker executor completely from vendored code by removing internal `lib/` and `_trainer/` directories.
