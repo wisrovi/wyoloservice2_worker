@@ -3,6 +3,7 @@
 import argparse
 import os
 import shutil
+import stat
 from typing import Any, Dict
 from rich.console import Console
 from rich.panel import Panel
@@ -18,7 +19,55 @@ setproctitle("wtrain-service")
 console = Console()
 
 # WORKER/EXECUTOR VERSION
-__VERSION__ = "2.2.46"
+__VERSION__ = "2.2.47"
+
+
+def _force_unlock(path: str) -> None:
+    """Attempt to grant full read/write/execute permissions to path."""
+    try:
+        os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+    except Exception:
+        pass
+
+
+def _force_remove_item(item_path: str) -> None:
+    """Robustly delete a file or directory tree by unlocking permissions first."""
+    if not os.path.exists(item_path) and not os.path.islink(item_path):
+        return
+    _force_unlock(item_path)
+    if os.path.isfile(item_path) or os.path.islink(item_path):
+        try:
+            os.unlink(item_path)
+        except Exception:
+            try:
+                os.system(f"rm -f '{item_path}' 2>/dev/null")
+            except Exception:
+                pass
+    elif os.path.isdir(item_path):
+        for root, dirs, files in os.walk(item_path, topdown=False):
+            for f in files:
+                fp = os.path.join(root, f)
+                _force_unlock(fp)
+                try:
+                    os.unlink(fp)
+                except Exception:
+                    pass
+            for d in dirs:
+                dp = os.path.join(root, d)
+                _force_unlock(dp)
+                try:
+                    shutil.rmtree(dp, ignore_errors=True)
+                except Exception:
+                    pass
+        try:
+            shutil.rmtree(item_path, ignore_errors=True)
+        except Exception:
+            pass
+        if os.path.exists(item_path):
+            try:
+                os.system(f"rm -rf '{item_path}' 2>/dev/null")
+            except Exception:
+                pass
 
 
 def display_banner() -> None:
@@ -55,21 +104,15 @@ def main(user_config_train: Dict[str, Any]) -> Dict[str, Any]:
     """
     artifacts_path = "/wyolo/worker/train_service_results"
     if os.path.exists(artifacts_path):
+        _force_unlock(artifacts_path)
         for item in os.listdir(artifacts_path):
             if item.startswith("logs_"):
                 continue
             item_path = os.path.join(artifacts_path, item)
             try:
-                if os.path.isfile(item_path) or os.path.islink(item_path):
-                    os.unlink(item_path)
-                elif os.path.isdir(item_path):
-                    shutil.rmtree(item_path, ignore_errors=True)
+                _force_remove_item(item_path)
             except Exception as clean_error:
                 print(f"Failed to clean {item_path}: {clean_error}")
-
-        extras_dir = os.path.join(artifacts_path, "extras")
-        if os.path.exists(extras_dir):
-            shutil.rmtree(extras_dir, ignore_errors=True)
 
     with ResourceMonitor("wtrain_ResourceMonitor") as monitor:
         with TaskTimer("wtrain_TaskTimer", timeout_seconds=900) as timer:
