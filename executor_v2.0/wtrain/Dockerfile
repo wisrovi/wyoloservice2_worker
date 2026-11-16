@@ -1,5 +1,5 @@
 
-FROM wisrovi/agents:gpu-slim-yolo as base
+FROM wisrovi/agents:gpu-slim-yolo
 
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y \
@@ -34,7 +34,7 @@ WORKDIR /requirements
 
 COPY docker/requirements.txt .
 RUN pip install --no-cache-dir --timeout 300 --retries 3 -r requirements.txt
-RUN pip install --no-cache-dir --upgrade "wyolo>=2.3.2"
+RUN pip install --no-cache-dir --upgrade "wyolo==2.3.3"
 
 # Instalar OpenCode para el análisis LLM post-entrenamiento
 RUN curl -fsSL https://opencode.ai/install | bash
@@ -43,9 +43,6 @@ RUN curl -fsSL https://opencode.ai/install | bash
 
 WORKDIR /examples
 COPY examples .
-
-
-FROM base
 
 WORKDIR /usr/local/bin/
 COPY docker/mount-cifs.sh .
