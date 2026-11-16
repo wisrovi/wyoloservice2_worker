@@ -362,6 +362,11 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+### Version 2.2.45 - 2026-11-16
+*   **Flexible Floating Dependency for wyolo:** Updated `wyolo` dependency from fixed pinning (`==2.2.16`) to floating requirement (`wyolo>=2.2.18`) in `Dockerfile` and `requirements.txt`.
+*   **Always Latest Library Consumption:** Configured the executor container to pull the newest version of `wyolo` available on PyPI automatically without pinning boundaries.
+*   **Version Update:** Bumped worker/executor version to v2.2.45.
+
 ### Version 2.2.44 - 2026-11-13
 *   **Official wyolo Library Migration:** Completely decoupled worker executor from vendored local code by removing internal `lib/` and `_trainer/` directories.
 *   **Dependency Standardization:** Worker executor now officially depends on and installs `wyolo==2.2.16` from PyPI.
