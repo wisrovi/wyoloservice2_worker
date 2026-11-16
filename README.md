@@ -362,6 +362,10 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+### Version 2.2.46 - 2026-11-16
+*   **Residual Artifact Prevention in extras:** Removed the directory preservation exception `if item == "extras"` in `main.py`, guaranteeing complete purging of `/wyolo/worker/train_service_results` and `extras/` prior to every new training session. Prevents heatmaps and predictions from prior runs from persisting into subsequent experiments.
+*   **Version Update:** Bumped worker/executor version to v2.2.46.
+
 ### Version 2.2.45 - 2026-11-16
 *   **Flexible Floating Dependency for wyolo:** Updated `wyolo` dependency from fixed pinning (`==2.2.16`) to floating requirement (`wyolo>=2.2.18`) in `Dockerfile` and `requirements.txt`.
 *   **Always Latest Library Consumption:** Configured the executor container to pull the newest version of `wyolo` available on PyPI automatically without pinning boundaries.
