@@ -182,7 +182,12 @@ docker push wisrovi/train_service:worker_executor_v1.0.0
 
 ## 📜 Changelog & Version History
 
-### Version 2.2.43 (Current Release) - 2026-11-09
+### Version 2.2.47 (Current Release) - 2026-11-16
+*   **Permission-Unlocking Result Directory Purge:** Implemented recursive permission unlocking (`os.chmod(path, 0o777)`) and robust cleanup `_force_remove_item` in `main.py` entrypoint. Guarantees that write-protected or root-owned files from prior executions on mounted volumes (`/wyolo/worker/train_service_results`) are purged completely before pipeline initialization.
+*   **Upgraded `wyolo` Dependency:** Upgraded to `wyolo>=2.3.2` with defensive `CleanFolderExtra` directory purge, ensuring zero leftover artifacts in `extras/model_focus/`.
+*   **Version Update:** Bumped executor version to v2.2.47.
+
+### Version 2.2.43 - 2026-11-09
 *   **XAI Metadata Manifest Generation (`xai_manifest.json`):** In `ModelFocusDescriber`, automatically inspects all generated Eigen-CAM heatmaps in `extras/model_focus/`, correlates them with clean test images in `extras/post_train_results/`, extracts class mappings from the dataset configuration, and generates a structured `xai_manifest.json`. This provides frontends and analytical consumers with a standardized, dataset-agnostic contract for visual explainability.
 *   **Version Update:** Bumped executor version to v2.2.43.
 
