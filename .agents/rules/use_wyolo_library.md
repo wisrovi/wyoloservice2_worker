@@ -7,7 +7,7 @@ description: Mandatory rule to strictly use the official wyolo library without l
 
 1. **Mandatory Use of Official `wyolo` Library:**
    - All YOLO and RT-DETR training, hyperparameter optimization, and post-training analysis MUST strictly import and use the official corporate `wyolo` library (`from wyolo import ...`, `from wyolo.trainer import ...`).
-   - The worker container installs `wyolo` directly as a dependency from PyPI or corporate wheels.
+   - The worker container installs `wyolo` directly as a dependency from PyPI using flexible floating versioning (`wyolo>=...`) so the latest version is always consumed without hard pinning (`==`).
 
 2. **Absolute Prohibition of Local Code Vendoring:**
    - It is strictly forbidden to vendor or maintain local copies of `wyolo` source code (such as `lib/`, `_trainer/`, or local duplicate trainer scripts) inside the worker or executor codebase.
